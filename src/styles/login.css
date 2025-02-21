@@ -1,0 +1,148 @@
+/* Login Container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  background: #f4f7f6;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Login Card */
+.login-card {
+  background: #fff;
+  padding: 40px 30px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Title */
+.login-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #283e56;
+  font-size: 1.8em;
+}
+
+/* Input Group */
+.input-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label */
+.input-label {
+  margin-bottom: 5px;
+  color: #283e56;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  font-size: 0.95em;
+}
+
+.input-label .icon {
+  margin-right: 8px;
+  color: #2B9843;
+}
+
+/* Input Fields */
+.input-field {
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  transition: border 0.3s ease;
+  width: 100%;
+}
+
+.input-field:focus {
+  border-color: #2B9843;
+  outline: none;
+}
+
+/* Password Wrapper */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Password Input */
+.password-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+/* Password Toggle Icon */
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #2B9843;
+}
+
+/* Select Dropdown Wrapper */
+.select-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* Styled Select Element */
+.select-field {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #008d23;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1em;
+  transition: border 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.select-field:focus {
+  border-color: #2B9843;
+  outline: none;
+}
+
+/* Dropdown Icon */
+.dropdown-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #2B9843;
+  font-size: 1em;
+}
+
+/* Login Button */
+.login-btn {
+  width: 100%;
+  background: #2B9843;
+  color: #fff;
+  padding: 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #237c39;
+}
+
+/* Error Message */
+.error-message {
+  color: red;
+  margin-bottom: 20px;
+  text-align: center;
+}

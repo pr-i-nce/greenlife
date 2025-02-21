@@ -1,0 +1,64 @@
+{
+  "roles": {
+    "regionalManager": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "subRegionalManager": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "distributor": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "region": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "subregion": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "commission": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "products": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "agents": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "groups": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    },
+    "users": {
+      "create": false,
+      "read": false,
+      "update": false,
+      "delete": false
+    }
+  }
+}

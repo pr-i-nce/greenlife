@@ -1,0 +1,194 @@
+/* roles.css */
+.roles-container {
+  max-width: 1800px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.roles-header {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1.8rem;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.roles-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Each role group container */
+.role-group {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+}
+
+/* Subtitle for each resource group */
+.role-group-title {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  color: #555;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+/* Container for checkboxes aligned horizontally */
+.role-group-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Style for each checkbox element */
+.role-checkbox {
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  align-items: center;
+  background: #fff;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  transition: background 0.2s ease-in-out;
+}
+
+.role-checkbox:hover {
+  background: #e9f5e9;
+}
+
+.role-checkbox input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  accent-color: #2B9843;
+}
+
+.role-checkbox label {
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Button Styles */
+.submit-btn {
+  align-self: center;
+  background-color: #2B9843;
+  color: #fff;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #237a32;
+}
+
+.back-btn {
+  background-color: transparent;
+  border: none;
+  color: #2B9843;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.back-btn .icon {
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+/* Media Queries */
+
+/* For devices with width below 480px */
+@media (max-width: 480px) {
+  .roles-container {
+    margin: 20px;
+    padding: 20px;
+  }
+  .roles-header {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  .role-group {
+    padding: 10px;
+  }
+  .role-group-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .role-group-checkboxes {
+    gap: 10px;
+    justify-content: center;
+  }
+  .role-checkbox {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  .role-checkbox input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+  }
+  .submit-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+  .back-btn {
+    font-size: 0.9rem;
+  }
+}
+
+/* For devices with width below 365px */
+@media (max-width: 365px) {
+  .roles-container {
+    margin: 10px;
+    padding: 15px;
+  }
+  .roles-header {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+  }
+  .role-group {
+    padding: 8px;
+  }
+  .role-group-title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .role-group-checkboxes {
+    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .role-checkbox {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    margin: 5px 0;
+  }
+  .role-checkbox input[type='checkbox'] {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+  .submit-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  .back-btn {
+    font-size: 0.8rem;
+  }
+}
