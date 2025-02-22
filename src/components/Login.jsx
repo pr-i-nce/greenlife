@@ -3,6 +3,7 @@ import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GlobalContext } from './GlobalContext';
 import '../styles/login.css';
+import '../styles/hero.css';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -51,6 +52,18 @@ function Login() {
   };
 
   return (
+   <>
+    {/* Header */}
+    <header className="admin-header">
+        <div className="header-flex">
+          <img 
+            src="https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=100" 
+            alt="GreenLife Logo" 
+            className="logo"
+          />
+          <h1>GreenLife Admin Portal</h1>
+        </div>
+    </header>
     <div className="login-container">
       <div className="login-card">
         <h2 className="login-title">Sign In</h2>
@@ -117,6 +130,7 @@ function Login() {
         </form>
       </div>
     </div>
+    </>
   );
 }
 

@@ -62,20 +62,20 @@ function PaidCommissionsTable() {
               return (
                 <tr key={sale.id}>
                   <td data-label="SN">{index + 1}</td>
-                  <td className="first-name-col" data-label="Agent Name">{sale.firstName || 'N/A'}</td>
+                  <td className="first-name-col" data-label="Agent Name">{sale.first_name || 'N/A'} {sale.last_name || 'N/A'}</td>
                   <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                  <td className="region-name-col" data-label="Region">{sale.regionName || 'N/A'}</td>
-                  <td data-label="Sub Region">{sale.subRegion || 'N/A'}</td>
+                  <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
+                  <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                   <td data-label="Amount">{sale.amount || 'N/A'}</td>
                   {currentTab === 'initial' && (
                     <>
-                      <td data-label="Initial Commission">{sale.initialCommission || 'N/A'}</td>
+                      <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
                       <td data-label="Payment Status">{initialStatus}</td>
                     </>
                   )}
                   {currentTab === 'final' && (
                     <>
-                      <td data-label="Final Commission">{sale.finalCommission || 'N/A'}</td>
+                      <td data-label="Final Commission">{sale.final_commission || 'N/A'}</td>
                       <td data-label="Payment Status">{finalStatus}</td>
                     </>
                   )}

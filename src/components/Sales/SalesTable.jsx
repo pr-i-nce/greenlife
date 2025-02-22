@@ -74,6 +74,7 @@ function SalesTable() {
         if (Array.isArray(data)) {
           setAcceptedSales(data);
           console.log('Accepted sales data:', data);
+          console.log('Accepted sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -91,6 +92,7 @@ function SalesTable() {
       .then((data) => {
         if (Array.isArray(data)) {
           setRejectedSales(data);
+          console.log('Rejected sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -290,8 +292,10 @@ function SalesTable() {
     }
   };
 
-  const handleViewImage = (receiptImagePath) => {
-    const imageUrl = `${API_BASE}/serve/getImage/${receiptImagePath}`;
+  const handleViewImage = (reciept_image_path
+  ) => {
+    const imageUrl = `${API_BASE}/serve/getImage/${reciept_image_path
+    }`;
     console.log('Image URL:', imageUrl);
     Swal.fire({
       ...swalOptions,
@@ -303,6 +307,37 @@ function SalesTable() {
     });
   };
 
+  const handleViewProductDetails = async (ref_id) => {
+    Swal.fire({
+      ...swalOptions,
+      title: 'Fetching Product Details...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    try {
+      const response = await fetch(`${API_BASE}/sales/sold-products?id=${ref_id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) throw new Error('Network error');
+      const data = await response.json();
+      const productDetails = Array.isArray(data.object) ? data.object : [];
+      console.log('Product details:', productDetails);
+      Swal.close();
+      setSelectedProduct(productDetails);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      Swal.close();
+      Swal.fire({
+        ...swalOptions,
+        title: 'Error',
+        text: 'Could not fetch product details. Please try again.',
+        icon: 'error'
+      });
+    }
+  };
+  
   const renderTable = (data, tabName) => (
     <div className="table-content">
       <table>
@@ -310,6 +345,8 @@ function SalesTable() {
           <tr>
             <th>SN</th>
             <th className="first-name-col">Agent name</th>
+            <th>Phone number</th>
+            <th>Email</th>
             <th>Distributor</th>
             <th className="region-name-col">Region</th>
             <th>Sub region</th>
@@ -321,7 +358,6 @@ function SalesTable() {
               </>
             )}
             <th>Status</th>
-            <th>Created by</th>
             <th>Product details</th>
             <th>Receipt image</th>
             <th>Actions</th>
@@ -332,39 +368,35 @@ function SalesTable() {
             data.map((sale, index) => (
               <tr key={sale.id}>
                 <td data-label="SN">{index + 1}</td>
-                <td className="first-name-col" data-label="Agent Name">{sale.firstName || 'N/A'}</td>
+                <td className="first-name-col" data-label="Agent Name">{sale.first_name || 'N/A'} {sale.last_name || 'N/A'}</td>
+                <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
+                <td data-label="Email">{sale.email || 'N/A'}</td>
                 <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                <td className="region-name-col" data-label="Region">{sale.regionName || 'N/A'}</td>
-                <td data-label="Sub Region">{sale.subRegion || 'N/A'}</td>
+                <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
+                <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                 <td data-label="Amount">{sale.amount || 'N/A'}</td>
                 {tabName === 'accepted' && (
                   <>
-                    <td data-label="Initial Commission">{sale.initialCommission || 'N/A'}</td>
-                    <td data-label="Final Commission">{sale.finalCommission || 'N/A'}</td>
+                    <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
+                    <td data-label="Final Commission">{sale.final_commission || 'N/A'}</td>
                   </>
                 )}
                 <td data-label="Status">{sale.status || 'Pending'}</td>
-                <td data-label="Created By">{sale.createdBy || 'N/A'}</td>
-                <td data-label="Receipt Image">
-                  {sale.recieptImagePath ? (
-                  <button className="action-btn view-btn" onClick={() => setSelectedProduct(sale)}>
-                  View Details
-                </button>
-                  ) : (
-                    'N/A'
-                  )}
+                <td data-label="Product Details">
+                  <button className="action-btn view-btn" onClick={() => handleViewProductDetails(sale.ref_id)}>
+                    View Details
+                  </button>
                 </td>
                 <td data-label="Receipt Image">
-                  {sale.recieptImagePath ? (
+                  
                     <button
                       className="action-btn view-btn"
-                      onClick={() => handleViewImage(sale.recieptImagePath)}
+                      onClick={() => handleViewImage(sale.reciept_image_path
+                      )}
                     >
                       View
                     </button>
-                  ) : (
-                    'N/A'
-                  )}
+                 
                 </td>
                 <td data-label="Actions">
                   {tabName === 'all' && (
@@ -389,7 +421,6 @@ function SalesTable() {
                       Accept
                     </button>
                   )}
-
                 </td>
               </tr>
             ))
@@ -423,7 +454,7 @@ function SalesTable() {
     <div className="registered-table">
       {selectedProduct ? (
         <GenericModal onClose={() => setSelectedProduct(null)}>
-          <ProductDetails records={[selectedProduct]} onClose={() => setSelectedProduct(null)} />
+          <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
         </GenericModal>
       ) : (
         <>

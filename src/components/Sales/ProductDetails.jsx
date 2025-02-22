@@ -21,33 +21,32 @@ const ProductDetails = ({ records, onClose }) => {
         <table className="product-details-table">
           <thead>
             <tr>
-              <th>ID</th>
+
               <th>Product Name</th>
               <th>Price</th>
               <th>Sold Unit(s)</th>
-              <th>Created By</th>
+              <th>Receipt number</th>
             </tr>
           </thead>
           <tbody>
             {records && records.length > 0 ? (
               records.map((record, index) => (
                 <tr key={record.id || index}>
-                  <td>{displayValue(record.id)}</td>
                   <td>{displayValue(record.productName)}</td>
-                  <td>{displayValue(record.price)}</td>
-                  <td>{displayValue(record.unit)}</td>
-                  <td>{displayValue(record.createdBy)}</td>
+                  <td>{displayValue(record.cost)}</td>
+                  <td>{displayValue(record.quantity)}</td>
+                  <td>{displayValue(record.receipno)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>No products found.</td>
+                <td colSpan="4" style={{ textAlign: 'center' }}>No products found.</td>
               </tr>
             )}
           </tbody>
         </table>
         <div className="form-row" style={{ textAlign: 'center', marginTop: '10px' }}>
-          <button type="button" onClick={onClose} className="submit-btn">
+          <button type="button" onClick={onClose} className="action-btn">
             Close
           </button>
         </div>
