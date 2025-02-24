@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaToggleOn, FaToggleOff, FaUsers } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({
     firstName: record.firstName || '',
     lastName: record.lastName || '',
@@ -49,12 +50,15 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
     });
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`https://jituze.greenlife.co.ke/rest/sub-region-manager/status?email=${encodeURIComponent(formData.email)}&active=${newStatus}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
+        const response = await fetch(
+          `${BASE_URL}/sub-region-manager/status?email=${encodeURIComponent(formData.email)}&active=${newStatus}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
           }
-        });
+        );
         const responseText = await response.text();
         if (!response.ok) {
           throw new Error(responseText || 'Status update failed');
@@ -91,14 +95,17 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
     };
     try {
       setUpdating(true);
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/sub-region-manager/update?email=${encodeURIComponent(formData.email)}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(updatedData)
-      });
+      const response = await fetch(
+        `${BASE_URL}/sub-region-manager/update?email=${encodeURIComponent(formData.email)}`,
+        {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify(updatedData)
+        }
+      );
       if (!response.ok) {
         const errMsg = await response.text();
         throw new Error(errMsg || 'Update failed');
@@ -195,7 +202,7 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
             />
           </div>
           <div className="grid-item">
-            <label htmlFor="subRegionName">Subregion Name</label>
+            <label htmlFor="subRegionName">Area Name</label>
             <input 
               type="text" 
               id="subRegionName" 

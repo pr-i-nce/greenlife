@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaToggleOn, FaToggleOff, FaUsers } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({
     firstName: record.firstName || '',
     lastName: record.lastName || '',
@@ -46,7 +47,7 @@ const RegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
     });
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`https://jituze.greenlife.co.ke/rest/region-manager/status?email=${encodeURIComponent(formData.email)}&active=${newStatus}`, {
+        const response = await fetch(`${BASE_URL}/region-manager/status?email=${encodeURIComponent(formData.email)}&active=${newStatus}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -85,7 +86,7 @@ const RegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
     };
     try {
       setUpdating(true);
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/region-manager/update?email=${encodeURIComponent(formData.email)}`, {
+      const response = await fetch(`${BASE_URL}/region-manager/update?email=${encodeURIComponent(formData.email)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -9,13 +9,13 @@ const SubregionView = ({ record, onClose }) => {
       <div className="subregion-header">
         <img src="https://images.pexels.com/photos/8943323/pexels-photo-8943323.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="View Subregion" className="subregion-header-image" />
         <div className="subregion-header-overlay">
-          <h2>View Subregion: {displayValue(record.subRegionName)}</h2>
+          <h2>View Area: {displayValue(record.subRegionName)}</h2>
         </div>
       </div>
       <div className="subregion-form">
         <div className="grid-container">
           <div className="grid-item">
-            <label>Subregion Name:</label>
+            <label>Area Name:</label>
             <p>{displayValue(record.subRegionName)}</p>
           </div>
           <div className="grid-item">

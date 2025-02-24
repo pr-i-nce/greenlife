@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { FaBuilding, FaMapMarkedAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
@@ -67,7 +68,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
 };
 
 const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [businessName, setBusinessName] = useState('');
   const [subRegionName, setSubRegionName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -78,7 +79,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/subregion/all', {
+      const response = await fetch(`${BASE_URL}/subregion/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch subregions.');
@@ -148,7 +149,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
     };
 
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/distributor', {
+      const response = await fetch(`${BASE_URL}/distributor`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -192,7 +193,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
           className="rm-header-image"
         />
         <div className="rm-header-overlay">
-          <h2>Distributor Registration</h2>
+          <h2>Dealer Registration</h2>
         </div>
       </div>
       <form className="rm-form" onSubmit={handleRegistrationSubmit}>
@@ -214,7 +215,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="subRegionName">
-              <FaMapMarkedAlt className="icon" /> Subregion
+              <FaMapMarkedAlt className="icon" /> Area
             </label>
             <SearchableDropdown 
               id="subRegionName"

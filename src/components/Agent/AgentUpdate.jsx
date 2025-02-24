@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import {
   FaUser,
@@ -9,14 +9,14 @@ import {
   FaToggleOn,
   FaToggleOff
 } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [updateError, setUpdateError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Status state – initially set from record
   const [isActive, setIsActive] = useState(record?.active || false);
   const [regData, setRegData] = useState({
     firstName: '',
@@ -30,20 +30,17 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
-  // Hard-coded searchable dropdown states for Sub-Region
   const [subOpen, setSubOpen] = useState(false);
   const [subSearch, setSubSearch] = useState('');
   const subDropdownRef = useRef(null);
 
-  // Hard-coded searchable dropdown states for Distributor
   const [distOpen, setDistOpen] = useState(false);
   const [distSearch, setDistSearch] = useState('');
   const distDropdownRef = useRef(null);
 
-  // Fetch distributors and subregions
   const fetchDistributors = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/distributor/all', {
+      const response = await fetch(`${BASE_URL}/distributor/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch distributors.');
@@ -57,7 +54,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/subregion/all', {
+      const response = await fetch(`${BASE_URL}/subregion/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch subregions.');
@@ -126,7 +123,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     return '';
   };
 
-  // Status toggle handler – after successful update, navigate back via onClose() and trigger table refresh via onUpdateSuccess()
+  // Status toggle handler – after successful update, call onClose and onUpdateSuccess to refresh table
   const handleStatusToggle = async () => {
     const newStatus = !isActive;
     const actionLabel = newStatus ? "Activate" : "Deactivate";
@@ -141,7 +138,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     if (result.isConfirmed) {
       try {
         const response = await fetch(
-          `https://jituze.greenlife.co.ke/rest/agent/status?email=${encodeURIComponent(regData.email)}&active=${newStatus}`,
+          `${BASE_URL}/agent/status?email=${encodeURIComponent(regData.email)}&active=${newStatus}`,
           {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -154,7 +151,6 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
         const responseText = await response.text();
         setIsActive(newStatus);
         Swal.fire({ icon: 'success', title: 'Status Updated', text: responseText }).then(() => {
-          // Navigate back to the table and trigger table refresh
           onClose();
           if (onUpdateSuccess) onUpdateSuccess();
         });
@@ -177,7 +173,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     setIsLoading(true);
     const payload = { ...regData, active: isActive };
     try {
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/agent/update?email=${encodeURIComponent(regData.email)}`, {
+      const response = await fetch(`${BASE_URL}/agent/update?email=${encodeURIComponent(regData.email)}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json', 
@@ -201,31 +197,28 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     }
   };
 
-  // Click outside logic for Sub-Region dropdown
   useEffect(() => {
-    const handleClickOutside = (e) => {
+    const handleClickOutsideSub = (e) => {
       if (subDropdownRef.current && !subDropdownRef.current.contains(e.target)) {
         setSubOpen(false);
         setSubSearch('');
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutsideSub);
+    return () => document.removeEventListener('mousedown', handleClickOutsideSub);
   }, []);
 
-  // Click outside logic for Distributor dropdown
   useEffect(() => {
-    const handleClickOutside = (e) => {
+    const handleClickOutsideDist = (e) => {
       if (distDropdownRef.current && !distDropdownRef.current.contains(e.target)) {
         setDistOpen(false);
         setDistSearch('');
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutsideDist);
+    return () => document.removeEventListener('mousedown', handleClickOutsideDist);
   }, []);
 
-  // Render hard-coded searchable dropdown for Sub-Region
   const renderSubRegionDropdown = () => {
     const filtered = subregionOptions.filter(option =>
       option.label.toLowerCase().includes(subSearch.toLowerCase())
@@ -260,7 +253,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
                   </li>
                 ))
               ) : (
-                <li className="no-options">No subregions found</li>
+                <li className="no-options">No areas found</li>
               )}
             </ul>
           </div>
@@ -269,7 +262,6 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     );
   };
 
-  // Render hard-coded searchable dropdown for Distributor
   const renderDistributorDropdown = () => {
     const filtered = distributorOptions.filter(option =>
       option.label.toLowerCase().includes(distSearch.toLowerCase())
@@ -304,7 +296,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
                   </li>
                 ))
               ) : (
-                <li className="no-options">No distributors found</li>
+                <li className="no-options">No dealers found</li>
               )}
             </ul>
           </div>
@@ -398,7 +390,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
           </div>
           <div className="form-group">
             <label htmlFor="subRegion">
-              <FaMapMarkerAlt className="icon" /> Sub-Region
+              <FaMapMarkerAlt className="icon" /> Area
             </label>
             {renderSubRegionDropdown()}
           </div>
@@ -406,7 +398,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="distributor">
-              <FaIdBadge className="icon" /> Distributor
+              <FaIdBadge className="icon" /> Dealer
             </label>
             {renderDistributorDropdown()}
           </div>

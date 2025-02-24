@@ -42,7 +42,7 @@ const mainMenuItems = [
     icon: <FaUserTie />,
     subItems: [
       { key: 'agents', label: 'Agents', icon: <FaUserTie /> },
-      { key: 'distributors', label: 'Distributors', icon: <FaStore /> }
+      { key: 'distributors', label: 'Dealers', icon: <FaStore /> }
     ]
   },
   {
@@ -53,7 +53,7 @@ const mainMenuItems = [
       { key: 'regionalManagers', label: 'Regional Managers', icon: <FaUserTie /> },
       { key: 'subRegionalManagers', label: 'Sub Regional Managers', icon: <FaStore /> },
       { key: 'regions', label: 'Regions', icon: <FaMapMarkedAlt /> },
-      { key: 'subRegions', label: 'Sub Regions', icon: <FaMapMarkerAlt /> },
+      { key: 'subRegions', label: 'Areas', icon: <FaMapMarkerAlt /> },
       { key: 'products', label: 'Products', icon: <FaBoxOpen /> },
       { key: 'commission', label: 'Commission Configuration', icon: <FaMoneyBill /> }
     ]

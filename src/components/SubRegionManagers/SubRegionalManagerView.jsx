@@ -47,7 +47,7 @@ const SubRegionalManagerView = ({ record, onClose }) => {
             <p>{displayValue(record.regionName)}</p>
           </div>
           <div className="grid-item">
-            <label>Subregion Name:</label>
+            <label>Area Name:</label>
             <p>{displayValue(record.subRegionName)}</p>
           </div>
           <div className="grid-item">

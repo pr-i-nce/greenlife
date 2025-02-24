@@ -49,11 +49,11 @@ const Dashboard = () => {
     },
   };
   const barChartData = {
-    labels: ['Nairobi', 'Mombasa', 'Kisumu', 'Eldoret', 'Nakuru'],
+    labels: ['Uasin Gishu', 'Elgeyo Marakwet', ' Trans Nzoia', 'Baringo', 'Nandi', 'West Pokot'],
     datasets: [
       {
-        label: 'Region Sales (KES)',
-        data: [1200000, 800000, 600000, 400000, 300000],
+        label: 'Sales per Area (KES)',
+        data: [1200000, 800000, 600000, 400000, 300000, 600000],
         backgroundColor: '#21B98F',
         borderRadius: 6,
       },
@@ -66,7 +66,7 @@ const Dashboard = () => {
       legend: { display: false },
       title: {
         display: true,
-        text: 'Regional Sales',
+        text: 'Sales per Area',
         color: '#444',
         font: { size: 16 },
       },

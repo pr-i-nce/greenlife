@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import {
   FaBuilding,
@@ -8,14 +8,14 @@ import {
   FaToggleOn,
   FaToggleOff
 } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [updateError, setUpdateError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Status state for distributor – initialize from record
   const [isActive, setIsActive] = useState(record?.active || false);
   const [regData, setRegData] = useState({
     businessName: '',
@@ -28,20 +28,17 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const [regions, setRegions] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
-  // Dropdown state for Region
   const [regionOpen, setRegionOpen] = useState(false);
   const [regionSearch, setRegionSearch] = useState('');
   const regionDropdownRef = useRef(null);
 
-  // Dropdown state for Subregion
   const [subOpen, setSubOpen] = useState(false);
   const [subSearch, setSubSearch] = useState('');
   const subDropdownRef = useRef(null);
 
-  // Fetch regions from API
   const fetchRegions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/region/all', {
+      const response = await fetch(`${BASE_URL}/region/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch regions.');
@@ -53,10 +50,9 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     }
   };
 
-  // Fetch subregions from API
   const fetchSubregions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/subregion/all', {
+      const response = await fetch(`${BASE_URL}/subregion/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch subregions.');
@@ -121,7 +117,6 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     return '';
   };
 
-  // Status toggle handler for distributor – navigate back after successful change
   const handleStatusToggle = async () => {
     const newStatus = !isActive;
     const actionLabel = newStatus ? "Activate" : "Deactivate";
@@ -136,7 +131,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     if (result.isConfirmed) {
       try {
         const response = await fetch(
-          `https://jituze.greenlife.co.ke/rest/distributor/status?email=${encodeURIComponent(regData.email)}&active=${newStatus}`,
+          `${BASE_URL}/distributor/status?email=${encodeURIComponent(regData.email)}&active=${newStatus}`,
           {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -149,7 +144,6 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
         const responseText = await response.text();
         setIsActive(newStatus);
         Swal.fire({ icon: 'success', title: 'Status Updated', text: responseText }).then(() => {
-          // Navigate back to table and trigger table refresh
           onClose();
           if (onUpdateSuccess) onUpdateSuccess();
         });
@@ -172,7 +166,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     setIsLoading(true);
     const payload = { ...regData, active: isActive };
     try {
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/distributor/update?email=${encodeURIComponent(regData.email)}`, {
+      const response = await fetch(`${BASE_URL}/distributor/update?email=${encodeURIComponent(regData.email)}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json', 
@@ -196,7 +190,6 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     }
   };
 
-  // Dropdown logic for Region
   useEffect(() => {
     const handleClickOutsideRegion = (e) => {
       if (regionDropdownRef.current && !regionDropdownRef.current.contains(e.target)) {
@@ -251,7 +244,6 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     );
   };
 
-  // Dropdown logic for Subregion
   useEffect(() => {
     const handleClickOutsideSub = (e) => {
       if (subDropdownRef.current && !subDropdownRef.current.contains(e.target)) {
@@ -297,7 +289,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
                   </li>
                 ))
               ) : (
-                <li className="no-options">No subregions found</li>
+                <li className="no-options">No Areas found</li>
               )}
             </ul>
           </div>
@@ -315,7 +307,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
           className="rm-header-image"
         />
         <div className="rm-header-overlay">
-          <h2>Update Distributor</h2>
+          <h2>Update Dealer</h2>
         </div>
       </div>
       <form className="rm-form" onSubmit={handleUpdateSubmit}>
@@ -341,7 +333,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
           </div>
           <div className="form-group">
             <label htmlFor="subRegionName">
-              <FaMapMarkedAlt className="icon" /> Subregion
+              <FaMapMarkedAlt className="icon" /> Area
             </label>
             {renderSubregionDropdown()}
           </div>

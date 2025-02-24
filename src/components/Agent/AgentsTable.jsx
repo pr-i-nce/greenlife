@@ -1,15 +1,17 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaTrash, FaEye } from 'react-icons/fa';
 import GenericModal from '../GenericModal';
 import AgentsRegistration from './AgentRegistration';
 import AgentsUpdate from './AgentUpdate';
 import AgentsView from './AgentsView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 function AgentsTable() {
-  const { groupData, accessToken } = useContext(GlobalContext);
+  const groupData = useSelector((state) => state.auth.groupData);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [registerMode, setRegisterMode] = useState(false);
   const [agents, setAgents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,7 +19,6 @@ function AgentsTable() {
   const [error, setError] = useState('');
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
-  const BASE_URL = 'https://jituze.greenlife.co.ke/rest';
 
   const fetchAgents = async () => {
     try {
@@ -118,20 +119,6 @@ function AgentsTable() {
         </>
       ) : (
         <div className="registered-table">
-          <div className="table-controls">
-            <button
-              className="register-btn"
-              onClick={() => {
-                if (!groupData?.permissions?.createAgent) {
-                  Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to register an agent.' });
-                  return;
-                }
-                setRegisterMode(true);
-              }}
-            >
-              Register
-            </button>
-          </div>
           <div className="table-header">
             <img
               src="https://images.pexels.com/photos/3184425/pexels-photo-3184425.jpeg?auto=compress&cs=tinysrgb&w=1600"
@@ -143,6 +130,20 @@ function AgentsTable() {
             </div>
           </div>
           <div className="table-content">
+            <div className="table-controls">
+              <button
+                className="register-btn"
+                onClick={() => {
+                  if (!groupData?.permissions?.createAgent) {
+                    Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to register an agent.' });
+                    return;
+                  }
+                  setRegisterMode(true);
+                }}
+              >
+                Register
+              </button>
+            </div>
             <input
               type="text"
               placeholder="Search agents by name, id, subregion, distributor, or email..."
@@ -156,8 +157,8 @@ function AgentsTable() {
                   <th>SN</th>
                   <th>Agent Name</th>
                   <th>ID Number</th>
-                  <th>Sub Region</th>
-                  <th>Distributor</th>
+                  <th>Area</th>
+                  <th>Dealer</th>
                   <th>Email</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -170,8 +171,8 @@ function AgentsTable() {
                       <td data-label="SN">{index + 1}</td>
                       <td data-label="Agent Name">{agent.firstName} {agent.lastName}</td>
                       <td data-label="ID Number">{agent.idNumber}</td>
-                      <td data-label="Sub Region">{agent.subRegion}</td>
-                      <td data-label="Distributor">{agent.distributor}</td>
+                      <td data-label="Area">{agent.subRegion}</td>
+                      <td data-label="Dealer">{agent.distributor}</td>
                       <td data-label="Email">{agent.email}</td>
                       <td data-label="Status">
                         <span className={`status ${agent.active ? 'active' : 'inactive'}`}>

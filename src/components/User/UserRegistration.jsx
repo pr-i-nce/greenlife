@@ -180,10 +180,10 @@ function UserRegistration({ onClose }) {
             </select>
           </div>
         </div>
-        <button type="submit" className="submit-btn">
+      </form>
+      <button type="submit" className="submit-btn">
           Register User
         </button>
-      </form>
     </div>
   );
 }

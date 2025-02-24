@@ -113,24 +113,6 @@ function ProductTable() {
 
   return (
     <div className="registered-table">
-      <div className="table-controls">
-        <button
-          className="register-btn"
-          onClick={() => {
-            if (!groupData?.permissions?.createProduct) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Access Denied',
-                text: 'You do not have permission to register a product.'
-              });
-              return;
-            }
-            setRegisterMode(true);
-          }}
-        >
-          Register Product
-        </button>
-      </div>
       <div className="table-header">
         <img src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="Products" className="header-image" />
         <div className="header-overlay">
@@ -138,6 +120,24 @@ function ProductTable() {
         </div>
       </div>
       <div className="table-content">
+        <div className="table-controls">
+          <button
+            className="register-btn"
+            onClick={() => {
+              if (!groupData?.permissions?.createProduct) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Access Denied',
+                  text: 'You do not have permission to register a product.'
+                });
+                return;
+              }
+              setRegisterMode(true);
+            }}
+          >
+            Register Product
+          </button>
+        </div>
         <input
           type="text"
           placeholder="Search products..."

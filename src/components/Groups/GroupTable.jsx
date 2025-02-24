@@ -83,6 +83,7 @@ const GroupTable = () => {
     setViewRecord(group);
     setMode('view');
   };
+
   const filteredGroups = groups.filter((group) => {
     const name = (group.groupName || '').toLowerCase();
     const id = (group.groupId || '').toLowerCase();
@@ -93,13 +94,6 @@ const GroupTable = () => {
   if (mode === 'table') {
     return (
       <div className="registered-table">
-        <button
-          className="register-btn"
-          style={{ position: 'absolute', top: '10px', right: '10px' }}
-          onClick={() => setMode('register')}
-        >
-          Register Group
-        </button>
         <div className="table-header" style={{ position: 'relative' }}>
           <img
             src="https://images.pexels.com/photos/3184634/pexels-photo-3184634.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
@@ -111,6 +105,14 @@ const GroupTable = () => {
           </div>
         </div>
         <div className="table-content">
+          <div className="table-controls">
+            <button
+              className="register-btn"
+              onClick={() => setMode('register')}
+            >
+              Register Group
+            </button>
+          </div>
           <input
             type="text"
             placeholder="Search groups..."
@@ -138,7 +140,6 @@ const GroupTable = () => {
                     >
                       <FaEye /> View
                     </button>
- 
                     <button
                       className="action-btn roles-btn"
                       onClick={() => handleManageRoles(group)}

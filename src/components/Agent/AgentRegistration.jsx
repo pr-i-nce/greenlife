@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import {
   FaUser,
@@ -7,7 +7,8 @@ import {
   FaPhone,
   FaMapMarkerAlt
 } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
@@ -73,7 +74,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
 };
 
 const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [regData, setRegData] = useState({
     firstName: '',
     lastName: '',
@@ -91,7 +92,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchDistributors = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/distributor/all', {
+      const response = await fetch(`${BASE_URL}/distributor/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch distributors.');
@@ -105,7 +106,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/subregion/all', {
+      const response = await fetch(`${BASE_URL}/subregion/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch subregions.');
@@ -190,7 +191,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setIsLoading(true);
     const payload = { ...regData };
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/agent', {
+      const response = await fetch(`${BASE_URL}/agent`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -314,14 +315,14 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
           </div>
           <div className="form-group">
             <label htmlFor="subRegion">
-              <FaMapMarkerAlt className="icon" /> Sub-Region
+              <FaMapMarkerAlt className="icon" /> Area
             </label>
             <SearchableDropdown 
               id="subRegion"
               value={regData.subRegion}
               onChange={handleRegChange}
               options={subregionOptions}
-              placeholder="Select Sub-Region"
+              placeholder="Select Area"
               noOptionsText="No subregions found"
             />
           </div>
@@ -330,14 +331,14 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="distributor">
-              <FaIdBadge className="icon" /> Distributor
+              <FaIdBadge className="icon" /> Dealer
             </label>
             <SearchableDropdown 
               id="distributor"
               value={regData.distributor}
               onChange={handleRegChange}
               options={distributorOptions}
-              placeholder="Select Distributor"
+              placeholder="Select Dealer"
               noOptionsText="No distributors found"
             />
           </div>

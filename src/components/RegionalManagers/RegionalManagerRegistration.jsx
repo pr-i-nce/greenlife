@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import swal from 'sweetalert';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
@@ -34,9 +35,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
   return (
     <div className="searchable-dropdown" ref={dropdownRef}>
       <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
-        {value
-          ? options.find(opt => opt.value === value)?.label
-          : placeholder}
+        {value ? options.find(opt => opt.value === value)?.label : placeholder}
         <span className="dropdown-arrow">&#9662;</span>
       </div>
       {isOpen && (
@@ -67,7 +66,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
 };
 
 const RegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [regFirstName, setRegFirstName] = useState('');
   const [regLastName, setRegLastName] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -81,7 +80,7 @@ const RegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchRegions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/region/all', {
+      const response = await fetch(`${BASE_URL}/region/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch regions.');
@@ -98,10 +97,9 @@ const RegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
   };
 
-  // Fetch groups from API
   const fetchGroups = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/group/all', {
+      const response = await fetch(`${BASE_URL}/group/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch groups.');
@@ -124,7 +122,6 @@ const RegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
       fetchGroups();
     }
   }, [accessToken]);
-
 
   const regionOptions = regions.map(region => ({
     id: region.id,
@@ -185,7 +182,7 @@ const RegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
       groupName: regGroupName
     };
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/region-manager', {
+      const response = await fetch(`${BASE_URL}/region-manager`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

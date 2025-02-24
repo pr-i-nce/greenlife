@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import GenericModal from '../GenericModal';
 import RegionalManagerRegistration from './RegionalManagerRegistration';
 import RegionalManagerUpdate from './RegionalManagerUpdate';
 import RegionalManagerView from './RegionalManagerView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionalManagersTable = () => {
-  const { accessToken, groupData } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
+  
   const [regionalManagers, setRegionalManagers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -23,10 +26,8 @@ const RegionalManagersTable = () => {
   const fetchRegionalManagers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/region-manager/all', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+      const response = await fetch(`${BASE_URL}/region-manager/all`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) {
         throw new Error('Failed to fetch regional managers.');
@@ -41,7 +42,9 @@ const RegionalManagersTable = () => {
   };
 
   useEffect(() => {
-    fetchRegionalManagers();
+    if (accessToken) {
+      fetchRegionalManagers();
+    }
   }, [accessToken]);
 
   const filteredRegionalManagers = regionalManagers.filter(manager => {
@@ -66,7 +69,7 @@ const RegionalManagersTable = () => {
     }
     const result = await Swal.fire({
       title: "Confirm Deletion",
-      text: `To delete manager "${manager.firstName} ${manager.lastName}" with email "${manager.email}", please type "yes" below:`,
+      text: `To delete manager "${manager.firstName} ${manager.lastName}" with email "${manager.email}", please type "yes":`,
       icon: "warning",
       input: "text",
       inputPlaceholder: "Type yes to confirm",
@@ -82,7 +85,7 @@ const RegionalManagersTable = () => {
     });
     if (result.isConfirmed && result.value === "yes") {
       try {
-        const response = await fetch(`https://jituze.greenlife.co.ke/rest/region-manager/delete?email=${encodeURIComponent(email)}`, {
+        const response = await fetch(`${BASE_URL}/region-manager/delete?email=${encodeURIComponent(email)}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${accessToken}` }
         });
@@ -150,24 +153,6 @@ const RegionalManagersTable = () => {
         </>
       ) : (
         <div className="registered-table">
-          <div className="table-controls">
-            <button 
-              className="register-btn" 
-              onClick={() => {
-                if (!groupData?.permissions?.createRegionManager) {
-                  Swal.fire({ 
-                    icon: 'error', 
-                    title: 'Access Denied', 
-                    text: 'You do not have permission to register a regional manager.' 
-                  });
-                  return;
-                }
-                setShowRegistrationModal(true);
-              }}
-            >
-              Register
-            </button>
-          </div>
           <div className="table-header">
             <img 
               src="https://images.pexels.com/photos/8943323/pexels-photo-8943323.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
@@ -179,6 +164,24 @@ const RegionalManagersTable = () => {
             </div>
           </div>
           <div className="table-content">
+            <div className="table-controls">
+              <button 
+                className="register-btn" 
+                onClick={() => {
+                  if (!groupData?.permissions?.createRegionManager) {
+                    Swal.fire({ 
+                      icon: 'error', 
+                      title: 'Access Denied', 
+                      text: 'You do not have permission to register a regional manager.' 
+                    });
+                    return;
+                  }
+                  setShowRegistrationModal(true);
+                }}
+              >
+                Register
+              </button>
+            </div>
             <input 
               type="text"
               placeholder="Search by name, region, email or group..."

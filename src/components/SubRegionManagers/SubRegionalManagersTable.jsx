@@ -1,19 +1,20 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import GenericModal from '../GenericModal';
 import SubRegionalManagerRegistration from './SubRegionalManagerRegistration';
 import SubRegionalManagerUpdate from './SubRegionalManagerUpdate';
 import SubRegionalManagerView from './SubRegionalManagerView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubRegionalManagersTable = () => {
-  const { accessToken, groupData } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [subManagers, setSubManagers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
@@ -21,7 +22,7 @@ const SubRegionalManagersTable = () => {
   const fetchSubManagers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/sub-region-manager/all', {
+      const response = await fetch(`${BASE_URL}/sub-region-manager/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) {
@@ -37,7 +38,9 @@ const SubRegionalManagersTable = () => {
   };
 
   useEffect(() => {
-    fetchSubManagers();
+    if (accessToken) {
+      fetchSubManagers();
+    }
   }, [accessToken]);
 
   const filteredSubManagers = subManagers.filter(manager => {
@@ -56,7 +59,7 @@ const SubRegionalManagersTable = () => {
     );
   });
 
-  const handleDelete = (email) => {
+  const handleDelete = async (email) => {
     Swal.fire({
       title: 'Are you sure?',
       text: `You are about to delete the manager with email: ${email}`,
@@ -67,7 +70,7 @@ const SubRegionalManagersTable = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch(`https://jituze.greenlife.co.ke/rest/sub-region-manager/delete?email=${encodeURIComponent(email)}`, {
+          const response = await fetch(`${BASE_URL}/sub-region-manager/delete?email=${encodeURIComponent(email)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${accessToken}` }
           });
@@ -101,15 +104,12 @@ const SubRegionalManagersTable = () => {
     setViewRecord(record);
   };
 
-  if (loading) {
-    return <div className="registered-table">Loading sub regional managers...</div>;
-  }
-  if (error) {
-    return <div className="registered-table">Error: {error}</div>;
-  }
+  if (loading) return <div className="registered-table">Loading sub regional managers...</div>;
+  if (error) return <div className="registered-table">Error: {error}</div>;
+
   return (
     <>
-      {showRegistrationModal || editingRecord || viewRecord ? (
+      {(showRegistrationModal || editingRecord || viewRecord) ? (
         <>
           {showRegistrationModal && (
             <GenericModal onClose={() => setShowRegistrationModal(false)}>
@@ -139,24 +139,6 @@ const SubRegionalManagersTable = () => {
         </>
       ) : (
         <div className="registered-table">
-          <div className="table-controls">
-            <button 
-              className="register-btn" 
-              onClick={() => {
-                if (!groupData?.permissions?.createSubRegionManager) {
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Access Denied',
-                    text: 'You do not have permission to register a sub regional manager.'
-                  });
-                  return;
-                }
-                setShowRegistrationModal(true);
-              }}
-            >
-              Register
-            </button>
-          </div>
           <div className="table-header">
             <img 
               src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600" 
@@ -168,6 +150,24 @@ const SubRegionalManagersTable = () => {
             </div>
           </div>
           <div className="table-content">
+            <div className="table-controls">
+              <button 
+                className="register-btn" 
+                onClick={() => {
+                  if (!groupData?.permissions?.createSubRegionManager) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Access Denied',
+                      text: 'You do not have permission to register a sub regional manager.'
+                    });
+                    return;
+                  }
+                  setShowRegistrationModal(true);
+                }}
+              >
+                Register
+              </button>
+            </div>
             <input 
               type="text"
               placeholder="Search by name, region, subregion, email or group..."
@@ -182,7 +182,7 @@ const SubRegionalManagersTable = () => {
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>Region Name</th>
-                  <th>Subregion Name</th>
+                  <th>Area Name</th>
                   <th>Group Name</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -195,7 +195,7 @@ const SubRegionalManagersTable = () => {
                     <td data-label="Full Name">{manager.firstName} {manager.lastName}</td>
                     <td data-label="Email">{manager.email}</td>
                     <td data-label="Region Name">{manager.regionName}</td>
-                    <td data-label="Subregion Name">{manager.subRegionName}</td>
+                    <td data-label="Area Name">{manager.subRegionName}</td>
                     <td data-label="Group Name">{manager.groupName}</td>
                     <td data-label="Status">
                       <span className={`status ${manager.active ? 'active' : 'inactive'}`}>

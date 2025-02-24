@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import GenericModal from '../GenericModal';
 import DistributorRegistration from './DistributorRegistration';
 import DistributorUpdate from './DistributorUpdate';
 import DistributorView from './DistributorView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const DistributorsTable = () => {
-  const { accessToken, groupData } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
+  
   const [registerMode, setRegisterMode] = useState(false);
   const [distributors, setDistributors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,7 +23,7 @@ const DistributorsTable = () => {
   const fetchDistributors = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/distributor/all', {
+      const response = await fetch(`${BASE_URL}/distributor/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch distributors.');
@@ -34,7 +37,9 @@ const DistributorsTable = () => {
   };
 
   useEffect(() => {
-    fetchDistributors();
+    if (accessToken) {
+      fetchDistributors();
+    }
   }, [accessToken]);
 
   const filteredDistributors = distributors.filter(distributor => {
@@ -64,7 +69,7 @@ const DistributorsTable = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/distributor/delete?email=${encodeURIComponent(email)}`, {
+      const response = await fetch(`${BASE_URL}/distributor/delete?email=${encodeURIComponent(email)}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
@@ -80,8 +85,8 @@ const DistributorsTable = () => {
     }
   };
 
-  const handleEdit = (record) => { setEditingRecord(record); };
-  const handleView = (record) => { setViewRecord(record); };
+  const handleEdit = (record) => setEditingRecord(record);
+  const handleView = (record) => setViewRecord(record);
 
   const isModalOpen = registerMode || editingRecord || viewRecord;
 
@@ -120,24 +125,6 @@ const DistributorsTable = () => {
         </>
       ) : (
         <div className="registered-table">
-          <div className="table-controls">
-            <button
-              className="register-btn"
-              onClick={() => {
-                if (!groupData?.permissions?.createDistributor) {
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Access Denied',
-                    text: 'You do not have permission to register a distributor.'
-                  });
-                  return;
-                }
-                setRegisterMode(true);
-              }}
-            >
-              Register
-            </button>
-          </div>
           <div className="table-header">
             <img 
               src="https://images.pexels.com/photos/3184302/pexels-photo-3184302.jpeg?auto=compress&cs=tinysrgb&w=1600" 
@@ -145,10 +132,28 @@ const DistributorsTable = () => {
               className="header-image" 
             />
             <div className="header-overlay">
-              <h2>Distributors</h2>
+              <h2>Dealers</h2>
             </div>
           </div>
           <div className="table-content">
+            <div className="table-controls">
+              <button
+                className="register-btn"
+                onClick={() => {
+                  if (!groupData?.permissions?.createDistributor) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Access Denied',
+                      text: 'You do not have permission to register a distributor.'
+                    });
+                    return;
+                  }
+                  setRegisterMode(true);
+                }}
+              >
+                Register
+              </button>
+            </div>
             <input 
               type="text"
               placeholder="Search distributors by business name, region, subregion, phone or email..."
@@ -162,7 +167,7 @@ const DistributorsTable = () => {
                   <th>SN</th>
                   <th>Business Name</th>
                   <th>Region</th>
-                  <th>Subregion</th>
+                  <th>Area</th>
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Status</th>
@@ -176,7 +181,7 @@ const DistributorsTable = () => {
                       <td data-label="SN">{index + 1}</td>
                       <td data-label="Business Name">{distributor.businessName}</td>
                       <td data-label="Region">{distributor.regionName}</td>
-                      <td data-label="Subregion">{distributor.subRegionName}</td>
+                      <td data-label="Area">{distributor.subRegionName}</td>
                       <td data-label="Phone">{distributor.phoneNumber}</td>
                       <td data-label="Email">{distributor.email}</td>
                       <td data-label="Status">
@@ -238,7 +243,7 @@ const DistributorsTable = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="no-data">No distributors found</td>
+                    <td colSpan="8" className="no-data">No dealers found</td>
                   </tr>
                 )}
               </tbody>

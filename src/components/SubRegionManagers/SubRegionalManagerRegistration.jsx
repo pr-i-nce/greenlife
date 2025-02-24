@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import swal from 'sweetalert';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
@@ -34,9 +35,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
   return (
     <div className="searchable-dropdown" ref={dropdownRef}>
       <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
-        {value
-          ? options.find(opt => opt.value === value)?.label
-          : placeholder}
+        {value ? options.find(opt => opt.value === value)?.label : placeholder}
         <span className="dropdown-arrow">&#9662;</span>
       </div>
       {isOpen && (
@@ -67,13 +66,13 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
 };
 
 const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [regFirstName, setRegFirstName] = useState('');
   const [regLastName, setRegLastName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regRegionName, setRegRegionName] = useState(''); 
-  const [regSubRegionName, setRegSubRegionName] = useState(''); 
+  const [regRegionName, setRegRegionName] = useState('');
+  const [regSubRegionName, setRegSubRegionName] = useState('');
   const [regGroupName, setRegGroupName] = useState('');
   const [regError, setRegError] = useState('');
 
@@ -83,7 +82,7 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchRegions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/region/all', {
+      const response = await fetch(`${BASE_URL}/region/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch regions.');
@@ -100,10 +99,9 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
   };
 
-  // Fetch subregions
   const fetchSubregions = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/subregion/all', {
+      const response = await fetch(`${BASE_URL}/subregion/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch subregions.');
@@ -120,10 +118,9 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
   };
 
-  // Fetch groups
   const fetchGroups = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/group/all', {
+      const response = await fetch(`${BASE_URL}/group/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Failed to fetch groups.');
@@ -227,7 +224,7 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
 
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/sub-region-manager', {
+      const response = await fetch(`${BASE_URL}/sub-region-manager`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -351,14 +348,14 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
           </div>
           <div className="form-group">
             <label htmlFor="regSubRegionName">
-              <FaMapMarkerAlt className="icon" /> Subregion
+              <FaMapMarkerAlt className="icon" /> Area
             </label>
             <SearchableDropdown 
               id="regSubRegionName"
               value={regSubRegionName}
               onChange={(e) => setRegSubRegionName(e.target.value)}
               options={subregionOptions}
-              placeholder="Select Subregion"
+              placeholder="Select Area"
               noOptionsText="No subregions found"
             />
           </div>
