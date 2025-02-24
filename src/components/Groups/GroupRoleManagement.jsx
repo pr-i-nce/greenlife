@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaClipboardList, FaArrowLeft } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
+import { useSelector } from 'react-redux';
 
 const roleMapping = {
   agent: ['createAgent', 'readAgent', 'updateAgent', 'deleteAgent'],
@@ -17,6 +18,7 @@ const roleMapping = {
 };
 
 const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) => {
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [roleData, setRoleData] = useState(initialRoles || {});
 
   const handleCheckboxChange = (e) => {
@@ -33,12 +35,11 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
     };
 
     try {
-      const token = localStorage.getItem('accessToken');
       const response = await fetch('https://jituze.greenlife.co.ke/rest/group/update', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${accessToken}` 
         },
         body: JSON.stringify(payload)
       });
@@ -46,6 +47,7 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
       const data = await response.json();
 
       if (data && data.groupId) {
+        // Update local roles cache
         const existingLocalData = JSON.parse(localStorage.getItem('roles') || '{}');
         const existingPermissions = existingLocalData.permissions || {};
 
@@ -134,4 +136,4 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
   );
 };
 
-export default GroupRoleManagement;  
+export default GroupRoleManagement;

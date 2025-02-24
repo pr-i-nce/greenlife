@@ -7,13 +7,11 @@ import '../../styles/registeredTables.css';
 
 const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  // Extend formData to include regionName
   const [formData, setFormData] = useState({ subRegionName: "", subRegionCode: "", regionName: "" });
   const [updateError, setUpdateError] = useState("");
   const [updating, setUpdating] = useState(false);
   const [regions, setRegions] = useState([]);
 
-  // Dropdown state for Region
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownSearch, setDropdownSearch] = useState("");
   const dropdownRef = useRef(null);
@@ -46,7 +44,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
     });
   }, [record]);
 
-  // Filter regions based on dropdown search
   const filteredRegions = regions.filter(region =>
     region.regionName.toLowerCase().includes(dropdownSearch.toLowerCase())
   );
@@ -57,7 +54,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
     setDropdownSearch("");
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -130,12 +126,12 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
           className="subregion-header-image"
         />
         <div className="subregion-header-overlay">
-          <h2>Update Subregion</h2>
+          <h2>Update Area</h2>
         </div>
       </div>
       <form className="subregion-form" onSubmit={handleSubmit}>
         <div className="grid-container">
-          {/* Region Dropdown */}
+
           <div className="grid-item">
             <label htmlFor="regionName">Region</label>
             <div className="searchable-dropdown" ref={dropdownRef}>
@@ -168,29 +164,29 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
               )}
             </div>
           </div>
-          {/* Subregion Name */}
+
           <div className="grid-item">
             <label htmlFor="subRegionName">
-              <FaClipboardList className="icon" /> Subregion Name
+              <FaClipboardList className="icon" /> Area Name
             </label>
             <input 
               type="text" 
               id="subRegionName" 
-              placeholder="Enter subregion name" 
+              placeholder="Enter area name" 
               value={formData.subRegionName}
               onChange={handleChange}
               required 
             />
           </div>
-          {/* Subregion Code */}
+
           <div className="grid-item">
             <label htmlFor="subRegionCode">
-              <FaMapMarkerAlt className="icon" /> Subregion Code
+              <FaMapMarkerAlt className="icon" /> Area Code
             </label>
             <input 
               type="text" 
               id="subRegionCode" 
-              placeholder="Enter subregion code" 
+              placeholder="Enter area code" 
               value={formData.subRegionCode}
               onChange={handleChange}
               required 

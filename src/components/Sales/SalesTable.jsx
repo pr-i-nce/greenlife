@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
-import { GlobalContext } from '../GlobalContext';
+import { useSelector } from 'react-redux';
 import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
-
-const API_BASE = 'https://jituze.greenlife.co.ke/rest';
+import { BASE_URL } from '../apiClient';
 
 const swalOptions = {
   background: '#ffffff',
@@ -15,7 +14,7 @@ const swalOptions = {
 };
 
 function SalesTable() {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [salesData, setSalesData] = useState([]);
   const [acceptedSales, setAcceptedSales] = useState([]);
   const [rejectedSales, setRejectedSales] = useState([]);
@@ -48,7 +47,7 @@ function SalesTable() {
   };
 
   const fetchAllSales = () => {
-    fetch(`${API_BASE}/sales/all`, {
+    fetch(`${BASE_URL}/sales/all`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
       .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
@@ -66,14 +65,13 @@ function SalesTable() {
   };
 
   const fetchAcceptedSales = () => {
-    fetch(`${API_BASE}/sales/approved`, {
+    fetch(`${BASE_URL}/sales/approved`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
       .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
       .then((data) => {
         if (Array.isArray(data)) {
           setAcceptedSales(data);
-          console.log('Accepted sales data:', data);
           console.log('Accepted sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
@@ -85,7 +83,7 @@ function SalesTable() {
   };
 
   const fetchRejectedSales = () => {
-    fetch(`${API_BASE}/sales/rejected`, {
+    fetch(`${BASE_URL}/sales/rejected`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
       .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
@@ -147,7 +145,7 @@ function SalesTable() {
     showLoadingAlert();
     try {
       const response = await fetch(
-        `${API_BASE}/sales/update?id=${sale.id}&newStatus=Approved`,
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` }
@@ -186,7 +184,7 @@ function SalesTable() {
     showLoadingAlert();
     try {
       const response = await fetch(
-        `${API_BASE}/sales/update?id=${sale.id}&newStatus=Rejected`,
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` }
@@ -225,7 +223,7 @@ function SalesTable() {
     showLoadingAlert();
     try {
       const response = await fetch(
-        `${API_BASE}/sales/update?id=${sale.id}&newStatus=Rejected`,
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` }
@@ -264,7 +262,7 @@ function SalesTable() {
     showLoadingAlert();
     try {
       const response = await fetch(
-        `${API_BASE}/sales/update?id=${sale.id}&newStatus=Approved`,
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` }
@@ -292,10 +290,8 @@ function SalesTable() {
     }
   };
 
-  const handleViewImage = (reciept_image_path
-  ) => {
-    const imageUrl = `${API_BASE}/serve/getImage/${reciept_image_path
-    }`;
+  const handleViewImage = (reciept_image_path) => {
+    const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
     console.log('Image URL:', imageUrl);
     Swal.fire({
       ...swalOptions,
@@ -317,7 +313,7 @@ function SalesTable() {
       }
     });
     try {
-      const response = await fetch(`${API_BASE}/sales/sold-products?id=${ref_id}`, {
+      const response = await fetch(`${BASE_URL}/sales/sold-products?id=${ref_id}`, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error('Network error');
@@ -388,15 +384,12 @@ function SalesTable() {
                   </button>
                 </td>
                 <td data-label="Receipt Image">
-                  
-                    <button
-                      className="action-btn view-btn"
-                      onClick={() => handleViewImage(sale.reciept_image_path
-                      )}
-                    >
-                      View
-                    </button>
-                 
+                  <button
+                    className="action-btn view-btn"
+                    onClick={() => handleViewImage(sale.reciept_image_path)}
+                  >
+                    View
+                  </button>
                 </td>
                 <td data-label="Actions">
                   {tabName === 'all' && (

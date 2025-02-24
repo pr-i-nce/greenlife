@@ -1,12 +1,13 @@
-import React, { useState, useContext } from 'react';
-import swal from 'sweetalert';
+import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { FaPercentage } from 'react-icons/fa';
 import GenericModal from '../GenericModal';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const CommissionRegister = ({ onClose, onRegisterSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [commissionType, setCommissionType] = useState("");
   const [initialCommission, setInitialCommission] = useState("");
   const [lastCommission, setLastCommission] = useState("");
@@ -16,7 +17,7 @@ const CommissionRegister = ({ onClose, onRegisterSuccess }) => {
     e.preventDefault();
     if (!commissionType.trim() || !initialCommission.trim() || !lastCommission.trim()) {
       setRegError("All fields are required.");
-      swal({ title: "Validation Error", text: "All fields are required.", icon: "error", button: "OK" });
+      Swal.fire({ title: "Validation Error", text: "All fields are required.", icon: "error", confirmButtonText: "OK" });
       return;
     }
     setRegError("");
@@ -26,7 +27,7 @@ const CommissionRegister = ({ onClose, onRegisterSuccess }) => {
       lastCommission: parseFloat(lastCommission)
     };
     try {
-      const response = await fetch("https://jituze.greenlife.co.ke/rest/commission", {
+      const response = await fetch(`${BASE_URL}/commission`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,17 +37,17 @@ const CommissionRegister = ({ onClose, onRegisterSuccess }) => {
       });
       const responseText = await response.text();
       if (response.ok) {
-        swal({ icon: "success", title: "Success" }).then(() => {
+        Swal.fire({ icon: "success", title: "Success", text: responseText }).then(() => {
           setCommissionType("");
           setInitialCommission("");
           setLastCommission("");
           onRegisterSuccess();
         });
       } else {
-        swal({ icon: "error", title: "Error", text: responseText });
+        Swal.fire({ icon: "error", title: "Error", text: responseText });
       }
     } catch (err) {
-      swal({ icon: "error", title: "Error", text: "An error occurred while registering. Please try again." });
+      Swal.fire({ icon: "error", title: "Error", text: "An error occurred while registering. Please try again." });
     }
   };
 

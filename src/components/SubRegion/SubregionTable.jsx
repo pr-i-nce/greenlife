@@ -106,7 +106,7 @@ const SubregionTable = () => {
             className="subregion-header-image"
           />
           <div className="header-overlay">
-            <h2>Registered Subregions</h2>
+            <h2>Registered Area</h2>
           </div>
         </div>
         <div className="table-content">
@@ -125,12 +125,12 @@ const SubregionTable = () => {
                 setMode("register");
               }}
             >
-              Register Subregion
+              Register Area
             </button>
           </div>
           <input
             type="text"
-            placeholder="Search subregions..."
+            placeholder="Search Area..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"

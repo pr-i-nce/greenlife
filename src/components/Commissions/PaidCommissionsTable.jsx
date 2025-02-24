@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/registeredTables.css';
-import { GlobalContext } from '../GlobalContext';
-
-const API_BASE = 'https://jituze.greenlife.co.ke/rest';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 
 const swalOptions = {
   background: '#ffffff',
   confirmButtonColor: '#0a803e',
-  cancelButtonColor: '#e74c3c`',
+  cancelButtonColor: '#e74c3c',
   color: '#283e56',
 };
 
 function PaidCommissionsTable() {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [commissionsData, setCommissionsData] = useState([]);
-  const [currentTab, setCurrentTab] = useState('initial'); 
 
   const fetchCommissions = () => {
-    fetch(`${API_BASE}/sales/approved`, {
+    fetch(`${BASE_URL}/sales/approved`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
       .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
@@ -44,41 +42,34 @@ function PaidCommissionsTable() {
         <thead>
           <tr>
             <th>SN</th>
-            <th className="first-name-col">Agent name</th>
+            <th className="first-name-col">Agent Name</th>
             <th>Distributor</th>
             <th className="region-name-col">Region</th>
-            <th>Sub region</th>
+            <th>Sub Region</th>
             <th>Amount</th>
-            {currentTab === 'initial' && <th>Initial commission</th>}
-            {currentTab === 'final' && <th>Final commission</th>}
-            <th>Payment status</th>
+            <th>Commission</th>
+            <th>Payment Status</th>
           </tr>
         </thead>
         <tbody>
           {commissionsData.length > 0 ? (
             commissionsData.map((sale, index) => {
-              const initialStatus = sale.initialCommission && sale.initialCommission > 0 ? "Paid" : "Not Paid";
-              const finalStatus = sale.finalCommission && sale.finalCommission > 0 ? "Paid" : "Not Paid";
+              const commission = sale.initial_commission || 'N/A';
+              const paymentStatus = sale.payment_status || 'N/A'; 
               return (
                 <tr key={sale.id}>
                   <td data-label="SN">{index + 1}</td>
-                  <td className="first-name-col" data-label="Agent Name">{sale.first_name || 'N/A'} {sale.last_name || 'N/A'}</td>
+                  <td className="first-name-col" data-label="Agent Name">
+                    {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
+                  </td>
                   <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                  <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
+                  <td className="region-name-col" data-label="Region">
+                    {sale.region_name || 'N/A'}
+                  </td>
                   <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                   <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                  {currentTab === 'initial' && (
-                    <>
-                      <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                      <td data-label="Payment Status">{initialStatus}</td>
-                    </>
-                  )}
-                  {currentTab === 'final' && (
-                    <>
-                      <td data-label="Final Commission">{sale.final_commission || 'N/A'}</td>
-                      <td data-label="Payment Status">{finalStatus}</td>
-                    </>
-                  )}
+                  <td data-label="Commission">{commission}</td>
+                  <td data-label="Payment Status">{paymentStatus}</td>
                 </tr>
               );
             })
@@ -106,24 +97,6 @@ function PaidCommissionsTable() {
           <h2>Paid Commissions Records</h2>
         </div>
       </div>
-
-      <div className="table-controls">
-        <div className="tabs">
-          <button
-            className={`tab-btn ${currentTab === 'initial' ? 'active' : ''}`}
-            onClick={() => setCurrentTab('initial')}
-          >
-            Initial commissions
-          </button>
-          <button
-            className={`tab-btn ${currentTab === 'final' ? 'active' : ''}`}
-            onClick={() => setCurrentTab('final')}
-          >
-            Final commissions
-          </button>
-        </div>
-      </div>
-
       {renderTable()}
     </div>
   );

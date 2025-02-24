@@ -19,7 +19,7 @@ const SubregionView = ({ record, onClose }) => {
             <p>{displayValue(record.subRegionName)}</p>
           </div>
           <div className="grid-item">
-            <label>Subregion Code:</label>
+            <label>Area Code:</label>
             <p>{displayValue(record.subRegionCode)}</p>
           </div>
           <div className="grid-item">

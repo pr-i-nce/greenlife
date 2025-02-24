@@ -1,10 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '' });
   const [error, setError] = useState('');
 
@@ -21,7 +22,7 @@ const ProductRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
     setError('');
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/product', {
+      const response = await fetch(`${BASE_URL}/product`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 

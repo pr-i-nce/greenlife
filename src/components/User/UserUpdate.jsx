@@ -1,10 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { GlobalContext } from '../GlobalContext';
+import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
-
-const API_BASE = 'https://jituze.greenlife.co.ke/rest';
+import { BASE_URL } from '../apiClient';
 
 const safeJsonParse = (res) => {
   return res.text().then((text) => {
@@ -18,7 +17,7 @@ const safeJsonParse = (res) => {
 };
 
 function UserUpdate({ user, onClose }) {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   const getAuthHeaders = () =>
     accessToken
@@ -48,7 +47,7 @@ function UserUpdate({ user, onClose }) {
       }
     }
     const staffNumber = user.staffNumber;
-    fetch(`${API_BASE}/registration/update?staffNumber=${encodeURIComponent(staffNumber)}`, {
+    fetch(`${BASE_URL}/registration/update?staffNumber=${encodeURIComponent(staffNumber)}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(updateFormData),
@@ -137,7 +136,6 @@ function UserUpdate({ user, onClose }) {
             />
           </div>
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="groupName">

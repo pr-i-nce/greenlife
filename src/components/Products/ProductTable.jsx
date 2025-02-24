@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import GenericModal from '../GenericModal';
 import ProductRegistration from './ProductRegistration';
 import ProductUpdate from './ProductUpdate';
 import ProductView from './ProductView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 function ProductTable() {
-  const { accessToken, groupData } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [registerMode, setRegisterMode] = useState(false);
@@ -17,7 +19,7 @@ function ProductTable() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/product/all', {
+      const response = await fetch(`${BASE_URL}/product/all`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if (!response.ok) {
@@ -38,10 +40,10 @@ function ProductTable() {
     (product.productDescription || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = async (productDescription) => {
+  const handleDelete = async (product) => {
     Swal.fire({
       title: 'Are you sure?',
-      text: `To confirm deletion of "${productDescription}", please type "yes" below:`,
+      text: `To confirm deletion of "${product.productDescription}", please type "yes" below:`,
       input: 'text',
       inputPlaceholder: 'Type yes to confirm',
       showCancelButton: true,
@@ -55,14 +57,14 @@ function ProductTable() {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const response = await fetch(`https://jituze.greenlife.co.ke/rest/product/delete?productDescription=${encodeURIComponent(productDescription)}`, {
+          const response = await fetch(`${BASE_URL}/product/${product.id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${accessToken}` }
           });
           const responseText = await response.text();
           if (response.ok) {
             Swal.fire('Deleted!', responseText, 'success');
-            setProducts(products.filter(p => p.productDescription !== productDescription));
+            setProducts(products.filter(p => p.id !== product.id));
           } else {
             Swal.fire('Error', responseText, 'error');
           }
@@ -191,7 +193,7 @@ function ProductTable() {
                           });
                           return;
                         }
-                        handleDelete(product.productDescription);
+                        handleDelete(product);
                       }}
                     >
                       Delete

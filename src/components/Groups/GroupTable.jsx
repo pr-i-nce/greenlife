@@ -5,10 +5,13 @@ import GenericModal from '../GenericModal';
 import GroupRegistration from './GroupRegistration';
 import GroupRoleManagement from './GroupRoleManagement';
 import GroupView from './GroupView'; 
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 
 const GroupTable = () => {
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [mode, setMode] = useState('table'); 
@@ -18,9 +21,8 @@ const GroupTable = () => {
 
   const fetchGroups = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/group/all', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${BASE_URL}/group/all`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
@@ -31,7 +33,7 @@ const GroupTable = () => {
 
   useEffect(() => {
     fetchGroups();
-  }, []);
+  }, [accessToken]);
 
   const handleDelete = async (id) => {
     const group = groups.find((g) => g.id === id);
@@ -53,10 +55,9 @@ const GroupTable = () => {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const token = localStorage.getItem('accessToken');
-          const response = await fetch(`https://jituze.greenlife.co.ke/rest/group/${id}`, {
+          const response = await fetch(`${BASE_URL}/group/${id}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${accessToken}` }
           });
           const responseText = await response.text();
           if (response.ok) {
@@ -145,6 +146,12 @@ const GroupTable = () => {
                       onClick={() => handleManageRoles(group)}
                     >
                       Manage Roles
+                    </button>
+                    <button
+                      className="action-btn delete-btn"
+                      onClick={() => handleDelete(group.id)}
+                    >
+                      <FaTrash /> Delete
                     </button>
                   </td>
                 </tr>

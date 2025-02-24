@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
-import { GlobalContext } from '../../components/GlobalContext';
 
 const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '' });
   const [updating, setUpdating] = useState(false);
 
@@ -24,7 +25,7 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
     e.preventDefault();
     try {
       setUpdating(true);
-      const response = await fetch(`https://jituze.greenlife.co.ke/rest/product/update?productDescription=${encodeURIComponent(record.productDescription)}`, {
+      const response = await fetch(`${BASE_URL}/product/${record.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
         body: JSON.stringify(formData)

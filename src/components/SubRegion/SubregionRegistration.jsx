@@ -11,12 +11,10 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
   const [error, setError] = useState("");
   const [regions, setRegions] = useState([]);
 
-  // Dropdown state for Region
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownSearch, setDropdownSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  // Fetch regions from backend
   const fetchRegions = async () => {
     try {
       const response = await fetch(`${BASE_URL}/region/all`, {
@@ -42,19 +40,16 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
   }, [accessToken]);
 
-  // Filter regions based on search input
   const filteredRegions = regions.filter(region =>
     region.regionName.toLowerCase().includes(dropdownSearch.toLowerCase())
   );
 
-  // Handle dropdown option selection
   const handleDropdownSelect = (regionName) => {
     setFormData({ ...formData, regionName });
     setDropdownOpen(false);
     setDropdownSearch("");
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -117,11 +112,11 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
           className="subregion-header-image"
         />
         <div className="subregion-header-overlay">
-          <h2>Subregion Registration</h2>
+          <h2>Area Registration</h2>
         </div>
       </div>
       <form className="subregion-form" onSubmit={handleSubmit}>
-        {/* Region Dropdown */}
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="regionName">Region</label>
@@ -156,32 +151,32 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
             </div>
           </div>
         </div>
-        {/* Subregion Name */}
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="subRegionName">
-              <FaClipboardList className="icon" /> Subregion Name
+              <FaClipboardList className="icon" /> Area Name
             </label>
             <input 
               type="text" 
               id="subRegionName" 
-              placeholder="Enter subregion name" 
+              placeholder="Enter area name" 
               value={formData.subRegionName}
               onChange={handleChange}
               required 
             />
           </div>
         </div>
-        {/* Subregion Code */}
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="subRegionCode">
-              <FaMapMarkerAlt className="icon" /> Subregion Code
+              <FaMapMarkerAlt className="icon" /> Area Code
             </label>
             <input 
               type="text" 
               id="subRegionCode" 
-              placeholder="Enter subregion code" 
+              placeholder="Enter area code" 
               value={formData.subRegionCode}
               onChange={handleChange}
               required 
@@ -189,7 +184,7 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
           </div>
         </div>
         {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="submit-btn">Register Subregion</button>
+        <button type="submit" className="submit-btn">Register Area</button>
       </form>
     </div>
   );

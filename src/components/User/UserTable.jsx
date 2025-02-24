@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { GlobalContext } from '../GlobalContext';
+import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
 import GenericModal from '../GenericModal';
 import UserRegistration from './UserRegistration';
 import UserUpdate from './UserUpdate';
 import UserView from './UserView';
-import Swal from 'sweetalert2';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
-
-const API_BASE = 'https://jituze.greenlife.co.ke/rest';
+import { BASE_URL } from '../apiClient';
 
 const safeJsonParse = (res) => {
   return res.text().then((text) => {
@@ -22,7 +21,7 @@ const safeJsonParse = (res) => {
 };
 
 function UserTable() {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   const getAuthHeaders = () =>
     accessToken
@@ -36,7 +35,7 @@ function UserTable() {
   const [viewingUser, setViewingUser] = useState(null);
 
   const fetchUsers = () => {
-    fetch(`${API_BASE}/registration/users`, { headers: getAuthHeaders() })
+    fetch(`${BASE_URL}/registration/users`, { headers: getAuthHeaders() })
       .then((res) => safeJsonParse(res))
       .then((data) => {
         setUsers(Array.isArray(data) ? data : []);
@@ -69,7 +68,7 @@ function UserTable() {
       },
     }).then((result) => {
       if (result.isConfirmed && result.value === 'yes') {
-        fetch(`${API_BASE}/registration/delete?staffNumber=${encodeURIComponent(staffNumber)}`, {
+        fetch(`${BASE_URL}/registration/delete?staffNumber=${encodeURIComponent(staffNumber)}`, {
           method: 'DELETE',
           headers: getAuthHeaders(),
         })
@@ -107,6 +106,7 @@ function UserTable() {
             setRegistrationMode(false);
             fetchUsers();
           }}
+          onRegistrationSuccess={fetchUsers}
         />
       </GenericModal>
     );

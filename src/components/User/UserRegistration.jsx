@@ -1,13 +1,12 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { GlobalContext } from '../GlobalContext';
+import { useSelector } from 'react-redux';
 import { FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
+import { BASE_URL } from '../apiClient';
 
-const API_BASE = 'https://jituze.greenlife.co.ke/rest';
-
-function UserRegistration({ onClose }) {
-  const { accessToken } = useContext(GlobalContext);
+const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   const [regFormData, setRegFormData] = useState({
     firstName: '',
@@ -15,15 +14,14 @@ function UserRegistration({ onClose }) {
     phone: '',
     email: '',
     userTitle: '',
-    groupName: '', 
+    groupName: '',
   });
 
   const [groups, setGroups] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    fetch(`${API_BASE}/group/all`, {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch(`${BASE_URL}/group/all`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((response) => response.json())
       .then((data) => {
@@ -32,7 +30,7 @@ function UserRegistration({ onClose }) {
       .catch((err) => {
         Swal.fire('Error', err.message, 'error');
       });
-  }, []);
+  }, [accessToken]);
 
   const handleRegChange = (e) => {
     setRegFormData({ ...regFormData, [e.target.id]: e.target.value });
@@ -41,8 +39,7 @@ function UserRegistration({ onClose }) {
   const handleRegSubmit = (e) => {
     e.preventDefault();
 
-
-    fetch(`${API_BASE}/registration`, {
+    fetch(`${BASE_URL}/registration`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,6 +59,7 @@ function UserRegistration({ onClose }) {
         if (data && data.staffNumber) {
           Swal.fire('Success', data.message || 'User registered successfully!', 'success');
           onClose();
+          if (onRegistrationSuccess) onRegistrationSuccess();
         } else {
           Swal.fire('Error', 'User not created.', 'error');
         }
@@ -141,7 +139,7 @@ function UserRegistration({ onClose }) {
             />
           </div>
         </div>
-        <div className="form-row">
+        {/* <div className="form-row">
           <div className="form-group">
             <label htmlFor="userTitle">
               <FaIdBadge className="icon" /> User Title
@@ -159,7 +157,7 @@ function UserRegistration({ onClose }) {
               <option value="004">Sub Regional Manager</option>
             </select>
           </div>
-        </div>
+        </div> */}
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="groupName">
@@ -173,19 +171,19 @@ function UserRegistration({ onClose }) {
             >
               <option value="">Select Group</option>
               {groups.map((group) => (
-                <option key={group.groupName || group.groupName} value={group.groupName || group.groupName}>
+                <option key={group.groupName} value={group.groupName}>
                   {group.groupName}
                 </option>
               ))}
             </select>
           </div>
         </div>
-      </form>
-      <button type="submit" className="submit-btn">
+        <button type="submit" className="submit-btn">
           Register User
         </button>
+      </form>
     </div>
   );
-}
+};
 
 export default UserRegistration;

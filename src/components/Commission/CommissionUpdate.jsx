@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaPercentage } from 'react-icons/fa';
 import GenericModal from '../GenericModal';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const CommissionUpdate = ({ commission, onClose, onUpdateSuccess }) => {
-  const { accessToken } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({
     commissionType: "",
     initialCommission: "",
@@ -55,7 +56,7 @@ const CommissionUpdate = ({ commission, onClose, onUpdateSuccess }) => {
     try {
       setUpdating(true);
       const response = await fetch(
-        `https://jituze.greenlife.co.ke/rest/commission/update?commissionType=${encodeURIComponent(formData.commissionType)}`,
+        `${BASE_URL}/commission/${commission.id}`,
         {
           method: "PUT",
           headers: {

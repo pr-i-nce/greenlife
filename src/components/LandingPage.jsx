@@ -91,20 +91,16 @@ function LandingPage() {
   const [activeComponent, setActiveComponent] = useState('Dashboard');
   const [activeSubItem, setActiveSubItem] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Set the dashboard dropdown open by default
   const [openDropdowns, setOpenDropdowns] = useState({ dashboard: true });
 
   const handleSignOut = () => {
     navigate('/');
   };
 
-  // This function handles main menu clicks by opening its dropdown
-  // and selecting the first submenu.
+
   const handleMainMenuClick = (mainItem) => {
     if (mainItem.subItems && mainItem.subItems.length > 0) {
-      // Open only this main menu's dropdown
       setOpenDropdowns({ [mainItem.key]: true });
-      // Select and display the first submenu item
       handleSubItemClick(mainItem.key, mainItem.subItems[0].key);
     } else {
       setOpenDropdowns({ [mainItem.key]: true });
@@ -135,7 +131,6 @@ function LandingPage() {
       else if (subKey === 'group') setActiveComponent('GroupTable');
     }
     setActiveSubItem(subKey);
-    // Ensure only this dropdown remains open
     setOpenDropdowns({ [mainKey]: true });
     if (window.innerWidth < 780) {
       setSidebarOpen(false);

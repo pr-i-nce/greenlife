@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import CommissionRegister from './CommissionRegistration';
 import CommissionUpdate from './CommissionUpdate';
 import CommissionView from './CommissionView';
-import { GlobalContext } from '../../components/GlobalContext';
+import { useSelector } from 'react-redux';
+import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 function CommissionTable() {
-  const { accessToken, groupData } = useContext(GlobalContext);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [commissions, setCommissions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,7 @@ function CommissionTable() {
   const fetchCommissions = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://jituze.greenlife.co.ke/rest/commission/all", {
+      const response = await fetch(`${BASE_URL}/commission/all`, {
         headers: { "Authorization": `Bearer ${accessToken}` }
       });
       if (!response.ok) throw new Error("Failed to fetch commissions.");
@@ -35,10 +37,10 @@ function CommissionTable() {
 
   useEffect(() => { fetchCommissions(); }, [accessToken]);
 
-  const handleDelete = async (commissionType) => {
+  const handleDelete = async (commission) => {
     const result = await Swal.fire({
       title: "Confirm Deletion",
-      text: `To delete commission "${commissionType}", please type "yes" below:`,
+      text: `To delete commission "${commission.commissionType}", please type "yes" below:`,
       icon: "warning",
       input: "text",
       inputPlaceholder: "Type yes to confirm",
@@ -53,7 +55,7 @@ function CommissionTable() {
     });
     if (result.isConfirmed && result.value === "yes") {
       try {
-        const response = await fetch(`https://jituze.greenlife.co.ke/rest/commission/delete?commissionType=${encodeURIComponent(commissionType)}`, {
+        const response = await fetch(`${BASE_URL}/commission/${commission.id}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${accessToken}` }
         });
@@ -63,7 +65,7 @@ function CommissionTable() {
         }
         const successMessage = await response.text();
         Swal.fire({ icon: "success", title: "Deleted!", text: successMessage });
-        setCommissions(commissions.filter((c) => c.commissionType !== commissionType));
+        setCommissions(commissions.filter((c) => c.id !== commission.id));
       } catch (err) {
         Swal.fire({ icon: "error", title: "Delete Failed", text: err.message });
       }
@@ -137,7 +139,7 @@ function CommissionTable() {
             </thead>
             <tbody>
               {filteredCommissions.map((c) => (
-                <tr key={c.commissionType}>
+                <tr key={c.id}>
                   <td data-label="Commission Type">{c.commissionType}</td>
                   <td data-label="Initial Commission">{c.initialCommission}</td>
                   <td data-label="Last Commission">{c.lastCommission}</td>
@@ -169,7 +171,7 @@ function CommissionTable() {
                           });
                           return;
                         }
-                        handleDelete(c.commissionType);
+                        handleDelete(c);
                       }}
                     >
                       <FaTrash /> Delete
