@@ -9,12 +9,18 @@ const apiClient = axios.create({
   baseURL: BASE_URL,
 });
 
-// Request interceptor
+// Request interceptor: Attach token if available except for login endpoints.
 apiClient.interceptors.request.use(
   (config) => {
-    const token = store.getState().auth.accessToken;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // If the request is not for login endpoints, attach the token.
+    if (
+      !config.url.includes('/registration/login') &&
+      !config.url.includes('/region-manager/login')
+    ) {
+      const token = store.getState().auth.accessToken;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -23,11 +29,20 @@ apiClient.interceptors.request.use(
 
 let isAlertShown = false;
 
-// Handle expired tokens (status 401)
+// Response interceptor: Handle expired tokens for all endpoints except login.
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Skip handling for login endpoints.
+    if (
+      originalRequest.url.includes('/registration/login') ||
+      originalRequest.url.includes('/region-manager/login')
+    ) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       store.dispatch(clearAuth());
@@ -41,9 +56,9 @@ apiClient.interceptors.response.use(
           confirmButtonText: 'Login'
         }).then((result) => {
           if (result.isConfirmed) {
-            window.location.href = '/'; 
+            window.location.href = '/';
           }
-          isAlertShown = false; 
+          isAlertShown = false;
         });
       }
       

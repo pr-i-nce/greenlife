@@ -10,7 +10,6 @@ import '../styles/hero.css';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -18,17 +17,8 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!role) {
-      setErrorMessage('Please select a role.');
-      return;
-    }
     try {
-      let loginEndpoint = '';
-      if (role === 'Admin') {
-        loginEndpoint = '/registration/login';
-      } else if (role === 'Manager') {
-        loginEndpoint = '/region-manager/login';
-      }
+      const loginEndpoint = '/registration/login';
       
       const response = await apiClient.post(loginEndpoint, null, {
         params: {
@@ -71,25 +61,6 @@ function Login() {
           <h2 className="login-title">Sign In</h2>
           {errorMessage && <div className="error-message">{errorMessage}</div>}
           <form onSubmit={handleSubmit} className="login-form">
-            <div className="input-group">
-              <label htmlFor="role" className="input-label">
-                Role
-              </label>
-              <div className="select-wrapper">
-                <select
-                  id="role"
-                  className="input-field select-field"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                >
-                  <option value="">Select Role</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                </select>
-                <span className="dropdown-icon">&#9662;</span>
-              </div>
-            </div>
             <div className="input-group">
               <label htmlFor="email" className="input-label">
                 <FaUser className="icon" /> Email

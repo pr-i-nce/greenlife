@@ -272,7 +272,7 @@ const SubRegionalManagerRegistration = ({ onClose, onRegistrationSuccess }) => {
           className="subregion-header-image"
         />
         <div className="subregion-header-overlay">
-          <h2>Sub Regional Manager Registration</h2>
+          <h2>Area Manager Registration</h2>
         </div>
       </div>
       <form className="subregion-form" onSubmit={handleRegistrationSubmit}>

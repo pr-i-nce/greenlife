@@ -1,9 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
-import { FaToggleOn, FaToggleOff, FaUsers } from 'react-icons/fa';
+import { FaToggleOn, FaToggleOff, FaUsers, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
+
+const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleClickOutside = (e) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setIsOpen(false);
+      setSearchTerm('');
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleOptionSelect = (selectedValue) => {
+    onChange({ target: { id, value: selectedValue } });
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div className="searchable-dropdown" ref={dropdownRef}>
+      <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
+        {value
+          ? (options.find(opt => opt.value === value)?.label || value)
+          : placeholder}
+        <span className="dropdown-arrow">&#9662;</span>
+      </div>
+      {isOpen && (
+        <div className="dropdown-menu">
+          <input 
+            type="text"
+            className="dropdown-search"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          <ul className="dropdown-list">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <li key={option.id} onMouseDown={() => handleOptionSelect(option.value)}>
+                  {option.label}
+                </li>
+              ))
+            ) : (
+              <li className="no-options">{noOptionsText || "No options found"}</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -19,6 +81,9 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const [updateError, setUpdateError] = useState('');
   const [isActive, setIsActive] = useState(record.active);
   const [updating, setUpdating] = useState(false);
+  const [regions, setRegions] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [subregions, setSubregions] = useState([]);
 
   useEffect(() => {
     setFormData({
@@ -32,6 +97,75 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
     });
     setIsActive(record.active);
   }, [record]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetch(`${BASE_URL}/region/all`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          const regionOptions = Array.isArray(data)
+            ? data.map(region => ({
+                id: region.id,
+                label: region.regionName, 
+                value: region.regionName,
+              }))
+            : [];
+          setRegions(regionOptions);
+        })
+        .catch(err => {
+          console.error("Error fetching regions:", err);
+          Swal.fire("Error", err.message, "error");
+        });
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetch(`${BASE_URL}/group/all`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          const groupOptions = Array.isArray(data)
+            ? data.map(group => ({
+                id: group.id,
+                label: group.groupName,
+                value: group.groupName,
+              }))
+            : [];
+          setGroups(groupOptions);
+        })
+        .catch(err => {
+          console.error("Error fetching groups:", err);
+          Swal.fire("Error", err.message, "error");
+        });
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetch(`${BASE_URL}/subregion/all`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          const subregionOptions = Array.isArray(data)
+            ? data.map(sub => ({
+                id: sub.id,
+                label: sub.subRegionName, 
+                value: sub.subRegionName,
+              }))
+            : [];
+          setSubregions(subregionOptions);
+        })
+        .catch(err => {
+          console.error("Error fetching subregions:", err);
+          Swal.fire("Error", err.message, "error");
+        });
+    }
+  }, [accessToken]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -140,7 +274,7 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
           className="subregion-header-image"
         />
         <div className="subregion-header-overlay">
-          <h2>Update Sub Regional Manager</h2>
+          <h2>Update Area Manager</h2>
         </div>
       </div>
       <form className="subregion-form" onSubmit={handleUpdateSubmit}>
@@ -191,38 +325,40 @@ const SubRegionalManagerUpdate = ({ record, onClose, onUpdateSuccess }) => {
             />
           </div>
           <div className="grid-item">
-            <label htmlFor="regionName">Region Name</label>
-            <input 
-              type="text" 
-              id="regionName" 
-              placeholder="Region Name" 
+            <label htmlFor="regionName">
+              <FaMapMarkerAlt className="icon" /> Region
+            </label>
+            <SearchableDropdown 
+              id="regionName"
               value={formData.regionName}
               onChange={handleChange}
-              required 
+              options={regions}
+              placeholder="Select Region"
+              noOptionsText="No regions found"
             />
           </div>
           <div className="grid-item">
-            <label htmlFor="subRegionName">Area Name</label>
-            <input 
-              type="text" 
-              id="subRegionName" 
-              placeholder="Sub-region Name" 
+            <label htmlFor="subRegionName">Area</label>
+            <SearchableDropdown 
+              id="subRegionName"
               value={formData.subRegionName}
               onChange={handleChange}
-              required 
+              options={subregions}
+              placeholder="Select Subregion"
+              noOptionsText="No subregions found"
             />
           </div>
           <div className="grid-item">
             <label htmlFor="groupName">
               <FaUsers className="icon" /> Group Name
             </label>
-            <input 
-              type="text" 
-              id="groupName" 
-              placeholder="Group Name" 
+            <SearchableDropdown 
+              id="groupName"
               value={formData.groupName}
               onChange={handleChange}
-              required 
+              options={groups}
+              placeholder="Select Group"
+              noOptionsText="No groups found"
             />
           </div>
         </div>

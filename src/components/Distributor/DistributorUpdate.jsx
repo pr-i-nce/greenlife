@@ -22,7 +22,8 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     regionName: '',
     subRegionName: '',
     phoneNumber: '',
-    email: ''
+    email: '',
+    kraPin: ''
   });
   
   const [regions, setRegions] = useState([]);
@@ -78,7 +79,8 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
         regionName: record.regionName || '',
         subRegionName: record.subRegionName || '',
         phoneNumber: record.phoneNumber || '',
-        email: record.email || ''
+        email: record.email || '',
+        kraPin: record.kraPin || ''
       });
       setIsActive(record.active);
     }
@@ -101,13 +103,14 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
   };
 
   const validateForm = () => {
-    const { businessName, regionName, subRegionName, phoneNumber, email } = regData;
+    const { businessName, regionName, subRegionName, phoneNumber, email, kraPin } = regData;
     if (
       !businessName.trim() ||
       !regionName.trim() ||
       !subRegionName.trim() ||
       !phoneNumber.trim() ||
-      !email.trim()
+      !email.trim() ||
+      !kraPin.trim()
     ) {
       return 'All fields are required.';
     }
@@ -176,7 +179,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
       });
       const responseText = await response.text();
       if (response.ok) {
-        Swal.fire({ icon: 'success', title: 'Success', text: responseText }).then(() => {
+        Swal.fire({ icon: 'success', title: 'Successfully registered Dealer' }).then(() => {
           onClose();
           if (onUpdateSuccess) onUpdateSuccess();
         });
@@ -361,6 +364,19 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
               id="email"
               placeholder="Enter email"
               value={regData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group full-width">
+            <label htmlFor="kraPin">KRA PIN</label>
+            <input 
+              type="text" 
+              id="kraPin" 
+              placeholder="Enter KRA PIN" 
+              value={regData.kraPin}
               onChange={handleChange}
               required
             />

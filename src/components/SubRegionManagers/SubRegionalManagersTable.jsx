@@ -146,7 +146,7 @@ const SubRegionalManagersTable = () => {
               className="header-image" 
             />
             <div className="header-overlay">
-              <h2>Sub Regional Managers</h2>
+              <h2>Area Managers</h2>
             </div>
           </div>
           <div className="table-content">

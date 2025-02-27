@@ -73,6 +73,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
   const [subRegionName, setSubRegionName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [kraPin, setKraPin] = useState('');
   const [regError, setRegError] = useState('');
   
   const [subregions, setSubregions] = useState([]);
@@ -110,7 +111,8 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
       !businessName.trim() ||
       !subRegionName.trim() ||
       !phoneNumber.trim() ||
-      !email.trim()
+      !email.trim() ||
+      !kraPin.trim()
     ) {
       return "All fields are required.";
     }
@@ -125,6 +127,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
     setSubRegionName('');
     setPhoneNumber('');
     setEmail('');
+    setKraPin('');
     setRegError('');
   };
 
@@ -145,7 +148,8 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
       businessName,
       subRegionName,
       phoneNumber,
-      email
+      email,
+      kraPin
     };
 
     try {
@@ -222,7 +226,7 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
               value={subRegionName}
               onChange={(e) => setSubRegionName(e.target.value)}
               options={subregionOptions}
-              placeholder="Select subregion"
+              placeholder="Select Area"
               noOptionsText="No subregions found"
             />
           </div>
@@ -252,6 +256,19 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
               required 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group full-width">
+            <label htmlFor="kraPin">KRA PIN</label>
+            <input 
+              type="text" 
+              id="kraPin" 
+              placeholder="Enter KRA PIN" 
+              required 
+              value={kraPin}
+              onChange={(e) => setKraPin(e.target.value)}
             />
           </div>
         </div>

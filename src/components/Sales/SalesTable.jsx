@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
+import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
   background: '#ffffff',
@@ -20,6 +21,8 @@ function SalesTable() {
   const [rejectedSales, setRejectedSales] = useState([]);
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
 
   const confirmAction = async (promptText) => {
     const { value } = await Swal.fire({
@@ -108,6 +111,7 @@ function SalesTable() {
     } else if (currentTab === 'rejected') {
       fetchRejectedSales();
     }
+    setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
   useEffect(() => {
@@ -333,101 +337,118 @@ function SalesTable() {
       });
     }
   };
-  
-  const renderTable = (data, tabName) => (
-    <div className="table-content">
-      <table>
-        <thead>
-          <tr>
-            <th>SN</th>
-            <th className="first-name-col">Agent name</th>
-            <th>Phone number</th>
-            <th>Email</th>
-            <th>Distributor</th>
-            <th className="region-name-col">Region</th>
-            <th>Sub region</th>
-            <th>Amount</th>
-            {tabName === 'accepted' && (
-              <>
-                <th>Initial commission</th>
-                <th>Final commission</th>
-              </>
-            )}
-            <th>Status</th>
-            <th>Product details</th>
-            <th>Receipt image</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.length > 0 ? (
-            data.map((sale, index) => (
-              <tr key={sale.id}>
-                <td data-label="SN">{index + 1}</td>
-                <td className="first-name-col" data-label="Agent Name">{sale.first_name || 'N/A'} {sale.last_name || 'N/A'}</td>
-                <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
-                <td data-label="Email">{sale.email || 'N/A'}</td>
-                <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
-                <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
-                <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                {tabName === 'accepted' && (
-                  <>
-                    <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                    <td data-label="Final Commission">{sale.final_commission || 'N/A'}</td>
-                  </>
-                )}
-                <td data-label="Status">{sale.status || 'Pending'}</td>
-                <td data-label="Product Details">
-                  <button className="action-btn view-btn" onClick={() => handleViewProductDetails(sale.ref_id)}>
-                    View Details
-                  </button>
-                </td>
-                <td data-label="Receipt Image">
-                  <button
-                    className="action-btn view-btn"
-                    onClick={() => handleViewImage(sale.reciept_image_path)}
-                  >
-                    View
-                  </button>
-                </td>
-                <td data-label="Actions">
-                  {tabName === 'all' && (
-                    <>
-                      <button className="action-btn view-btn" onClick={() => handleAccept(sale.id)}>
-                        Accept
-                      </button>
-                      <button className="action-btn delete-btn" onClick={() => handleReject(sale.id)}>
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  {tabName === 'accepted' && (
-                    <>
-                      <button className="action-btn delete-btn" onClick={() => moveAcceptedToRejected(sale.id)}>
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  {tabName === 'rejected' && (
-                    <button className="action-btn view-btn" onClick={() => moveRejectedToAccepted(sale.id)}>
-                      Accept
-                    </button>
-                  )}
-                </td>
+
+  const renderTable = (data, tabName) => {
+    const currentPage = pages[tabName] || 1;
+    const indexOfLastRow = currentPage * rowsPerPage;
+    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+    const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(data.length / rowsPerPage);
+
+    return (
+      <div>
+        <div className="table-content">
+          <table>
+            <thead>
+              <tr>
+                <th>SN</th>
+                <th className="first-name-col">Agent name</th>
+                <th>Phone number</th>
+                <th>Email</th>
+                <th>Distributor</th>
+                <th className="region-name-col">Region</th>
+                <th>Sub region</th>
+                <th>Amount</th>
+                {tabName === 'accepted' && <th>Initial commission</th>}
+                <th>Status</th>
+                <th>Product details</th>
+                <th>Receipt image</th>
+                <th>Actions</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={tabName === 'accepted' ? 12 : 10} style={{ textAlign: 'center', padding: '20px' }}>
-                No records found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+            </thead>
+            <tbody>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((sale, index) => (
+                  <tr key={sale.id}>
+                    <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
+                    <td className="first-name-col" data-label="Agent Name">
+                      {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
+                    </td>
+                    <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
+                    <td data-label="Email">{sale.email || 'N/A'}</td>
+                    <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
+                    <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
+                    <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
+                    <td data-label="Amount">{sale.amount || 'N/A'}</td>
+                    {tabName === 'accepted' && (
+                      <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
+                    )}
+                    <td data-label="Status">{sale.status || 'Pending'}</td>
+                    <td data-label="Product Details">
+                      <button className="action-btn view-btn" onClick={() => handleViewProductDetails(sale.ref_id)}>
+                        View Details
+                      </button>
+                    </td>
+                    <td data-label="Receipt Image">
+                      <button className="action-btn view-btn" onClick={() => handleViewImage(sale.reciept_image_path)}>
+                        View
+                      </button>
+                    </td>
+                    <td data-label="Actions">
+                      {tabName === 'all' && (
+                        <>
+                          <button className="action-btn view-btn" onClick={() => handleAccept(sale.id)}>
+                            Accept
+                          </button>
+                          <button className="action-btn delete-btn" onClick={() => handleReject(sale.id)}>
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {tabName === 'accepted' && (
+                        <button className="action-btn delete-btn" onClick={() => moveAcceptedToRejected(sale.id)}>
+                          Reject
+                        </button>
+                      )}
+                      {tabName === 'rejected' && (
+                        <button className="action-btn view-btn" onClick={() => moveRejectedToAccepted(sale.id)}>
+                          Accept
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={tabName === 'accepted' ? 12 : 10} style={{ textAlign: 'center', padding: '20px' }}>
+                    No records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setPageForTab(tabName, page)}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
+                color: (pages[tabName] || 1) === page ? '#fff' : '#000',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const renderContent = () => {
     let dataToRender;

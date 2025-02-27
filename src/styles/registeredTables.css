@@ -4,6 +4,22 @@
 *::after {
   box-sizing: border-box;
 }
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .screen-only {
+    display: none !important;
+  }
+  .print-only {
+    display: inline !important;
+  }
+}
+@media screen {
+  .print-only {
+    display: none;
+  }
+}
 
 body {
   margin: 0;
@@ -50,7 +66,6 @@ body {
   border-radius: 4px;
 }
 
-/* Optional: Custom scrollbar styling for WebKit browsers */
 .dropdown-menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -177,7 +192,7 @@ button.modal-close-btn {
 /* Form Styles */
 .rm-form {
   padding: 30px 20px;
-  height: 600px;
+  /* height: 600px; */
 }
 
 .form-row {

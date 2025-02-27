@@ -25,6 +25,7 @@ import DashboardContent from './DashboardContent';
 import SalesTable from './Sales/SalesTable';
 import CommissionsTable from './Commissions/CommisionTable';
 import PaidCommissionsTable from './Commissions/PaidCommissionsTable';
+import GroupedDataTable from './Sales/GroupedDataTable';
 import '../styles/landingpage.css';
 
 const mainMenuItems = [
@@ -63,7 +64,8 @@ const mainMenuItems = [
     label: 'Sales',
     icon: <FaMoneyBill />,
     subItems: [
-      { key: 'reports', label: 'Sales', icon: <FaChartLine /> }
+      { key: 'reports', label: 'Sales', icon: <FaChartLine /> },
+      { key: 'groupedSales', label: 'Grouped Sales', icon: <FaChartLine /> }
     ]
   },
   {
@@ -97,7 +99,6 @@ function LandingPage() {
     navigate('/');
   };
 
-
   const handleMainMenuClick = (mainItem) => {
     if (mainItem.subItems && mainItem.subItems.length > 0) {
       setOpenDropdowns({ [mainItem.key]: true });
@@ -126,6 +127,7 @@ function LandingPage() {
       else if (subKey === 'subRegions') setActiveComponent('SubRegionsTable');
     } else if (mainKey === 'sales') {
       if (subKey === 'reports') setActiveComponent('SalesReports');
+      else if (subKey === 'groupedSales') setActiveComponent('GroupedSales');
     } else if (mainKey === 'accessManagement') {
       if (subKey === 'user') setActiveComponent('UserTable');
       else if (subKey === 'group') setActiveComponent('GroupTable');
@@ -165,6 +167,8 @@ function LandingPage() {
         return <GroupTable />;
       case 'SalesReports':
         return <SalesTable />;
+      case 'GroupedSales':
+        return <GroupedDataTable />;
       case 'Dashboard':
       default:
         return <DashboardContent />;

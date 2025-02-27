@@ -5,11 +5,14 @@ import { RouterProvider } from "react-router-dom";
 import router from "./components/Routes";
 import { Provider } from "react-redux";
 import { store } from "./components/store/store";
+import { PaginationProvider } from "./components/PaginationContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <PaginationProvider>
+        <RouterProvider router={router} />
+      </PaginationProvider>
     </Provider>
   </React.StrictMode>
 );
