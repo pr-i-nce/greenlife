@@ -7,18 +7,7 @@ import UserUpdate from './UserUpdate';
 import UserView from './UserView';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
-import { BASE_URL } from '../apiClient';
-
-const safeJsonParse = (res) => {
-  return res.text().then((text) => {
-    try {
-      return text ? JSON.parse(text) : {};
-    } catch (err) {
-      console.error('JSON parse error:', err);
-      return {};
-    }
-  });
-};
+import apiClient, { BASE_URL } from '../apiClient';
 
 function UserTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -34,16 +23,17 @@ function UserTable() {
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
 
-  const fetchUsers = () => {
-    fetch(`${BASE_URL}/registration/users`, { headers: getAuthHeaders() })
-      .then((res) => safeJsonParse(res))
-      .then((data) => {
-        setUsers(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        console.error('Error fetching users:', err);
-        setUsers([]);
+  const fetchUsers = async () => {
+    try {
+      const { data } = await apiClient.get('/registration/users', {
+        headers: getAuthHeaders(),
       });
+      setUsers(Array.isArray(data) ? data : []);
+      console.log('Users:', data);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setUsers([]);
+    }
   };
 
   useEffect(() => {
@@ -66,21 +56,19 @@ function UserTable() {
         }
         return inputValue;
       },
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
-        fetch(`${BASE_URL}/registration/delete?staffNumber=${encodeURIComponent(staffNumber)}`, {
-          method: 'DELETE',
-          headers: getAuthHeaders(),
-        })
-          .then((res) => safeJsonParse(res))
-          .then((data) => {
-            Swal.fire('Success', data.message || 'User deleted successfully!', 'success');
-            setUsers(users.filter((u) => u.staffNumber !== staffNumber));
-          })
-          .catch((error) => {
-            console.error('Error deleting user:', error);
-            Swal.fire('Error', error.message || 'Error deleting user', 'error');
+        try {
+          const { data } = await apiClient.delete('/registration/delete', {
+            params: { staffNumber },
+            headers: getAuthHeaders(),
           });
+          Swal.fire('Success', data.message || 'User deleted successfully!', 'success');
+          setUsers(users.filter((u) => u.staffNumber !== staffNumber));
+        } catch (error) {
+          console.error('Error deleting user:', error);
+          Swal.fire('Error', error.response?.data || error.message || 'Error deleting user', 'error');
+        }
       }
     });
   };
@@ -168,7 +156,7 @@ function UserTable() {
               <th>Phone</th>
               <th>Email</th>
               <th>Group Name</th>
-              <th>Staff Number</th>
+              {/* <th>Staff Number</th> */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -180,7 +168,7 @@ function UserTable() {
                 <td data-label="Phone">{user.phone}</td>
                 <td data-label="Email">{user.email}</td>
                 <td data-label="Group Name">{user.groupName}</td>
-                <td data-label="Staff Number">{user.staffNumber}</td>
+                {/* <td data-label="Staff Number">{user.staffNumber}</td> */}
                 <td data-label="Actions">
                   <button
                     className="action-btn view-btn"

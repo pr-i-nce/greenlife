@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  // Load persisted values from localStorage if they exist
   accessToken: localStorage.getItem('accessToken') || null,
   groupData: localStorage.getItem('groupData')
     ? JSON.parse(localStorage.getItem('groupData'))

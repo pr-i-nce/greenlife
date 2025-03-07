@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BASE_URL } from '../apiClient';
 import Swal from 'sweetalert2';
-import { FaArrowLeft } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-import GenericModal from '../GenericModal';
-import ProductDetails from './ProductDetails';
 import '../../styles/registeredTables.css';
+import { useSelector } from 'react-redux';
+import ProductDetails from './ProductDetails';
+import GenericModal from '../GenericModal';
+import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const swalOptions = {
   background: '#ffffff',
@@ -14,7 +15,7 @@ const swalOptions = {
   color: '#283e56',
 };
 
-const SalesDetailsTable = ({ agentId, onBack }) => {
+function SalesDetailsTable({ agentId, onBack }) {
   const accessToken = useSelector((state) => state.auth.accessToken);
   const [agent, setAgent] = useState(null);
   const [sales, setSales] = useState([]);
@@ -25,16 +26,11 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
     const fetchSalesDetails = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${BASE_URL}/sales/fetched?id=${agentId}`, {
+        const { data } = await apiClient.get('/sales/fetch', {
+          params: { salesPersonId: agentId },
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        if (!response.ok) {
-          throw new Error('Network error');
-        }
-        const data = await response.json();
-        console.log("Sales details fetched:", data);  // Debug log
-
-        // Check if data is an array or an object with agent & sales keys
+        console.log("Sales details fetched:", data);
         if (Array.isArray(data)) {
           setSales(data);
           if (data.length > 0) {
@@ -64,7 +60,7 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
       }
     };
 
-    console.log("agentId received:", agentId); // Debug log
+    console.log("agentId received:", agentId);
     if (agentId) {
       fetchSalesDetails();
     }
@@ -80,11 +76,11 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
       },
     });
     try {
-      const response = await fetch(`${BASE_URL}/sales/sold-products?id=${ref_id}`, {
+      const { data } = await apiClient.get('/sales/sold-products', {
+        params: { id: ref_id },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (!response.ok) throw new Error('Network error');
-      const data = await response.json();
+      if (!data) throw new Error('Network error');
       const productDetails = Array.isArray(data.object) ? data.object : [];
       Swal.close();
       setSelectedProduct(productDetails);
@@ -94,13 +90,24 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
         ...swalOptions,
         title: 'Error',
         text: 'Could not fetch product details. Please try again.',
-        icon: 'error',
+        icon: 'error'
       });
     }
   };
 
   if (loading) {
     return <div>Loading sales details...</div>;
+  }
+
+  // Once product details are rendered, do not show the sales details table.
+  if (selectedProduct) {
+    return (
+      <GenericModal onClose={() => setSelectedProduct(null)} showBackButton={true}>
+        <div className="modal-inner-content" style={{ padding: '1rem' }}>
+          <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        </div>
+      </GenericModal>
+    );
   }
 
   return (
@@ -122,32 +129,21 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
       >
         <FaArrowLeft className="icon" /> Back
       </button>
-      {selectedProduct && (
-        <GenericModal onClose={() => setSelectedProduct(null)} showBackButton={true}>
-          <div className="modal-inner-content" style={{ padding: '1rem' }}>
-            <ProductDetails 
-              records={selectedProduct} 
-              onClose={() => setSelectedProduct(null)} 
-            />
-          </div>
-        </GenericModal>
-      )}
       <div className="table-content">
-        <table className="registered-table">
+        <table className="registered-table"style={{ margin: '-20px 0' }}>
           <thead>
             <tr>
               <th>SN</th>
               <th>Agent Name</th>
               <th>Phone Number</th>
-              <th>Email</th>
               <th>Distributor</th>
               <th>Region</th>
               <th>Sub Region</th>
               <th>Amount</th>
               <th>Initial Commission</th>
+              <th>Status</th>
               <th>Approval1</th>
               <th>Approval2</th>
-              <th>Receipt No</th>
               <th>Product Details</th>
               <th>Receipt Image</th>
             </tr>
@@ -163,9 +159,6 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
                   <td data-label="Phone Number">
                     {sale.phone_number || agent?.phone_number || 'N/A'}
                   </td>
-                  <td data-label="Email">
-                    {sale.email || agent?.email || 'N/A'}
-                  </td>
                   <td data-label="Distributor">
                     {sale.distributor || agent?.distributor || 'N/A'}
                   </td>
@@ -177,9 +170,9 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
                   </td>
                   <td data-label="Amount">{sale.amount || 'N/A'}</td>
                   <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                  <td data-label="Approval1">{sale.approval1 || 'N/A'}</td>
-                  <td data-label="Approval2">{sale.approval2 || 'N/A'}</td>
-                  <td data-label="Receipt No">{sale.receiptno || 'N/A'}</td>
+                  <td data-label="Status">{sale.status || 'N/A'}</td>
+                  <td data-label="confirmation">{sale.approval1 || 'N/A'}</td>
+                  <td data-label="Approval">{sale.approval2 || 'N/A'}</td>
                   <td data-label="Product Details">
                     <button 
                       className="action-btn view-btn"
@@ -215,6 +208,6 @@ const SalesDetailsTable = ({ agentId, onBack }) => {
       </div>
     </div>
   );
-};
+}
 
 export default SalesDetailsTable;

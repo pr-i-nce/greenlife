@@ -4,22 +4,99 @@ import { FaClipboardList, FaArrowLeft } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
+import apiClient, { BASE_URL } from '../apiClient';
 
 const roleMapping = {
-  agent: ['createAgent', 'readAgent', 'updateAgent', 'deleteAgent'],
-  distributor: ['createDistributor', 'readDistributor', 'updateDistributor', 'deleteDistributor'],
-  region: ['createRegion', 'readRegion', 'updateRegion', 'deleteRegion'],
-  product: ['createProduct', 'readProduct', 'updateProduct', 'deleteProduct'],
-  regionalManager: ['createRegionManager', 'readRegionManager', 'updateRegionManager', 'deleteRegionManager'],
-  subRegion: ['createSubRegion', 'readSubRegion', 'updateSubRegion', 'deleteSubRegion'],
-  subRegionManager: ['createSubRegionManager', 'readSubRegionManager', 'updateSubRegionManager', 'deleteSubRegionManager'],
-  commission: ['createCommission', 'readCommission', 'updateCommission', 'deleteCommission'],
-  group: ['createGroup', 'readGroup', 'updateGroup', 'deleteGroup']
+  agent: [
+    'createAgent', // Create a new agent.
+    'readAgent',   // View agent details.
+    'updateAgent', // Update agent information.
+    'deleteAgent'  // Delete an agent.
+  ],
+  distributor: [
+    'createDistributor', // Add a new distributor.
+    'readDistributor',   // View distributor details.
+    'updateDistributor', // Update distributor information.
+    'deleteDistributor'  // Remove a distributor.
+  ],
+  region: [
+    'createRegion', // Create a new region.
+    'readRegion',   // View region details.
+    'updateRegion', // Update region information.
+    'deleteRegion'  // Delete a region.
+  ],
+  product: [
+    'createProduct', // Add a new product.
+    'readProduct',   // View product details.
+    'updateProduct', // Update product information.
+    'deleteProduct'  // Delete a product.
+  ],
+  regionalManager: [
+    'createRegionManager', // Add a regional manager.
+    'readRegionManager',   // View regional manager details.
+    'updateRegionManager', // Update regional manager information.
+    'deleteRegionManager'  // Remove a regional manager.
+  ],
+  subRegion: [
+    'createSubRegion', // Create a sub-region.
+    'readSubRegion',   // View sub-region details.
+    'updateSubRegion', // Update sub-region information.
+    'deleteSubRegion'  // Delete a sub-region.
+  ],
+  subRegionManager: [
+    'createSubRegionManager', // Add a sub-region manager.
+    'readSubRegionManager',   // View sub-region manager details.
+    'updateSubRegionManager', // Update sub-region manager information.
+    'deleteSubRegionManager'  // Remove a sub-region manager.
+  ],
+  commission: [
+    'createCommission', // Create a commission entry.
+    'readCommission',   // View commission details.
+    'updateCommission', // Update commission information.
+    'deleteCommission'  // Delete a commission entry.
+  ],
+  group: [
+    'createGroup', // Create a new group.
+    'readGroup',   // View group details.
+    'updateGroup', // Update group information.
+    'deleteGroup'  // Delete a group.
+  ],
+  user: [
+    'createUser',  // Create a new user.
+    'editUser',    // Edit user details.
+    'deleteUser',  // Delete a user.
+    'viewUser',    // View user details.
+    'manageRoles'  // Manage user roles and permissions.
+  ],
+  sales: [
+    'rejectSales', // Reject a sales transaction.
+    'acceptSales', // Accept a sales transaction.
+    'viewSales',   // View overall sales data.
+    'viewDetails'  // View detailed sale information.
+  ],
+  approval: [
+    'approve1', // First-level approval (e.g., initial validation).
+    'approve2'  // Second-level approval (e.g., final confirmation).
+  ],
+  payment: [
+    'viewReceiptImage',   // View images of payment receipts.
+    'pay',                // Process a payment.
+    'viewPayment',        // View payment details.
+    'viewPaidCommissions' // View details of paid commissions.
+  ]
 };
 
 const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  const [roleData, setRoleData] = useState(initialRoles || {});
+
+  const defaultPermissions = {};
+  Object.keys(roleMapping).forEach((key) => {
+    roleMapping[key].forEach((perm) => {
+      defaultPermissions[perm] = false;
+    });
+  });
+
+  const [roleData, setRoleData] = useState({ ...defaultPermissions, ...initialRoles });
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
@@ -29,38 +106,25 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = { 
+    const payload = {
       groupName: group.groupName,
       ...roleData
     };
 
     try {
-      const response = await fetch('https://jituze.greenlife.co.ke/rest/group/update', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
-        },
-        body: JSON.stringify(payload)
+      const response = await apiClient.put('/group/update', payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      
-      const data = await response.json();
+      const data = response.data;
+      console.log('Roles updated:', data);
 
       if (data && data.groupId) {
-        // Update local roles cache
         const existingLocalData = JSON.parse(localStorage.getItem('roles') || '{}');
         const existingPermissions = existingLocalData.permissions || {};
 
-        const updatedPermissions = { ...existingPermissions, ...roleData };
-
-        const commissionDefaults = {
-          createCommission: false,
-          readCommission: false,
-          updateCommission: false,
-          deleteCommission: false
-        };
-
-        const finalPermissions = { ...commissionDefaults, ...updatedPermissions };
+        const finalPermissions = { ...defaultPermissions, ...existingPermissions, ...roleData };
 
         const updatedLocalData = {
           groupName: group.groupName,
@@ -69,26 +133,26 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
 
         localStorage.setItem('roles', JSON.stringify(updatedLocalData));
 
-        Swal.fire({ 
-          icon: 'success', 
-          title: 'Success', 
-          text: data.message || 'Roles updated successfully!', 
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: data.message || 'Roles updated successfully!',
           confirmButtonColor: '#2B9843'
         });
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();
       } else {
-        Swal.fire({ 
-          icon: 'error', 
-          title: 'Error', 
-          text: 'Roles not updated. Empty response.' 
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Roles not updated. Empty response.'
         });
       }
     } catch (err) {
-      Swal.fire({ 
-        icon: 'error', 
-        title: 'Error', 
-        text: err.message || 'Error updating roles' 
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.response?.data || err.message || 'Error updating roles'
       });
     }
   };
@@ -105,26 +169,49 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
               {key.charAt(0).toUpperCase() + key.slice(1)}
             </h3>
             <div className="role-group-checkboxes">
-              {roleMapping[key].map((perm) => (
-                <div key={perm} className="role-checkbox">
-                  <input
-                    type="checkbox"
-                    id={perm}
-                    name={perm}
-                    checked={roleData[perm] || false}
-                    onChange={handleCheckboxChange}
-                  />
-                  <label htmlFor={perm}>
-                    {perm.startsWith('create')
-                      ? 'Create'
-                      : perm.startsWith('read')
-                      ? 'Read'
-                      : perm.startsWith('update')
-                      ? 'Update'
-                      : 'Delete'}
-                  </label>
-                </div>
-              ))}
+              {roleMapping[key].map((perm) => {
+                let label = '';
+
+                if (key === 'sales') {
+                  if (perm === 'rejectSales') label = 'Reject Sales';
+                  else if (perm === 'acceptSales') label = 'Accept Sales';
+                  else if (perm === 'viewSales') label = 'View Sales';
+                  else if (perm === 'viewDetails') label = 'View Sale Details';
+                } else if (key === 'approval') {
+                  if (perm === 'approve1') label = 'Approve 1';
+                  else if (perm === 'approve2') label = 'Approve 2';
+                } else if (key === 'payment') {
+                  if (perm === 'viewReceiptImage') label = 'View Receipt Image';
+                  else if (perm === 'pay') label = 'Process Payment';
+                  else if (perm === 'viewPayment') label = 'View Payment';
+                  else if (perm === 'viewPaidCommissions') label = 'View Paid Commissions';
+                } else {
+                  label = perm.startsWith('create')
+                    ? 'Create'
+                    : perm.startsWith('read')
+                    ? 'Read'
+                    : perm.startsWith('update')
+                    ? 'Update'
+                    : perm.startsWith('delete')
+                    ? 'Delete'
+                    : perm.startsWith('edit')
+                    ? 'Edit'
+                    : perm;
+                }
+
+                return (
+                  <div key={perm} className="role-checkbox">
+                    <input
+                      type="checkbox"
+                      id={perm}
+                      name={perm}
+                      checked={roleData[perm] || false}
+                      onChange={handleCheckboxChange}
+                    />
+                    <label htmlFor={perm}>{label}</label>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}

@@ -7,6 +7,7 @@ import SubregionUpdate from './SubRegionUpdate';
 import SubregionView from './SubregionView';
 import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubregionTable = () => {
@@ -25,11 +26,7 @@ const SubregionTable = () => {
   const fetchSubregions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/subregion/all`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      if (!response.ok) throw new Error("Failed to fetch subregions.");
-      const data = await response.json();
+      const { data } = await apiClient.get('/subregion/all');
       setSubregions(data);
     } catch (err) {
       setError(err.message);
@@ -68,19 +65,14 @@ const SubregionTable = () => {
     });
     if (result.isConfirmed && result.value === "yes") {
       try {
-        const response = await fetch(`${BASE_URL}/subregion/delete?subRegionCode=${encodeURIComponent(subregion.subRegionCode)}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${accessToken}` }
+        const response = await apiClient.delete('/subregion/delete', {
+          params: { subRegionCode: subregion.subRegionCode }
         });
-        if (!response.ok) {
-          const errMsg = await response.text();
-          throw new Error(errMsg || "Delete failed");
-        }
-        const successMessage = await response.text();
+        const successMessage = response.data;
         Swal.fire({ icon: "success", title: "Deleted!", text: successMessage, confirmButtonColor: "#2B9843" });
         setSubregions(subregions.filter(r => r.id !== id));
       } catch (err) {
-        Swal.fire({ icon: "error", title: "Delete Failed", text: err.message });
+        Swal.fire({ icon: "error", title: "Delete Failed", text: err.response?.data || err.message });
       }
     }
   };

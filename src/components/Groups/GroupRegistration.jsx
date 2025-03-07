@@ -6,6 +6,7 @@ import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 
 const GroupRegistration = ({ onClose, onRegistrationSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -25,16 +26,11 @@ const GroupRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
     setError('');
     try {
-      const response = await fetch(`${BASE_URL}/group`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${accessToken}` 
-        },
-        body: JSON.stringify(formData)
+      const response = await apiClient.post('/group', formData, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = await response.text();
-      if (response.ok) {
+      const responseText = response.data;
+      if (response.status >= 200 && response.status < 300) {
         Swal.fire({ 
           icon: 'success', 
           title: 'Success', 
@@ -49,23 +45,23 @@ const GroupRegistration = ({ onClose, onRegistrationSuccess }) => {
         Swal.fire({ icon: 'error', title: 'Error', text: responseText });
       }
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Error creating group' });
+      Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data || err.message || 'Error creating group' });
     }
   };
 
   return (
-    <div className="region-container">
-      <div className="region-header">
+    <div className="rm-container">
+      <div className="rm-header">
         <img 
           src="https://images.pexels.com/photos/3184634/pexels-photo-3184634.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
           alt="Group Registration" 
-          className="region-header-image" 
+          className="rm-header-image" 
         />
-        <div className="region-header-overlay">
+        <div className="rm-header-overlay">
           <h2>Group Registration</h2>
         </div>
       </div>
-      <form className="region-form" onSubmit={handleSubmit}>
+      <form className="rm-form" onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="groupName">

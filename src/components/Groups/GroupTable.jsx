@@ -7,6 +7,7 @@ import GroupRoleManagement from './GroupRoleManagement';
 import GroupView from './GroupView'; 
 import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 
@@ -21,13 +22,10 @@ const GroupTable = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/group/all`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      const data = await response.json();
+      const { data } = await apiClient.get('/group/all');
       setGroups(Array.isArray(data) ? data : []);
     } catch (err) {
-      Swal.fire('Error', err.message, 'error');
+      Swal.fire('Error', err.response?.data || err.message, 'error');
     }
   };
 
@@ -55,19 +53,11 @@ const GroupTable = () => {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const response = await fetch(`${BASE_URL}/group/${id}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          const responseText = await response.text();
-          if (response.ok) {
-            Swal.fire('Deleted!', responseText, 'success');
-            setGroups(groups.filter((g) => g.id !== id));
-          } else {
-            Swal.fire('Error', responseText, 'error');
-          }
+          const { data: responseText } = await apiClient.delete(`/group/${id}`);
+          Swal.fire('Deleted!', responseText, 'success');
+          setGroups(groups.filter((g) => g.id !== id));
         } catch (err) {
-          Swal.fire('Error', err.message, 'error');
+          Swal.fire('Error', err.response?.data || err.message, 'error');
         }
       }
     });

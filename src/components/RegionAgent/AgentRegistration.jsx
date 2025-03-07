@@ -1,20 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
-import {
-  FaUser,
-  FaIdBadge,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt
-} from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import swal from 'sweetalert';
+import { FaUser, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef(null);
+  const dropdownRef = React.useRef(null);
 
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -168,7 +163,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading) return; 
     const validationError = validateRegistrationForm();
     if (validationError) {
       setRegError(validationError);
@@ -184,7 +179,9 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     const payload = { ...regData };
     try {
       const response = await apiClient.post('/agent', payload, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json'
+        }
       });
       const responseText = response.data;
       Swal.fire({

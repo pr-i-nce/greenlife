@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
@@ -25,13 +25,11 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
     e.preventDefault();
     try {
       setUpdating(true);
-      const response = await fetch(`${BASE_URL}/product/${record.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-        body: JSON.stringify(formData)
+      const response = await apiClient.put(`/product/${record.id}`, formData, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = await response.text();
-      if (response.ok) {
+      const responseText = response.data;
+      if (response.status >= 200 && response.status < 300) {
         let updatedRecord;
         try {
           updatedRecord = JSON.parse(responseText);
@@ -45,7 +43,7 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
         Swal.fire({ icon: 'error', title: 'Update Failed', text: responseText });
       }
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Update Failed', text: err.message });
+      Swal.fire({ icon: 'error', title: 'Update Failed', text: err.response?.data || err.message });
     } finally {
       setUpdating(false);
     }

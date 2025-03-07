@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionsUpdate = ({ record, onClose, onUpdateSuccess }) => {
@@ -33,33 +33,28 @@ const RegionsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     const payload = { regionName: formData.regionName, regionCode: formData.regionCode };
     try {
       setUpdating(true);
-      const response = await fetch(
-        `${BASE_URL}/region/update?regionCode=${encodeURIComponent(record.regionCode)}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          },
-          body: JSON.stringify(payload)
+      const response = await apiClient.put('/region/update', payload, {
+        params: { regionCode: record.regionCode },
+        headers: {
+          'Content-Type': 'application/json'
         }
-      );
-      if (!response.ok) {
-        const errMsg = await response.text();
-        throw new Error(errMsg || "Update failed");
-      }
-      const updatedRecord = await response.json();
-      onClose();
-      if (onUpdateSuccess) onUpdateSuccess();
-      Swal.fire({
-        icon: "success",
-        title: "Update Successful",
-        text: "Region updated successfully!",
-        confirmButtonColor: "#2B9843"
       });
+      const responseText = response.data;
+      if (response.status >= 200 && response.status < 300) {
+        onClose();
+        if (onUpdateSuccess) onUpdateSuccess();
+        Swal.fire({
+          icon: "success",
+          title: "Update Successful",
+          text: "Region updated successfully!",
+          confirmButtonColor: "#2B9843"
+        });
+      } else {
+        Swal.fire({ icon: "error", title: "Update Failed", text: responseText });
+      }
     } catch (err) {
       setError(err.message);
-      Swal.fire({ icon: "error", title: "Update Failed", text: err.message });
+      Swal.fire({ icon: "error", title: "Update Failed", text: err.response?.data || err.message });
     } finally {
       setUpdating(false);
     }
@@ -77,7 +72,7 @@ const RegionsUpdate = ({ record, onClose, onUpdateSuccess }) => {
           <h2>Update Region</h2>
         </div>
       </div>
-      <form className="region-form" onSubmit={handleSubmit}>
+      <form className="rm-form" onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="regionName">

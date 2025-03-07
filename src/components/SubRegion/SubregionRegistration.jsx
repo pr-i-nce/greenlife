@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import swal from 'sweetalert';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
@@ -17,11 +17,7 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchRegions = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/region/all`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      if (!response.ok) throw new Error("Failed to fetch regions.");
-      const data = await response.json();
+      const { data } = await apiClient.get('/region/all');
       setRegions(data);
     } catch (err) {
       console.error(err);
@@ -79,27 +75,18 @@ const SubregionRegistration = ({ onClose, onRegistrationSuccess }) => {
       regionName: formData.regionName
     };
     try {
-      const response = await fetch(`${BASE_URL}/subregion`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(payload)
+      const response = await apiClient.post('/subregion', payload, {
+        headers: { "Content-Type": "application/json" }
       });
-      const responseText = await response.text();
-      if (response.ok) {
-        swal({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" })
-          .then(() => {
-            setFormData({ subRegionName: "", subRegionCode: "", regionName: "" });
-            onClose();
-            if (onRegistrationSuccess) onRegistrationSuccess();
-          });
-      } else {
-        swal({ icon: "error", title: "Error", text: responseText });
-      }
+      const responseText = response.data;
+      swal({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" })
+        .then(() => {
+          setFormData({ subRegionName: "", subRegionCode: "", regionName: "" });
+          onClose();
+          if (onRegistrationSuccess) onRegistrationSuccess();
+        });
     } catch (err) {
-      swal({ icon: "error", title: "Error", text: "An error occurred while registering. Please try again." });
+      swal({ icon: "error", title: "Error", text: err.response?.data || "An error occurred while registering. Please try again." });
     }
   };
 

@@ -33,6 +33,7 @@ function Login() {
         dispatch(setAccessToken(token));
         const { groupName, permissions } = responseData;
         const filteredData = { groupName, permissions };
+        console.log('Group data:', filteredData);
         dispatch(setGroupData(filteredData));
         navigate('/landingpage');
       } else {

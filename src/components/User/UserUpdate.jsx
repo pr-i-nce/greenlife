@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
@@ -16,6 +16,67 @@ const safeJsonParse = (res) => {
   });
 };
 
+// Reusable SearchableDropdown component
+const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleClickOutside = (e) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setIsOpen(false);
+      setSearchTerm('');
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleOptionSelect = (selectedValue) => {
+    onChange({ target: { id, value: selectedValue } });
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div className="searchable-dropdown" ref={dropdownRef}>
+      <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
+        {value ? options.find(opt => opt.value === value)?.label : placeholder}
+        <span className="dropdown-arrow">&#9662;</span>
+      </div>
+      {isOpen && (
+        <div className="dropdown-menu">
+          <input 
+            type="text"
+            className="dropdown-search"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          <ul className="dropdown-list">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <li key={option.id} onMouseDown={() => handleOptionSelect(option.value)}>
+                  {option.label}
+                </li>
+              ))
+            ) : (
+              <li className="no-options">{noOptionsText || "No options found"}</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function UserUpdate({ user, onClose }) {
   const accessToken = useSelector((state) => state.auth.accessToken);
 
@@ -24,6 +85,7 @@ function UserUpdate({ user, onClose }) {
       ? { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
       : { 'Content-Type': 'application/json' };
 
+  // Extend update form data to include userTitle, region, and subRegion
   const [updateFormData, setUpdateFormData] = useState({
     firstName: user.firstName || '',
     lastName: user.lastName || '',
@@ -31,8 +93,65 @@ function UserUpdate({ user, onClose }) {
     email: user.email || '',
     password: '',
     confirmPassword: '',
+    userTitle: user.userTitle || '',
     groupName: user.groupName || '',
+    region: user.region || '',
+    subRegion: user.subRegion || '',
   });
+
+  const [groups, setGroups] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [subregions, setSubregions] = useState([]);
+
+  // Static options for user titles
+  const userTitleOptions = [
+    { id: '001', label: 'Admin', value: '001' },
+    { id: '002', label: 'Director', value: '002' },
+    { id: '003', label: 'Regional Manager', value: '003' },
+    { id: '004', label: 'Sub Regional Manager', value: '004' },
+  ];
+
+  // Fetch groups for Group Name dropdown
+  useEffect(() => {
+    fetch(`${BASE_URL}/group/all`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setGroups(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        Swal.fire('Error', err.message, 'error');
+      });
+  }, [accessToken]);
+
+  // Fetch regions for Region dropdown
+  useEffect(() => {
+    fetch(`${BASE_URL}/region/all`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setRegions(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        Swal.fire('Error', err.message, 'error');
+      });
+  }, [accessToken]);
+
+  // Fetch subregions for Sub Region dropdown
+  useEffect(() => {
+    fetch(`${BASE_URL}/subregion/all`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setSubregions(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        Swal.fire('Error', err.message, 'error');
+      });
+  }, [accessToken]);
 
   const handleUpdateChange = (e) => {
     setUpdateFormData({ ...updateFormData, [e.target.id]: e.target.value });
@@ -67,6 +186,25 @@ function UserUpdate({ user, onClose }) {
       });
   };
 
+  // Map fetched data to dropdown options
+  const groupOptions = groups.map(group => ({
+    id: group.id || group.groupName,
+    label: group.groupName,
+    value: group.groupName,
+  }));
+
+  const regionOptions = regions.map(region => ({
+    id: region.id,
+    label: region.regionName,
+    value: region.regionName,
+  }));
+
+  const subregionOptions = subregions.map(sub => ({
+    id: sub.id,
+    label: sub.subRegionName,
+    value: sub.subRegionName,
+  }));
+
   return (
     <div className="region-container">
       <div className="region-header">
@@ -79,7 +217,7 @@ function UserUpdate({ user, onClose }) {
           <h2>Update User</h2>
         </div>
       </div>
-      <form className="region-form" onSubmit={handleUpdateSubmit}>
+      <form className="rm-form" onSubmit={handleUpdateSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">
@@ -136,18 +274,64 @@ function UserUpdate({ user, onClose }) {
             />
           </div>
         </div>
+        {/* New row for User Title */}
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="userTitle">
+              <FaIdBadge className="icon" /> User Title
+            </label>
+            <SearchableDropdown
+              id="userTitle"
+              value={updateFormData.userTitle}
+              onChange={handleUpdateChange}
+              options={userTitleOptions}
+              placeholder="Select User Title"
+              noOptionsText="No titles found"
+            />
+          </div>
+        </div>
+        {/* Row for Region and Sub Region dropdowns */}
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="region">
+              <FaIdBadge className="icon" /> Region
+            </label>
+            <SearchableDropdown
+              id="region"
+              value={updateFormData.region}
+              onChange={handleUpdateChange}
+              options={regionOptions}
+              placeholder="Select Region"
+              noOptionsText="No regions found"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="subRegion">
+              <FaIdBadge className="icon" /> Sub Region
+            </label>
+            <SearchableDropdown
+              id="subRegion"
+              value={updateFormData.subRegion}
+              onChange={handleUpdateChange}
+              options={subregionOptions}
+              placeholder="Select Sub Region"
+              noOptionsText="No subregions found"
+            />
+          </div>
+        </div>
+        {/* Row for Group Name dropdown */}
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="groupName">
               <FaIdBadge className="icon" /> Group Name
             </label>
-            <input
-              type="text"
+            <SearchableDropdown
               id="groupName"
-              placeholder="Enter group name"
               value={updateFormData.groupName}
               onChange={handleUpdateChange}
-              required
+              options={groupOptions}
+              placeholder="Select Group"
+              noOptionsText="No groups found"
             />
           </div>
         </div>

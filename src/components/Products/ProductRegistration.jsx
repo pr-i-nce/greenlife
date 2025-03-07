@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductRegistration = ({ onClose, onRegistrationSuccess }) => {
@@ -22,25 +22,16 @@ const ProductRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
     setError('');
     try {
-      const response = await fetch(`${BASE_URL}/product`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${accessToken}` 
-        },
-        body: JSON.stringify(formData)
+      const response = await apiClient.post('/product', formData, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = await response.text();
-      if (response.ok) {
-        Swal.fire({ icon: 'success', title: 'Success', text: responseText });
-        setFormData({ productDescription: '', price: '', unit: '' });
-        onClose();
-        if (onRegistrationSuccess) onRegistrationSuccess();
-      } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: responseText });
-      }
+      const responseText = response.data;
+      Swal.fire({ icon: 'success', title: 'Success', text: responseText });
+      setFormData({ productDescription: '', price: '', unit: '' });
+      onClose();
+      if (onRegistrationSuccess) onRegistrationSuccess();
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Error', text: "An error occurred while registering the product. Please try again." });
+      Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data || "An error occurred while registering the product. Please try again." });
     }
   };
 

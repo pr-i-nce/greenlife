@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import swal from 'sweetalert';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {
@@ -24,26 +24,17 @@ const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setError("");
     const payload = { regionName: formData.regionName, regionCode: formData.regionCode };
     try {
-      const response = await fetch(`${BASE_URL}/region`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${accessToken}` 
-        },
-        body: JSON.stringify(payload)
+      const response = await apiClient.post('/region', payload, {
+        headers: { "Content-Type": "application/json" }
       });
-      const responseText = await response.text();
-      if (response.ok) {
-        swal({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
-          setFormData({ regionName: "", regionCode: "" });
-          onClose();
-          if (onRegistrationSuccess) onRegistrationSuccess();
-        });
-      } else {
-        swal({ icon: "error", title: "Error", text: responseText });
-      }
+      const responseText = response.data;
+      swal({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
+        setFormData({ regionName: "", regionCode: "" });
+        onClose();
+        if (onRegistrationSuccess) onRegistrationSuccess();
+      });
     } catch (err) {
-      swal({ icon: "error", title: "Error", text: "An error occurred while registering. Please try again." });
+      swal({ icon: "error", title: "Error", text: err.response?.data || "An error occurred while registering. Please try again." });
     }
   };
 
@@ -59,7 +50,7 @@ const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {
           <h2>Region Registration</h2>
         </div>
       </div>
-      <form className="region-form" onSubmit={handleSubmit}>
+      <form className="rm-form" onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="regionName">

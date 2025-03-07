@@ -1,92 +1,171 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import GenericModal from '../GenericModal';
+import SalesDetailsTable from '../Sales/SalesDetailsTable';
+import apiClient from '../apiClient';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
   background: '#ffffff',
-  confirmButtonColor: '#0a803e',
+  confirmButtonColor: '#2ECC71',
   cancelButtonColor: '#e74c3c',
   color: '#283e56',
 };
 
 function PaidCommissionsTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  const [commissionsData, setCommissionsData] = useState([]);
+  const [groupedData, setGroupedData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showSalesDetails, setShowSalesDetails] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState(null);
 
-  const fetchCommissions = () => {
-    fetch(`${BASE_URL}/sales/approved`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setCommissionsData(data);
-          console.log('Commissions data:', data);
-        } else {
-          return Promise.reject('Invalid data format');
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+
+  // Function to fetch data. If isPolling is true, do not trigger loading/error alerts.
+  const fetchGroupedData = async (isPolling = false) => {
+    if (!isPolling) setLoading(true);
+    try {
+      const { data } = await apiClient.get('/sales/agent');
+      // Update only if new data differs from the current state.
+      setGroupedData(prevData => {
+        if (JSON.stringify(data) !== JSON.stringify(prevData)) {
+          console.log('Updating grouped data:', data);
+          return data;
         }
-      })
-      .catch((error) => {
-        console.error('Error fetching commissions data:', error);
+        return prevData;
       });
+    } catch (error) {
+      if (!isPolling) {
+        Swal.fire({
+          ...swalOptions,
+          title: 'Error fetching data',
+          text: error.message,
+          icon: 'error',
+        });
+      }
+    } finally {
+      if (!isPolling) setLoading(false);
+    }
   };
 
+  // Initial fetch and set pagination key 'paid'
   useEffect(() => {
-    fetchCommissions();
+    fetchGroupedData();
+    setPageForTab('paid', 1);
   }, [accessToken]);
 
-  const renderTable = () => (
-    <div className="table-content">
-      <table>
-        <thead>
-          <tr>
-            <th>SN</th>
-            <th className="first-name-col">Agent Name</th>
-            <th>Distributor</th>
-            <th className="region-name-col">Region</th>
-            <th>Sub Region</th>
-            <th>Amount</th>
-            <th>Commission</th>
-            <th>Payment Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {commissionsData.length > 0 ? (
-            commissionsData.map((sale, index) => {
-              const commission = sale.initial_commission || 'N/A';
-              const paymentStatus = sale.payment_status || 'N/A'; 
-              return (
-                <tr key={sale.id}>
-                  <td data-label="SN">{index + 1}</td>
-                  <td className="first-name-col" data-label="Agent Name">
-                    {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
-                  </td>
-                  <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                  <td className="region-name-col" data-label="Region">
-                    {sale.region_name || 'N/A'}
-                  </td>
-                  <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
-                  <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                  <td data-label="Commission">{commission}</td>
-                  <td data-label="Payment Status">{paymentStatus}</td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
-                No records found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+  // Poll every 5 seconds without triggering loading/error UI
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchGroupedData(true);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [accessToken]);
 
-  return (
-    <div className="registered-table">
+  const handlePrint = () => {
+    const originalShowState = showSalesDetails;
+    if (!showSalesDetails) {
+      setShowSalesDetails(true);
+    }
+    setTimeout(() => {
+      const printableArea = document.getElementById('printable-area');
+      if (!printableArea) return;
+      html2canvas(printableArea).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('paid-commissions.pdf');
+      });
+      if (!originalShowState) {
+        setShowSalesDetails(false);
+      }
+    }, 500);
+  };
+
+  const handleViewDetails = (agentId) => {
+    setSelectedAgentId(agentId);
+    setShowSalesDetails(true);
+  };
+
+  // Logic to pay commission: prompt for confirmation and call /sales/pay with agent id.
+  const handlePay = async (agentId) => {
+    const { value } = await Swal.fire({
+      ...swalOptions,
+      title: 'Are you sure you want to pay commission for this agent?',
+      input: 'text',
+      inputPlaceholder: 'Type "yes" to confirm',
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return 'You need to type yes to confirm!';
+        }
+      },
+    });
+    if (!(value && value.toLowerCase() === 'yes')) {
+      Swal.fire({
+        ...swalOptions,
+        title: 'Action canceled',
+        icon: 'info',
+      });
+      return;
+    }
+
+    Swal.fire({
+      ...swalOptions,
+      title: 'Processing...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      await apiClient.put('/sales/pay', null, {
+        params: { id: agentId },
+      });
+      Swal.close();
+      Swal.fire({
+        ...swalOptions,
+        title: 'Success',
+        text: 'Commission paid successfully.',
+        icon: 'success',
+      });
+      fetchGroupedData(); // Update list after payment.
+    } catch (error) {
+      console.error('Error paying commission:', error);
+      Swal.close();
+      Swal.fire({
+        ...swalOptions,
+        title: 'Error',
+        text: error.message,
+        icon: 'error',
+      });
+    }
+  };
+
+  if (showSalesDetails) {
+    return (
+      <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
+        <SalesDetailsTable agentId={selectedAgentId} onBack={() => setShowSalesDetails(false)} />
+      </GenericModal>
+    );
+  }
+
+  // Pagination calculation using the 'paid' key
+  const currentPage = pages['paid'] || 1;
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const paginatedData = groupedData.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(groupedData.length / rowsPerPage);
+
+  const renderTable = () => (
+    <div id="printable-area">
       <div className="table-header">
         <img
           src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
@@ -97,6 +176,89 @@ function PaidCommissionsTable() {
           <h2>Paid Commissions Records</h2>
         </div>
       </div>
+      <div className="table-content">
+        <table>
+          <thead>
+            <tr>
+              <th>SN</th>
+              <th className="first-name-col">Agent Name</th>
+              <th>Phone Number</th>
+              {/* <th>Email</th> */}
+              <th>Distributor</th>
+              <th className="region-name-col">Region</th>
+              <th>Sub Region</th>
+              <th>Total Sales</th>
+              <th>Total Commission</th>
+              <th>Total Sales Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedData.length > 0 ? (
+              paginatedData.map((item, index) => {
+                const { agent } = item;
+                return (
+                  <tr key={`${agent.agentId}-${index}`}>
+                    <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
+                    <td className="first-name-col" data-label="Agent Name">
+                      {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
+                    </td>
+                    <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
+                    {/* <td data-label="Email">{agent.email || 'N/A'}</td> */}
+                    <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
+                    <td className="region-name-col" data-label="Region">{agent.region || 'N/A'}</td>
+                    <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
+                    <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
+                    <td data-label="Total Commission">{agent.totalCommission || 'N/A'}</td>
+                    <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
+                    <td data-label="Actions">
+                      <button
+                        className="action-btn view-btn no-print screen-only"
+                        onClick={() => handleViewDetails(agent.agentId)}
+                      >
+                        View Sales Details
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>
+                  No records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: '10px', textAlign: 'center' }}>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => setPageForTab('paid', page)}
+            style={{
+              margin: '0 5px',
+              padding: '5px 10px',
+              backgroundColor: (pages['paid'] || 1) === page ? '#0a803e' : '#f0f0f0',
+              color: (pages['paid'] || 1) === page ? '#fff' : '#000',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {page}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return <div>Loading paid commissions data...</div>;
+  }
+
+  return (
+    <div className="registered-table">
       {renderTable()}
     </div>
   );

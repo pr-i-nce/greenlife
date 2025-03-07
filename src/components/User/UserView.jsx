@@ -21,10 +21,10 @@ function UserView({ user, onClose }) {
             <label>ID</label>
             <input type="text" readOnly value={user.id || ''} />
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Staff Number</label>
             <input type="text" readOnly value={user.staffNumber || ''} />
-          </div>
+          </div> */}
         </div>
         <div className="form-row">
           <div className="form-group">
@@ -44,6 +44,17 @@ function UserView({ user, onClose }) {
           <div className="form-group">
             <label>Email</label>
             <input type="text" readOnly value={user.email || ''} />
+          </div>
+        </div>
+        {/* New row for Region and Sub Region */}
+        <div className="form-row">
+          <div className="form-group">
+            <label>Region</label>
+            <input type="text" readOnly value={user.regionName || ''} />
+          </div>
+          <div className="form-group">
+            <label>Sub Region</label>
+            <input type="text" readOnly value={user.subRegion || ''} />
           </div>
         </div>
         <div className="form-row">

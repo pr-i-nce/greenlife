@@ -1,30 +1,153 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
+import apiClient from './apiClient'; 
 import '../styles/dashboardcontent.css';
 
 const Dashboard = () => {
   const userName = 'Wanjiku';
   const brandName = 'GreenLife';
+
+  // State for daily, monthly, and annual stat card data,
+  // monthly chart data, subregion chart data, and top agent details.
+  const [dailySales, setDailySales] = useState(null);
+  const [monthlySales, setMonthlySales] = useState(null);
+  const [annualSales, setAnnualSales] = useState(null);
+  const [monthlyChartData, setMonthlyChartData] = useState(null);
+  const [subregionChartData, setSubregionChartData] = useState(null);
+  const [topAgents, setTopAgents] = useState([]);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        // Daily sales from /sales/daily
+        const dailyResponse = await apiClient.get('/sales/daily');
+        let dailyTotal = 0;
+        if (Array.isArray(dailyResponse.data)) {
+          dailyTotal = dailyResponse.data.reduce(
+            (sum, item) => sum + (item.totalAmount || 0),
+            0
+          );
+        }
+        setDailySales(dailyTotal);
+        console.log('Daily sales total:', dailyTotal);
+
+        // Monthly stat card from /sales/monthly
+        const monthlyResponse = await apiClient.get('/sales/monthly');
+        let monthlyTotal = 0;
+        if (Array.isArray(monthlyResponse.data)) {
+          monthlyTotal = monthlyResponse.data.reduce(
+            (sum, item) => sum + (item.totalAmount || 0),
+            0
+          );
+        } else {
+          monthlyTotal = monthlyResponse.data.monthlySales;
+        }
+        setMonthlySales(monthlyTotal);
+        console.log('Monthly stat card sales:', monthlyTotal);
+
+        // Annual sales from /sales/annual
+        const annualResponse = await apiClient.get('/sales/annual');
+        let annualTotal = 0;
+        if (Array.isArray(annualResponse.data)) {
+          annualTotal = annualResponse.data.reduce(
+            (sum, item) => sum + (item.totalAmount || 0),
+            0
+          );
+        }
+        setAnnualSales(annualTotal);
+        console.log('Annual sales total:', annualTotal);
+
+        // Monthly chart data from /sales/all-monthly
+        const allMonthlyResponse = await apiClient.get('/sales/all-monthly');
+        if (Array.isArray(allMonthlyResponse.data)) {
+          const labels = allMonthlyResponse.data.map((item) =>
+            new Date(item.salesMonth).toLocaleString('default', { month: 'short' })
+          );
+          const dataPoints = allMonthlyResponse.data.map((item) => item.totalAmount || 0);
+          setMonthlyChartData({
+            labels,
+            datasets: [
+              {
+                label: 'Monthly Sales (KES)',
+                data: dataPoints,
+                borderColor: '#2B9843',
+                backgroundColor: 'rgba(43,152,67,0.15)',
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          });
+          console.log('Monthly chart data:', { labels, dataPoints });
+        }
+
+        // Subregion chart data from /sales/subregion
+        const subregionResponse = await apiClient.get('/sales/subregion');
+        if (Array.isArray(subregionResponse.data)) {
+          const labels = subregionResponse.data.map((item) => item.sub_region);
+          const dataPoints = subregionResponse.data.map((item) => item.totalAmount || 0);
+          setSubregionChartData({
+            labels,
+            datasets: [
+              {
+                label: 'Sales per Area (KES)',
+                data: dataPoints,
+                backgroundColor: '#21B98F',
+                borderRadius: 6,
+              },
+            ],
+          });
+          console.log('Subregion chart data:', { labels, dataPoints });
+        }
+
+        // Agent details from /sales/agent
+        const agentResponse = await apiClient.get('/sales/agent');
+        const agentsArray = agentResponse.data.map((item) => item.agent);
+        const sortedAgents = agentsArray.sort(
+          (a, b) => (b.totalSales || 0) - (a.totalSales || 0)
+        );
+        const top5 = sortedAgents.slice(0, 5);
+        setTopAgents(top5);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    }
+    fetchDashboardData();
+  }, []);
+
+  // Define stat cards using fetched data.
   const statCards = [
-    { label: 'Daily Sales', value: 'KES 154,000', change: '+5%' },
-    { label: 'Monthly Sales', value: 'KES 4,120,000', change: '+12%' },
-    { label: 'Total Customers', value: '8,760', change: '+2%' },
-    { label: 'Yearly Growth', value: '28%', change: '+4%' },
+    {
+      label: 'Daily Sales',
+      value:
+        typeof dailySales === 'number'
+          ? `KES ${dailySales.toLocaleString()}`
+          : 'Loading...',
+      change: '+5%',
+    },
+    {
+      label: 'Monthly Sales',
+      value:
+        typeof monthlySales === 'number'
+          ? `KES ${monthlySales.toLocaleString()}`
+          : 'Loading...',
+      change: '+12%',
+    },
+    {
+      label: 'Annual Sales',
+      value:
+        typeof annualSales === 'number'
+          ? `KES ${annualSales.toLocaleString()}`
+          : 'Loading...',
+      change: '+0%',
+    },
+    {
+      label: 'Yearly Growth',
+      value: '28%',
+      change: '+4%',
+    },
   ];
-  const lineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-    datasets: [
-      {
-        label: 'Monthly Sales (KES)',
-        data: [3000000, 3200000, 3500000, 4000000, 4120000, 3800000, 4100000, 4300000],
-        borderColor: '#2B9843',
-        backgroundColor: 'rgba(43,152,67,0.15)',
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
+
   const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -48,17 +171,7 @@ const Dashboard = () => {
       },
     },
   };
-  const barChartData = {
-    labels: ['Uasin Gishu', 'Elgeyo Marakwet', ' Trans Nzoia', 'Baringo', 'Nandi', 'West Pokot'],
-    datasets: [
-      {
-        label: 'Sales per Area (KES)',
-        data: [1200000, 800000, 600000, 400000, 300000, 600000],
-        backgroundColor: '#21B98F',
-        borderRadius: 6,
-      },
-    ],
-  };
+
   const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -82,13 +195,6 @@ const Dashboard = () => {
       },
     },
   };
-  const topAgents = [
-    { name: 'Kamau', sales: 900000, commission: 'KES 45,000', region: 'Nairobi' },
-    { name: 'Achieng', sales: 750000, commission: 'KES 37,500', region: 'Kisumu' },
-    { name: 'Njeri', sales: 680000, commission: 'KES 34,000', region: 'Nakuru' },
-    { name: 'Otieno', sales: 650000, commission: 'KES 32,500', region: 'Mombasa' },
-    { name: 'Muthoni', sales: 600000, commission: 'KES 30,000', region: 'Eldoret' },
-  ];
 
   return (
     <div className="kenya-dashboard-container">
@@ -110,10 +216,18 @@ const Dashboard = () => {
       </div>
       <div className="charts-row">
         <div className="chart-box">
-          <Line data={lineChartData} options={lineChartOptions} />
+          {monthlyChartData ? (
+            <Line data={monthlyChartData} options={lineChartOptions} />
+          ) : (
+            <div>Loading monthly chart data...</div>
+          )}
         </div>
         <div className="chart-box">
-          <Bar data={barChartData} options={barChartOptions} />
+          {subregionChartData ? (
+            <Bar data={subregionChartData} options={barChartOptions} />
+          ) : (
+            <div>Loading subregion data...</div>
+          )}
         </div>
       </div>
       <div className="agents-table">
@@ -130,10 +244,16 @@ const Dashboard = () => {
           <tbody>
             {topAgents.map((agent, i) => (
               <tr key={i}>
-                <td data-label="Agent">{agent.name}</td>
-                <td data-label="Sales (KES)">{agent.sales.toLocaleString()}</td>
-                <td data-label="Commission">{agent.commission}</td>
-                <td data-label="Region">{agent.region}</td>
+                <td data-label="Agent">{`${agent.first_name} ${agent.last_name}`}</td>
+                <td data-label="Sales (KES)">
+                  {typeof agent.totalSales === 'number'
+                    ? agent.totalSales.toLocaleString()
+                    : "0"}
+                </td>
+                <td data-label="Commission">
+                  {agent.totalCommission !== undefined ? agent.totalCommission : "0"}
+                </td>
+                <td data-label="Region">{agent.region || ''}</td>
               </tr>
             ))}
           </tbody>

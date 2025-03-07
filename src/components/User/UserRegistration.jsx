@@ -1,13 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
-import { useSelector } from 'react-redux';
 import { FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
-import '../../styles/registeredTables.css';
+import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
+import '../../styles/registeredTables.css';
+
+// SearchableDropdown component (unchanged)
+const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleClickOutside = (e) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setIsOpen(false);
+      setSearchTerm('');
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleOptionSelect = (selectedValue) => {
+    onChange({ target: { id, value: selectedValue } });
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div className="searchable-dropdown" ref={dropdownRef}>
+      <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
+        {value
+          ? options.find(opt => opt.value === value)?.label
+          : placeholder}
+        <span className="dropdown-arrow">&#9662;</span>
+      </div>
+      {isOpen && (
+        <div className="dropdown-menu">
+          <input 
+            type="text"
+            className="dropdown-search"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          <ul className="dropdown-list">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <li key={option.id} onMouseDown={() => handleOptionSelect(option.value)}>
+                  {option.label}
+                </li>
+              ))
+            ) : (
+              <li className="no-options">{noOptionsText || "No options found"}</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
 
+  // Extend form data to include regionName, subRegion, and groupName
   const [regFormData, setRegFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,60 +80,99 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
     email: '',
     userTitle: '',
     groupName: '',
+    regionName: '', 
+    subRegion: ''
   });
 
   const [groups, setGroups] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [subregions, setSubregions] = useState([]);
 
+  // Fetch groups
   useEffect(() => {
-    fetch(`${BASE_URL}/group/all`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((response) => response.json())
-      .then((data) => {
+    const fetchGroups = async () => {
+      try {
+        const { data } = await apiClient.get('/group/all', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
         setGroups(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
+      } catch (err) {
         Swal.fire('Error', err.message, 'error');
-      });
+      }
+    };
+    if (accessToken) fetchGroups();
+  }, [accessToken]);
+
+  // Fetch regions from backend
+  useEffect(() => {
+    const fetchRegions = async () => {
+      try {
+        const { data } = await apiClient.get('/region/all', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        setRegions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    };
+    if (accessToken) fetchRegions();
+  }, [accessToken]);
+
+  // Fetch subregions from backend
+  useEffect(() => {
+    const fetchSubregions = async () => {
+      try {
+        const { data } = await apiClient.get('/subregion/all', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        setSubregions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    };
+    if (accessToken) fetchSubregions();
   }, [accessToken]);
 
   const handleRegChange = (e) => {
     setRegFormData({ ...regFormData, [e.target.id]: e.target.value });
   };
 
-  const handleRegSubmit = (e) => {
+  const handleRegSubmit = async (e) => {
     e.preventDefault();
 
-    fetch(`${BASE_URL}/registration`, {
-      method: 'POST',
+    const response = await apiClient.post('/registration', regFormData, {
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: accessToken ? `Bearer ${accessToken}` : '',
-      },
-      body: JSON.stringify(regFormData),
-    })
-      .then((res) => res.text())
-      .then((text) => {
-        let data;
-        try {
-          data = text ? JSON.parse(text) : {};
-        } catch (err) {
-          console.error('JSON parse error:', err);
-          data = {};
-        }
-        if (data && data.staffNumber) {
-          Swal.fire('Success', data.message || 'User registered successfully!', 'success');
-          onClose();
-          if (onRegistrationSuccess) onRegistrationSuccess();
-        } else {
-          Swal.fire('Error', 'User not created.', 'error');
-        }
-      })
-      .catch((error) => {
-        console.error('Registration error:', error);
-        Swal.fire('Error', error.message || 'Error creating user', 'error');
-      });
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = response.data;
+    // Assuming the API returns an object with staffNumber on success.
+    if (data && data.staffNumber) {
+      Swal.fire('Success', data.message || 'User registered successfully!', 'success');
+      onClose();
+      if (onRegistrationSuccess) onRegistrationSuccess();
+    } else {
+      Swal.fire('Error', 'User not created.', 'error');
+    }
   };
+
+  const regionOptions = regions.map(region => ({
+    id: region.id,
+    label: region.regionName,
+    value: region.regionName,
+  }));
+
+  const subregionOptions = subregions.map(sub => ({
+    id: sub.id,
+    label: sub.subRegionName,
+    value: sub.subRegionName,
+  }));
+
+  const groupOptions = groups.map(group => ({
+    id: group.id || group.groupName,
+    label: group.groupName,
+    value: group.groupName,
+  }));
 
   return (
     <div className="region-container">
@@ -82,7 +186,7 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
           <h2>User Registration</h2>
         </div>
       </div>
-      <form className="region-form" onSubmit={handleRegSubmit}>
+      <form className="rm-form" onSubmit={handleRegSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">
@@ -139,7 +243,35 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
             />
           </div>
         </div>
-        {/* <div className="form-row">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="regionName">
+              <FaIdBadge className="icon" /> Region
+            </label>
+            <SearchableDropdown
+              id="regionName"
+              value={regFormData.regionName}
+              onChange={handleRegChange}
+              options={regionOptions}
+              placeholder="Select Region"
+              noOptionsText="No regions found"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="subRegion">
+              <FaIdBadge className="icon" /> Sub Region
+            </label>
+            <SearchableDropdown
+              id="subRegion"
+              value={regFormData.subRegion}
+              onChange={handleRegChange}
+              options={subregionOptions}
+              placeholder="Select Sub Region"
+              noOptionsText="No subregions found"
+            />
+          </div>
+        </div>
+        <div className="form-row">
           <div className="form-group">
             <label htmlFor="userTitle">
               <FaIdBadge className="icon" /> User Title
@@ -157,31 +289,25 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
               <option value="004">Sub Regional Manager</option>
             </select>
           </div>
-        </div> */}
-        <div className="form-row">
           <div className="form-group">
             <label htmlFor="groupName">
               <FaIdBadge className="icon" /> Group Name
             </label>
-            <select
+            <SearchableDropdown
               id="groupName"
               value={regFormData.groupName}
               onChange={handleRegChange}
-              required
-            >
-              <option value="">Select Group</option>
-              {groups.map((group) => (
-                <option key={group.groupName} value={group.groupName}>
-                  {group.groupName}
-                </option>
-              ))}
-            </select>
+              options={groupOptions}
+              placeholder="Select Group"
+              noOptionsText="No groups found"
+            />
           </div>
         </div>
         <button type="submit" className="submit-btn">
           Register User
-        </button>
+      </button>
       </form>
+
     </div>
   );
 };

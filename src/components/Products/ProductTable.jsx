@@ -5,7 +5,7 @@ import ProductRegistration from './ProductRegistration';
 import ProductUpdate from './ProductUpdate';
 import ProductView from './ProductView';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 function ProductTable() {
@@ -19,16 +19,10 @@ function ProductTable() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/product/all`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch products.');
-      }
-      const data = await response.json();
+      const { data } = await apiClient.get('/product/all');
       setProducts(data);
     } catch (err) {
-      Swal.fire('Error', err.message, 'error');
+      Swal.fire('Error', err.response?.data || err.message, 'error');
     }
   };
 
@@ -57,19 +51,11 @@ function ProductTable() {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const response = await fetch(`${BASE_URL}/product/${product.id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-          });
-          const responseText = await response.text();
-          if (response.ok) {
-            Swal.fire('Deleted!', responseText, 'success');
-            setProducts(products.filter(p => p.id !== product.id));
-          } else {
-            Swal.fire('Error', responseText, 'error');
-          }
+          const { data: responseText } = await apiClient.delete(`/product/${product.id}`);
+          Swal.fire('Deleted!', responseText, 'success');
+          setProducts(products.filter(p => p.id !== product.id));
         } catch (err) {
-          Swal.fire('Error', err.message, 'error');
+          Swal.fire('Error', err.response?.data || err.message, 'error');
         }
       }
     });

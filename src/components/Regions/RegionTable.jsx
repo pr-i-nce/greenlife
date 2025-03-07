@@ -7,6 +7,7 @@ import RegionsUpdate from './RegionUpdate';
 import RegionsView from './RegionsView';
 import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 
@@ -30,11 +31,7 @@ const RegionsManagement = () => {
   const fetchRegions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/region/all`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      if (!response.ok) throw new Error("Failed to fetch regions.");
-      const data = await response.json();
+      const { data } = await apiClient.get('/region/all');
       setRegions(data);
     } catch (err) {
       setError(err.message);
@@ -61,23 +58,17 @@ const RegionsManagement = () => {
     setRegError("");
     const payload = { regionName: regFormData.regionName, regionCode: regFormData.regionCode };
     try {
-      const response = await fetch(`${BASE_URL}/region`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify(payload)
+      const response = await apiClient.post('/region', payload, {
+        headers: { "Content-Type": "application/json" }
       });
-      const responseText = await response.text();
-      if (response.ok) {
-        Swal.fire({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
-          setRegFormData({ regionName: "", regionCode: "" });
-          setMode("table");
-          fetchRegions();
-        });
-      } else {
-        Swal.fire({ icon: "error", title: "Error", text: responseText });
-      }
+      const responseText = response.data;
+      Swal.fire({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
+        setRegFormData({ regionName: "", regionCode: "" });
+        setMode("table");
+        fetchRegions();
+      });
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Error", text: "An error occurred while registering. Please try again." });
+      Swal.fire({ icon: "error", title: "Error", text: err.response?.data || err.message });
     }
   };
 
@@ -96,16 +87,11 @@ const RegionsManagement = () => {
     const payload = { regionName: updateFormData.regionName, regionCode: updateFormData.regionCode };
     try {
       setUpdating(true);
-      const response = await fetch(`${BASE_URL}/region/update?regionCode=${encodeURIComponent(editingRegion.regionCode)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify(payload)
+      const response = await apiClient.put('/region/update', payload, {
+        params: { regionCode: editingRegion.regionCode },
+        headers: { "Content-Type": "application/json" }
       });
-      if (!response.ok) {
-        const errMsg = await response.text();
-        throw new Error(errMsg || "Update failed");
-      }
-      const updatedRegion = await response.json();
+      const updatedRegion = response.data;
       setRegions(regions.map(region => region.id === updatedRegion.id ? updatedRegion : region));
       setEditingRegion(null);
       setMode("table");
@@ -113,7 +99,7 @@ const RegionsManagement = () => {
       fetchRegions();
     } catch (err) {
       setUpdateError(err.message);
-      Swal.fire({ icon: "error", title: "Update Failed", text: err.message });
+      Swal.fire({ icon: "error", title: "Update Failed", text: err.response?.data || err.message });
     } finally {
       setUpdating(false);
     }
@@ -139,19 +125,14 @@ const RegionsManagement = () => {
     });
     if (result.isConfirmed && result.value === "yes") {
       try {
-        const response = await fetch(`${BASE_URL}/region/delete?regionCode=${encodeURIComponent(regionCode)}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${accessToken}` }
+        const response = await apiClient.delete('/region/delete', {
+          params: { regionCode }
         });
-        if (!response.ok) {
-          const errMsg = await response.text();
-          throw new Error(errMsg || "Delete failed");
-        }
-        const successMessage = await response.text();
+        const successMessage = response.data;
         Swal.fire({ icon: "success", title: "Deleted!", text: successMessage, confirmButtonColor: "#2B9843" });
         setRegions(regions.filter(r => r.regionCode !== regionCode));
       } catch (err) {
-        Swal.fire({ icon: "error", title: "Delete Failed", text: err.message });
+        Swal.fire({ icon: "error", title: "Delete Failed", text: err.response?.data || err.message });
       }
     }
   };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
@@ -18,11 +18,7 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
 
   const fetchRegions = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/region/all`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      if (!response.ok) throw new Error("Failed to fetch regions.");
-      const data = await response.json();
+      const { data } = await apiClient.get('/region/all');
       setRegions(data);
     } catch (err) {
       console.error(err);
@@ -84,34 +80,29 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
     };
     try {
       setUpdating(true);
-      const response = await fetch(
-        `${BASE_URL}/subregion/update?subRegionCode=${encodeURIComponent(record.subRegionCode)}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          },
-          body: JSON.stringify(payload)
+      const response = await apiClient.put('/subregion/update', payload, {
+        params: { subRegionCode: record.subRegionCode },
+        headers: {
+          "Content-Type": "application/json"
         }
-      );
-      if (!response.ok) {
-        const errMsg = await response.text();
-        throw new Error(errMsg || "Update failed");
-      }
-      const updatedRecord = await response.json();
-      setUpdateError("");
-      onClose();
-      if (onUpdateSuccess) onUpdateSuccess();
-      Swal.fire({
-        icon: "success",
-        title: "Update Successful",
-        text: "Subregion updated successfully!",
-        confirmButtonColor: "#2B9843"
       });
+      if (response.status >= 200 && response.status < 300) {
+        const updatedRecord = response.data;
+        setUpdateError("");
+        onClose();
+        if (onUpdateSuccess) onUpdateSuccess();
+        Swal.fire({
+          icon: "success",
+          title: "Update Successful",
+          text: "Subregion updated successfully!",
+          confirmButtonColor: "#2B9843"
+        });
+      } else {
+        Swal.fire({ icon: "error", title: "Update Failed", text: response.data });
+      }
     } catch (err) {
       setUpdateError(err.message);
-      Swal.fire({ icon: "error", title: "Update Failed", text: err.message });
+      Swal.fire({ icon: "error", title: "Update Failed", text: err.response?.data || err.message });
     } finally {
       setUpdating(false);
     }
@@ -131,7 +122,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
       </div>
       <form className="subregion-form" onSubmit={handleSubmit}>
         <div className="grid-container">
-
           <div className="grid-item">
             <label htmlFor="regionName">Region</label>
             <div className="searchable-dropdown" ref={dropdownRef}>
@@ -151,9 +141,9 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
                   />
                   <ul className="dropdown-list">
                     {filteredRegions.length > 0 ? (
-                      filteredRegions.map(region => (
-                        <li key={region.id} onMouseDown={() => handleDropdownSelect(region.regionName)}>
-                          {region.regionName}
+                      filteredRegions.map(option => (
+                        <li key={option.id} onMouseDown={() => handleDropdownSelect(option.regionName)}>
+                          {option.regionName}
                         </li>
                       ))
                     ) : (
@@ -164,7 +154,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
               )}
             </div>
           </div>
-
           <div className="grid-item">
             <label htmlFor="subRegionName">
               <FaClipboardList className="icon" /> Area Name
@@ -178,7 +167,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
               required 
             />
           </div>
-
           <div className="grid-item">
             <label htmlFor="subRegionCode">
               <FaMapMarkerAlt className="icon" /> Area Code

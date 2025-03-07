@@ -4,6 +4,7 @@ import '../../styles/registeredTables.css';
 import SalesDetailsTable from './SalesDetailsTable';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -23,11 +24,7 @@ const GroupedDataTable = () => {
   const fetchGroupedData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/sales/agent`);
-      if (!response.ok) {
-        throw new Error('Network error');
-      }
-      const data = await response.json();
+      const { data } = await apiClient.get('/sales/agent');
       setGroupedData(data);
       console.log(data);
     } catch (error) {
@@ -74,7 +71,6 @@ const GroupedDataTable = () => {
   };
 
   const handleViewDetails = (agentId) => {
-    // Simply store the selected agent's id so SalesDetailsTable can fetch data based on it
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
@@ -101,9 +97,9 @@ const GroupedDataTable = () => {
   return (
     <div className="registered-table">
       <div style={{ margin: '20px 0', textAlign: 'right' }}>
-        <button className="action-btn view-btn no-print" onClick={handlePrint}>
+        {/* <button className="action-btn view-btn no-print" onClick={handlePrint}>
           Print Data
-        </button>
+        </button> */}
       </div>
       <div id="printable-area">
         <div className="table-header">

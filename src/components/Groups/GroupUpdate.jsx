@@ -4,7 +4,7 @@ import { FaClipboardList } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
+import apiClient, { BASE_URL } from '../apiClient';
 
 const GroupUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -30,16 +30,13 @@ const GroupUpdate = ({ record, onClose, onUpdateSuccess }) => {
     setError('');
     try {
       setUpdating(true);
-      const response = await fetch(`${BASE_URL}/group/${record.id}`, {
-        method: 'PUT',
+      const response = await apiClient.put(`/group/${record.id}`, formData, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(formData)
+          'Content-Type': 'application/json'
+        }
       });
-      const responseText = await response.text();
-      if (response.ok) {
+      const responseText = response.data;
+      if (response.status >= 200 && response.status < 300) {
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();
         Swal.fire({ icon: 'success', title: 'Update Successful', text: 'Group updated successfully!', confirmButtonColor: '#2B9843' });
@@ -48,7 +45,7 @@ const GroupUpdate = ({ record, onClose, onUpdateSuccess }) => {
       }
     } catch (err) {
       setError(err.message);
-      Swal.fire({ icon: 'error', title: 'Update Failed', text: err.message });
+      Swal.fire({ icon: 'error', title: 'Update Failed', text: err.response?.data || err.message });
     } finally {
       setUpdating(false);
     }

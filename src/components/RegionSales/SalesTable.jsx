@@ -4,7 +4,7 @@ import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
 import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
-import apiClient, { BASE_URL } from '../apiClient';
+import { BASE_URL } from '../apiClient';
 import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
@@ -49,26 +49,31 @@ function SalesTable() {
     }
   };
 
-  const fetchAllSales = () => {
-    apiClient.get('/sales/all')
-      .then((response) => {
-        const data = response.data;
+  // Fetch sales data by region using the new endpoint
+  const fetchRegionSales = () => {
+    fetch(`${BASE_URL}/sales/region`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
+      .then((data) => {
         if (Array.isArray(data)) {
           setSalesData(data);
-          console.log('Sales data:', data);
+          console.log('Region sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
       })
       .catch((error) => {
-        console.error('Error fetching all sales data:', error);
+        console.error('Error fetching region sales data:', error);
       });
   };
 
   const fetchAcceptedSales = () => {
-    apiClient.get('/sales/approved')
-      .then((response) => {
-        const data = response.data;
+    fetch(`${BASE_URL}/sales/region-accepted`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
+      .then((data) => {
         if (Array.isArray(data)) {
           setAcceptedSales(data);
           console.log('Accepted sales data:', data);
@@ -82,9 +87,11 @@ function SalesTable() {
   };
 
   const fetchRejectedSales = () => {
-    apiClient.get('/sales/rejected')
-      .then((response) => {
-        const data = response.data;
+    fetch(`${BASE_URL}/sales/region-rejected`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
+      .then((data) => {
         if (Array.isArray(data)) {
           setRejectedSales(data);
           console.log('Rejected sales data:', data);
@@ -99,7 +106,7 @@ function SalesTable() {
 
   useEffect(() => {
     if (currentTab === 'all') {
-      fetchAllSales();
+      fetchRegionSales();
     } else if (currentTab === 'accepted') {
       fetchAcceptedSales();
     } else if (currentTab === 'rejected') {
@@ -111,7 +118,7 @@ function SalesTable() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (currentTab === 'all') {
-        fetchAllSales();
+        fetchRegionSales();
       } else if (currentTab === 'accepted') {
         fetchAcceptedSales();
       } else if (currentTab === 'rejected') {
@@ -136,21 +143,28 @@ function SalesTable() {
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to accept sale for createdBy ${sale.email}?`
+      `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
 
     showLoadingAlert();
     try {
-      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Accepted`);
+      const response = await fetch(
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      if (!response.ok) throw new Error('Network error');
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'success',
         title: 'Sale Accepted',
-        text: `Sale accepted for createdBy ${sale.email}`
+        text: `Sale accepted for createdBy ${sale.createdBy}`
       });
-      fetchAllSales();
+      fetchRegionSales();
       fetchAcceptedSales();
     } catch (error) {
       console.error('Error accepting sale:', error);
@@ -168,21 +182,28 @@ function SalesTable() {
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to reject sale for ${sale.email}?`
+      `Are you sure you want to reject sale for ${sale.createdBy}?`
     );
     if (!confirmed) return;
 
     showLoadingAlert();
     try {
-      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
+      const response = await fetch(
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      if (!response.ok) throw new Error('Network error');
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'error',
         title: 'Sale Rejected',
-        text: `Sale rejected for createdBy ${sale.email}`
+        text: `Sale rejected for createdBy ${sale.createdBy}`
       });
-      fetchAllSales();
+      fetchRegionSales();
       fetchRejectedSales();
     } catch (error) {
       console.error('Error rejecting sale:', error);
@@ -200,19 +221,26 @@ function SalesTable() {
     const sale = acceptedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to reject sale for createdBy ${sale.email}?`
+      `Are you sure you want to reject sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
 
     showLoadingAlert();
     try {
-      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
+      const response = await fetch(
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      if (!response.ok) throw new Error('Network error');
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'error',
         title: 'Sale Rejected',
-        text: `Sale rejected for createdBy ${sale.email}`
+        text: `Sale rejected for createdBy ${sale.createdBy}`
       });
       fetchAcceptedSales();
       fetchRejectedSales();
@@ -232,19 +260,26 @@ function SalesTable() {
     const sale = rejectedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to accept sale for createdBy ${sale.email}?`
+      `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
 
     showLoadingAlert();
     try {
-      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Approved`);
+      const response = await fetch(
+        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+      if (!response.ok) throw new Error('Network error');
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'success',
         title: 'Sale Accepted',
-        text: `Sale accepted for createdBy ${sale.email}`
+        text: `Sale accepted for createdBy ${sale.createdBy}`
       });
       fetchAcceptedSales();
       fetchRejectedSales();
@@ -283,8 +318,11 @@ function SalesTable() {
       }
     });
     try {
-      const response = await apiClient.get(`/sales/sold-products?id=${ref_id}`);
-      const data = response.data;
+      const response = await fetch(`${BASE_URL}/sales/sold-products?id=${ref_id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) throw new Error('Network error');
+      const data = await response.json();
       const productDetails = Array.isArray(data.object) ? data.object : [];
       console.log('Product details:', productDetails);
       Swal.close();
