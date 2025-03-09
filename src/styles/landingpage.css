@@ -144,6 +144,12 @@ body,
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Active state for main menu title when a submenu is active */
+.menu-title.active {
+  background-color: #26ac5e94;
+  color: #fff;
+}
+
 .menu-icon {
   font-size: 1.2rem;
   margin-right: 0.75rem;

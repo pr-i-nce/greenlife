@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setAccessToken, setGroupData } from './store/authSlice';
@@ -12,11 +12,13 @@ function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const loginEndpoint = '/registration/login';
       
@@ -41,6 +43,8 @@ function Login() {
       }
     } catch (error) {
       setErrorMessage('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,8 +102,8 @@ function Login() {
                 </span>
               </div>
             </div>
-            <button type="submit" className="login-btn">
-              Login
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? <FaSpinner className="spinner" /> : 'Login'}
             </button>
           </form>
         </div>

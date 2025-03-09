@@ -29,7 +29,7 @@ function PaidCommissionsTable() {
   const fetchGroupedData = async (isPolling = false) => {
     if (!isPolling) setLoading(true);
     try {
-      const { data } = await apiClient.get('/sales/agent');
+      const { data } = await apiClient.get('/sales/paid');
       // Update only if new data differs from the current state.
       setGroupedData(prevData => {
         if (JSON.stringify(data) !== JSON.stringify(prevData)) {
@@ -183,7 +183,7 @@ function PaidCommissionsTable() {
               <th>SN</th>
               <th className="first-name-col">Agent Name</th>
               <th>Phone Number</th>
-              {/* <th>Email</th> */}
+              <th>Email</th>
               <th>Distributor</th>
               <th className="region-name-col">Region</th>
               <th>Sub Region</th>
@@ -204,7 +204,7 @@ function PaidCommissionsTable() {
                       {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
                     </td>
                     <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
-                    {/* <td data-label="Email">{agent.email || 'N/A'}</td> */}
+                    <td data-label="Email">{agent.email || 'N/A'}</td>
                     <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
                     <td className="region-name-col" data-label="Region">{agent.region || 'N/A'}</td>
                     <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
@@ -217,6 +217,12 @@ function PaidCommissionsTable() {
                         onClick={() => handleViewDetails(agent.agentId)}
                       >
                         View Sales Details
+                      </button>
+                      <button
+                        className="action-btn pay-btn no-print screen-only"
+                        onClick={() => handlePay(agent.agentId)}
+                      >
+                        Pay Commission
                       </button>
                     </td>
                   </tr>
@@ -259,6 +265,11 @@ function PaidCommissionsTable() {
 
   return (
     <div className="registered-table">
+      <div style={{ margin: '20px 0', textAlign: 'right' }}>
+        <button className="action-btn view-btn no-print" onClick={handlePrint}>
+          Print Data
+        </button>
+      </div>
       {renderTable()}
     </div>
   );

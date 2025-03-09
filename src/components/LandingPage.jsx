@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import {
   FaUserTie,
   FaStore,
@@ -9,29 +9,12 @@ import {
   FaMapMarkerAlt,
   FaBars,
   FaEye,
-  FaChartLine
+  FaChartLine,
+  FaChevronDown,
+  FaChevronUp
 } from 'react-icons/fa';
-import AgentsTable from './Agent/AgentsTable';
-import DistributorsTable from './Distributor/DistributorsTable';
-import RegionalManagersTable from './RegionalManagers/RegionalManagersTable';
-import SubRegionalManagersTable from './SubRegionManagers/SubRegionalManagersTable';
-import ProductsTable from './Products/ProductTable';
-import CommissionTable from './Commission/CommissionTable';
-import RegionsTable from './Regions/RegionTable';
-import SubRegionsTable from './SubRegion/SubregionTable';
-import UserTable from './User/UserTable';
-import GroupTable from './Groups/GroupTable';
-import DashboardContent from './DashboardContent';
-import SalesTable from './Sales/SalesTable';
-import CommissionsTable from './Commissions/CommisionTable';
-import PaidCommissionsTable from './Commissions/PaidCommissionsTable';
-import GroupedDataTable from './Sales/GroupedDataTable';
-import RegionSalesTable from './RegionSales/SalesTable'; 
-import RegionAgentsTable from './RegionAgent/AgentsTable';
-import RegionDistributorsTable from './RegionDistributor/DistributorsTable'; 
-import UserProfile from './Profile/UserProfile';
-import '../styles/landingpage.css';
 import { useSelector } from 'react-redux';
+import '../styles/landingpage.css';
 
 const mainMenuItems = [
   {
@@ -63,12 +46,9 @@ const mainMenuItems = [
     label: 'Settings',
     icon: <FaBoxOpen />,
     subItems: [
-      // { key: 'regionalManagers', label: 'Regional Managers', icon: <FaUserTie /> },
-      // { key: 'subRegionalManagers', label: 'Sub Regional Managers', icon: <FaStore /> },
       { key: 'regions', label: 'Regions', icon: <FaMapMarkedAlt /> },
       { key: 'subRegions', label: 'Areas', icon: <FaMapMarkerAlt /> },
       { key: 'products', label: 'Products', icon: <FaBoxOpen /> },
-      // { key: 'commission', label: 'Commission Configuration', icon: <FaMoneyBill /> },
       { key: 'profile', label: 'Profile', icon: <FaUserTie /> }
     ]
   },
@@ -109,10 +89,56 @@ const mainMenuItems = [
 
 function LandingPage() {
   const navigate = useNavigate();
-  const [activeComponent, setActiveComponent] = useState('Dashboard');
-  const [activeSubItem, setActiveSubItem] = useState('dashboard');
+  const location = useLocation();
+  const sidebarRef = useRef(null);
+
+  // Returns the full route path for a given mainKey and subKey
+  const getRoutePath = (mainKey, subKey) => {
+    if (mainKey === 'dashboard') return '/landingpage/dashboard';
+    if (mainKey === 'onboarding'){
+      if (subKey === 'agents') return '/landingpage/agents';
+      if (subKey === 'distributors') return '/landingpage/distributors';
+    }
+    if (mainKey === 'regionOnboarding'){
+      if (subKey === 'regionAgents') return '/landingpage/region-agents';
+      if (subKey === 'regionDistributors') return '/landingpage/region-distributors';
+    }
+    if (mainKey === 'settings'){
+      if (subKey === 'regions') return '/landingpage/regions';
+      if (subKey === 'subRegions') return '/landingpage/sub-regions';
+      if (subKey === 'products') return '/landingpage/products';
+      if (subKey === 'profile') return '/landingpage/profile';
+    }
+    if (mainKey === 'regionSales'){
+      if (subKey === 'reports') return '/landingpage/region-sales';
+    }
+    if (mainKey === 'sales'){
+      if (subKey === 'reports') return '/landingpage/sales';
+      if (subKey === 'groupedSales') return '/landingpage/grouped-sales';
+    }
+    if (mainKey === 'commissionMenu'){
+      if (subKey === 'commissionDisbursement') return '/landingpage/commission-disbursement';
+      if (subKey === 'paidCommissions') return '/landingpage/paid-commissions';
+    }
+    if (mainKey === 'accessManagement'){
+      if (subKey === 'user') return '/landingpage/user';
+      if (subKey === 'group') return '/landingpage/group';
+    }
+    return '/landingpage/dashboard';
+  };
+
+  // Uses startsWith so that extra segments are still considered active.
+  const isSubItemActive = (mainKey, subKey) => {
+    return location.pathname.startsWith(getRoutePath(mainKey, subKey));
+  };
+
+  // Compute active state for a main menu based on its subItems.
+  const isActiveMenu = (mainItem) => {
+    return mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
+  };
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [openDropdowns, setOpenDropdowns] = useState({ dashboard: true });
+  const [openDropdowns, setOpenDropdowns] = useState({});
 
   const groupData = JSON.parse(localStorage.getItem('groupData') || '{}');
   const permissions = groupData.permissions || {};
@@ -127,8 +153,6 @@ function LandingPage() {
     }
     return true;
   });
-
-  console.log('Filtered Menu Items:', filteredMenuItems);
 
   const menuPermissionMapping = {
     dashboard: null, 
@@ -153,111 +177,39 @@ function LandingPage() {
   };
 
   const handleMainMenuClick = (mainItem) => {
-    console.log('Main Menu Clicked:', mainItem);
-
-    if (mainItem.key === 'regionSales' || mainItem.key === 'regionOnboarding') {
-      setOpenDropdowns({ [mainItem.key]: true });
-      handleSubItemClick(mainItem.key, mainItem.subItems[0].key);
-      return;
-    }
     if (mainItem.subItems && mainItem.subItems.length > 0) {
-      const filteredSubItems = mainItem.subItems.filter((subItem) => {
-        const requiredPermission = menuPermissionMapping[subItem.key];
-        return requiredPermission ? permissions[requiredPermission] : true;
-      });
-      console.log(`Filtered SubItems for ${mainItem.key}:`, filteredSubItems);
-      if (filteredSubItems.length > 0) {
-        setOpenDropdowns({ [mainItem.key]: true });
-        handleSubItemClick(mainItem.key, filteredSubItems[0].key);
-      }
+      // Toggle dropdown open/close regardless of active submenu.
+      setOpenDropdowns((prev) => ({
+        ...prev,
+        [mainItem.key]: !prev[mainItem.key]
+      }));
     } else {
-      setOpenDropdowns({ [mainItem.key]: true });
-      handleSubItemClick(mainItem.key, mainItem.key);
+      // No subItems, navigate directly.
+      const routePath = getRoutePath(mainItem.key, mainItem.key);
+      navigate(routePath);
     }
   };
 
   const handleSubItemClick = (mainKey, subKey) => {
-    console.log(`Sub Menu Clicked: mainKey=${mainKey}, subKey=${subKey}`);
-    if (mainKey === 'dashboard') {
-      setActiveComponent('Dashboard');
-    } else if (mainKey === 'commissionMenu') {
-      if (subKey === 'commissionDisbursement') setActiveComponent('CommissionDisbursement');
-      else if (subKey === 'paidCommissions') setActiveComponent('PaidCommissions');
-    } else if (mainKey === 'onboarding') {
-      if (subKey === 'agents') setActiveComponent('AgentsTable');
-      else if (subKey === 'distributors') setActiveComponent('DistributorsTable');
-    } else if (mainKey === 'regionOnboarding') {
-      if (subKey === 'regionAgents') setActiveComponent('RegionAgents');
-      else if (subKey === 'regionDistributors') setActiveComponent('RegionDistributors');
-    } else if (mainKey === 'settings') {
-      if (subKey === 'products') setActiveComponent('ProductsTable');
-      else if (subKey === 'regionalManagers') setActiveComponent('RegionalManagersTable');
-      else if (subKey === 'subRegionalManagers') setActiveComponent('SubRegionalManagersTable');
-      else if (subKey === 'commission') setActiveComponent('CommissionTable');
-      else if (subKey === 'regions') setActiveComponent('RegionsTable');
-      else if (subKey === 'subRegions') setActiveComponent('SubRegionsTable');
-      else if (subKey === 'profile') setActiveComponent('Profile');
-    } else if (mainKey === 'regionSales') {
-      if (subKey === 'reports') setActiveComponent('RegionSales');
-    } else if (mainKey === 'sales') {
-      if (subKey === 'reports') setActiveComponent('SalesReports');
-      else if (subKey === 'groupedSales') setActiveComponent('GroupedSales');
-    } else if (mainKey === 'accessManagement') {
-      if (subKey === 'user') setActiveComponent('UserTable');
-      else if (subKey === 'group') setActiveComponent('GroupTable');
-    }
-    setActiveSubItem(subKey);
-    setOpenDropdowns({ [mainKey]: true });
+    const routePath = getRoutePath(mainKey, subKey);
+    navigate(routePath);
     if (window.innerWidth < 780) {
       setSidebarOpen(false);
     }
   };
 
-  const renderMainContent = () => {
-    switch (activeComponent) {
-      case 'AgentsTable':
-        return <AgentsTable />;
-      case 'DistributorsTable':
-        return <DistributorsTable />;
-      case 'RegionalManagersTable':
-        return <RegionalManagersTable />;
-      case 'SubRegionalManagersTable':
-        return <SubRegionalManagersTable />;
-      case 'ProductsTable':
-        return <ProductsTable />;
-      case 'CommissionTable':
-        return <CommissionTable />;
-      case 'CommissionDisbursement':
-        return <CommissionsTable />;
-      case 'PaidCommissions':
-        return <PaidCommissionsTable />;
-      case 'RegionsTable':
-        return <RegionsTable />;
-      case 'SubRegionsTable':
-        return <SubRegionsTable />;
-      case 'UserTable':
-        return <UserTable />;
-      case 'GroupTable':
-        return <GroupTable />;
-      case 'SalesReports':
-        return <SalesTable />;
-      case 'GroupedSales':
-        return <GroupedDataTable />;
-      case 'RegionSales':
-        return <RegionSalesTable />;
-      case 'RegionAgents':
-        return <RegionAgentsTable />;
-      case 'RegionDistributors':
-        return <RegionDistributorsTable />;
-      case 'Dashboard':
-      case '': // default case
-        return <DashboardContent />;
-      case 'Profile':
-        return <UserProfile />;
-      default:
-        return <DashboardContent />;
-    }
-  };
+  // Close dropdowns when clicking outside (mobile view)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (window.innerWidth < 780 && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setOpenDropdowns({});
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="landing-page">
@@ -284,7 +236,7 @@ function LandingPage() {
         </div>
       </header>
       <div className="main-container">
-        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Sidebar Navigation">
+        <aside ref={sidebarRef} className={`sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Sidebar Navigation">
           {filteredMenuItems.map((mainItem) => {
             let filteredSubItems = [];
             if (mainItem.key === 'regionSales' || mainItem.key === 'regionOnboarding') {
@@ -296,25 +248,34 @@ function LandingPage() {
               });
               if (filteredSubItems.length === 0) return null;
             }
+            // Compute if this main menu contains an active submenu.
+            const activeInMenu = mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
+            // Dropdown open state is controlled solely by user toggling.
+            const showSubMenu = openDropdowns[mainItem.key];
             return (
               <div key={mainItem.key} className="menu-section">
-                {filteredSubItems.length > 0 ? (
+                {mainItem.subItems && mainItem.subItems.length > 0 ? (
                   <>
                     <div
-                      className="menu-title"
+                      className={`menu-title ${(!showSubMenu && activeInMenu) ? 'active' : ''}`}
                       onClick={() => handleMainMenuClick(mainItem)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                     >
-                      <span className="menu-icon">{mainItem.icon}</span>
-                      <span className="menu-label">{mainItem.label}</span>
+                      <span>
+                        <span className="menu-icon">{mainItem.icon}</span>
+                        <span className="menu-label">{mainItem.label}</span>
+                      </span>
+                      <span className="dropdown-indicator">
+                        {showSubMenu ? <FaChevronUp /> : <FaChevronDown />}
+                      </span>
                     </div>
-                    {openDropdowns[mainItem.key] && (
+                    {showSubMenu && (
                       <ul className="sub-menu">
                         {filteredSubItems.map((subItem) => (
                           <li key={subItem.key} className="sub-menu-item">
                             <button
                               type="button"
-                              className={`action-button ${activeSubItem === subItem.key ? 'active' : ''}`}
+                              className={`action-button ${isSubItemActive(mainItem.key, subItem.key) ? 'active' : ''}`}
                               onClick={() => handleSubItemClick(mainItem.key, subItem.key)}
                             >
                               <span className="action-icon">{subItem.icon}</span>
@@ -328,7 +289,7 @@ function LandingPage() {
                 ) : (
                   <button
                     type="button"
-                    className={`action-button ${activeSubItem === mainItem.key ? 'active' : ''}`}
+                    className={`action-button ${isSubItemActive(mainItem.key, mainItem.key) ? 'active' : ''}`}
                     onClick={() => handleSubItemClick(mainItem.key, mainItem.key)}
                   >
                     <span className="action-icon">{mainItem.icon}</span>
@@ -340,7 +301,7 @@ function LandingPage() {
           })}
         </aside>
         <main className="content" aria-label="Main Content">
-          {renderMainContent()}
+          <Outlet />
         </main>
       </div>
     </div>

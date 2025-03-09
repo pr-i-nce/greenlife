@@ -811,3 +811,10 @@ tbody tr:nth-child(even) {
   }
   
 }
+
+/* Make table horizontally scrollable without affecting the fixed search bar and button */
+.registered-table table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+}
