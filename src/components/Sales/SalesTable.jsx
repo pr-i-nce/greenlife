@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
-import { useSelector } from 'react-redux';
-import ProductDetails from './ProductDetails';
+import SalesDetailsTable from './SalesDetailsTable';
 import GenericModal from '../GenericModal';
-import apiClient, { BASE_URL } from '../apiClient';
+import { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { usePagination } from '../PaginationContext';
+import { useSelector } from 'react-redux';
 
 const swalOptions = {
   background: '#ffffff',
@@ -21,8 +24,9 @@ function SalesTable() {
   const [rejectedSales, setRejectedSales] = useState([]);
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
-
+  const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages[currentTab] || 1;
 
   const confirmAction = async (promptText) => {
     const { value } = await Swal.fire({
@@ -139,7 +143,6 @@ function SalesTable() {
       `Are you sure you want to accept sale for createdBy ${sale.email}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Accepted`);
@@ -171,7 +174,6 @@ function SalesTable() {
       `Are you sure you want to reject sale for ${sale.email}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
@@ -203,7 +205,6 @@ function SalesTable() {
       `Are you sure you want to reject sale for createdBy ${sale.email}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
@@ -235,7 +236,6 @@ function SalesTable() {
       `Are you sure you want to accept sale for createdBy ${sale.email}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Approved`);
@@ -305,9 +305,23 @@ function SalesTable() {
     const currentPage = pages[tabName] || 1;
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
-    const totalPages = Math.ceil(data.length / rowsPerPage);
-
+    const filteredData = data.filter(sale => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (sale.first_name || '').toLowerCase().includes(search) ||
+        (sale.last_name || '').toLowerCase().includes(search) ||
+        (sale.phone_number || '').toLowerCase().includes(search) ||
+        (sale.email || '').toLowerCase().includes(search) ||
+        (sale.distributor || '').toLowerCase().includes(search) ||
+        (sale.region_name || '').toLowerCase().includes(search) ||
+        (sale.sub_region || '').toLowerCase().includes(search) ||
+        (sale.amount ? sale.amount.toString().toLowerCase() : '').includes(search) ||
+        (sale.created_date || '').toLowerCase().includes(search) ||
+        (sale.initial_commission ? sale.initial_commission.toString().toLowerCase() : '').includes(search)
+      );
+    });
+    const paginatedData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     return (
       <div>
         <div className="table-content">
@@ -317,7 +331,6 @@ function SalesTable() {
                 <th>SN</th>
                 <th className="first-name-col">Agent name</th>
                 <th>Phone number</th>
-                {/* <th>Email</th> */}
                 <th>Distributor</th>
                 <th className="region-name-col">Region</th>
                 <th>Sub region</th>
@@ -340,7 +353,6 @@ function SalesTable() {
                       {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
                     </td>
                     <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
-                    {/* <td data-label="Email">{sale.email || 'N/A'}</td> */}
                     <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
                     <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
                     <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
@@ -455,7 +467,6 @@ function SalesTable() {
           <h2>Sales Records</h2>
         </div>
       </div>
-
       <div className="table-controls">
         <div className="tabs">
           <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
@@ -468,8 +479,14 @@ function SalesTable() {
             Rejected sales
           </button>
         </div>
+        <input 
+          type="text"
+          placeholder="Search sales..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
       </div>
-
       {renderContent()}
     </div>
   );

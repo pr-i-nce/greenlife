@@ -8,6 +8,7 @@ import apiClient from '../apiClient';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { usePagination } from '../PaginationContext';
+import { useSelector } from 'react-redux';
 
 const swalOptions = {
   background: '#ffffff',
@@ -21,11 +22,9 @@ const GroupedDataTable = () => {
   const [loading, setLoading] = useState(false);
   const [showSalesDetails, setShowSalesDetails] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
-
-  // Pagination from context
+  const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
   const currentPage = pages.all || 1;
-
   const fetchGroupedData = async () => {
     setLoading(true);
     try {
@@ -43,11 +42,9 @@ const GroupedDataTable = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchGroupedData();
   }, []);
-
   const handlePrint = () => {
     const originalShowState = showSalesDetails;
     if (!showSalesDetails) {
@@ -74,16 +71,13 @@ const GroupedDataTable = () => {
       }
     }, 500);
   };
-
   const handleViewDetails = (agentId) => {
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
-
   if (loading) {
     return <div>Loading agent sales data...</div>;
   }
-
   if (showSalesDetails) {
     return (
       <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
@@ -94,24 +88,45 @@ const GroupedDataTable = () => {
       </GenericModal>
     );
   }
-
   if (!groupedData.length) {
     return <div>No agent sales data available.</div>;
   }
-
-  // Pagination calculations:
-  const totalPages = Math.ceil(groupedData.length / rowsPerPage);
-  const paginatedData = groupedData.slice(
+  const filteredData = groupedData.filter((item) => {
+    const { agent } = item;
+    const search = searchTerm.toLowerCase();
+    return (
+      (agent.first_name || '').toLowerCase().includes(search) ||
+      (agent.last_name || '').toLowerCase().includes(search) ||
+      (agent.phone_number || '').toLowerCase().includes(search) ||
+      (agent.email || '').toLowerCase().includes(search) ||
+      (agent.distributor || '').toLowerCase().includes(search) ||
+      (agent.region || '').toLowerCase().includes(search) ||
+      (agent.sub_region || '').toLowerCase().includes(search) ||
+      (agent.totalSales ? agent.totalSales.toString().toLowerCase() : '').includes(search) ||
+      (agent.totalCommission ? agent.totalCommission.toString().toLowerCase() : '').includes(search) ||
+      (agent.totalSalesCount ? agent.totalSalesCount.toString().toLowerCase() : '').includes(search)
+    );
+  });
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const paginatedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-
   return (
     <div className="registered-table">
       <div style={{ margin: '20px 0', textAlign: 'right' }}>
-        {/* <button className="action-btn view-btn no-print" onClick={handlePrint}>
-          Print Data
-        </button> */}
+      </div>
+      <div style={{ margin: '0 1rem' }}>
+        <input
+          type="text"
+          placeholder="Search agents..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPageForTab('all', 1);
+          }}
+          className="search-input"
+        />
       </div>
       <div id="printable-area">
         <div className="table-header">
@@ -172,7 +187,7 @@ const GroupedDataTable = () => {
               })}
             </tbody>
           </table>
-          {groupedData.length > rowsPerPage && (
+          {filteredData.length > rowsPerPage && (
             <div style={{ marginTop: '10px', textAlign: 'center' }}>
               {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
                 <button

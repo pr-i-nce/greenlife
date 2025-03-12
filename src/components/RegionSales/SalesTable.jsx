@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
-import { useSelector } from 'react-redux';
 import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import { usePagination } from '../PaginationContext';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { useSelector } from 'react-redux';
 
 const swalOptions = {
   background: '#ffffff',
@@ -21,7 +23,7 @@ function SalesTable() {
   const [rejectedSales, setRejectedSales] = useState([]);
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
-
+  const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
   const confirmAction = async (promptText) => {
@@ -49,7 +51,6 @@ function SalesTable() {
     }
   };
 
-  // Fetch sales data by region using the new endpoint
   const fetchRegionSales = () => {
     fetch(`${BASE_URL}/sales/region`, {
       headers: { Authorization: `Bearer ${accessToken}` }
@@ -146,7 +147,6 @@ function SalesTable() {
       `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       const response = await fetch(
@@ -185,7 +185,6 @@ function SalesTable() {
       `Are you sure you want to reject sale for ${sale.createdBy}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       const response = await fetch(
@@ -224,7 +223,6 @@ function SalesTable() {
       `Are you sure you want to reject sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       const response = await fetch(
@@ -263,7 +261,6 @@ function SalesTable() {
       `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
     );
     if (!confirmed) return;
-
     showLoadingAlert();
     try {
       const response = await fetch(
@@ -343,9 +340,23 @@ function SalesTable() {
     const currentPage = pages[tabName] || 1;
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
-    const totalPages = Math.ceil(data.length / rowsPerPage);
-
+    const filteredData = data.filter(sale => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (sale.first_name || '').toLowerCase().includes(search) ||
+        (sale.last_name || '').toLowerCase().includes(search) ||
+        (sale.phone_number || '').toLowerCase().includes(search) ||
+        (sale.email || '').toLowerCase().includes(search) ||
+        (sale.distributor || '').toLowerCase().includes(search) ||
+        (sale.region_name || '').toLowerCase().includes(search) ||
+        (sale.sub_region || '').toLowerCase().includes(search) ||
+        (sale.amount ? sale.amount.toString().toLowerCase() : '').includes(search) ||
+        (sale.created_date || '').toLowerCase().includes(search) ||
+        (sale.initial_commission ? sale.initial_commission.toString().toLowerCase() : '').includes(search)
+      );
+    });
+    const paginatedData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     return (
       <div>
         <div className="table-content">
@@ -467,40 +478,37 @@ function SalesTable() {
 
   return (
     <div className="registered-table">
-      {selectedProduct ? (
-        <GenericModal onClose={() => setSelectedProduct(null)}>
-          <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
-        </GenericModal>
-      ) : (
-        <>
-          <div className="table-header">
-            <img
-              src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
-              alt="Sales"
-              className="header-image"
-            />
-            <div className="header-overlay">
-              <h2>Sales Records</h2>
-            </div>
-          </div>
-
-          <div className="table-controls">
-            <div className="tabs">
-              <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
-                New sales
-              </button>
-              <button className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`} onClick={() => setCurrentTab('accepted')}>
-                Accepted sales
-              </button>
-              <button className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`} onClick={() => setCurrentTab('rejected')}>
-                Rejected sales
-              </button>
-            </div>
-          </div>
-
-          {renderContent()}
-        </>
-      )}
+      <div className="table-header">
+        <img
+          src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
+          alt="Sales"
+          className="header-image"
+        />
+        <div className="header-overlay">
+          <h2>Sales Records</h2>
+        </div>
+      </div>
+      <div className="table-controls">
+        <div className="tabs">
+          <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
+            New sales
+          </button>
+          <button className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`} onClick={() => setCurrentTab('accepted')}>
+            Accepted sales
+          </button>
+          <button className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`} onClick={() => setCurrentTab('rejected')}>
+            Rejected sales
+          </button>
+        </div>
+        <input 
+          type="text"
+          placeholder="Search sales..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+      </div>
+      {renderContent()}
     </div>
   );
 }

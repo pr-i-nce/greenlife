@@ -7,6 +7,7 @@ import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import { FaArrowLeft } from 'react-icons/fa';
+import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
   background: '#ffffff',
@@ -21,6 +22,10 @@ function SalesDetailsTable({ agentId, onBack }) {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.salesDetails || 1;
 
   useEffect(() => {
     const fetchSalesDetails = async () => {
@@ -30,7 +35,6 @@ function SalesDetailsTable({ agentId, onBack }) {
           params: { salesPersonId: agentId },
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        console.log("Sales details fetched:", data);
         if (Array.isArray(data)) {
           setSales(data);
           if (data.length > 0) {
@@ -60,7 +64,6 @@ function SalesDetailsTable({ agentId, onBack }) {
       }
     };
 
-    console.log("agentId received:", agentId);
     if (agentId) {
       fetchSalesDetails();
     }
@@ -99,7 +102,6 @@ function SalesDetailsTable({ agentId, onBack }) {
     return <div>Loading sales details...</div>;
   }
 
-  // Once product details are rendered, do not show the sales details table.
   if (selectedProduct) {
     return (
       <GenericModal onClose={() => setSelectedProduct(null)} showBackButton={true}>
@@ -109,6 +111,30 @@ function SalesDetailsTable({ agentId, onBack }) {
       </GenericModal>
     );
   }
+
+  const filteredSales = sales.filter(sale => {
+    const search = searchTerm.toLowerCase();
+    return (
+      (sale.first_name || '').toLowerCase().includes(search) ||
+      (sale.last_name || '').toLowerCase().includes(search) ||
+      (sale.phone_number || '').toLowerCase().includes(search) ||
+      (sale.distributor || '').toLowerCase().includes(search) ||
+      (sale.region_name || '').toLowerCase().includes(search) ||
+      (sale.sub_region || '').toLowerCase().includes(search) ||
+      (sale.amount ? sale.amount.toString().toLowerCase() : '').includes(search) ||
+      (sale.created_date || '').toLowerCase().includes(search) ||
+      (sale.initial_commission ? sale.initial_commission.toString().toLowerCase() : '').includes(search) ||
+      (sale.status || '').toLowerCase().includes(search) ||
+      (sale.approval1 || '').toLowerCase().includes(search) ||
+      (sale.approval2 || '').toLowerCase().includes(search)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredSales.length / rowsPerPage);
+  const paginatedSales = filteredSales.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   return (
     <div className="registered-table">
@@ -129,6 +155,18 @@ function SalesDetailsTable({ agentId, onBack }) {
       >
         <FaArrowLeft className="icon" /> Back
       </button>
+      <div style={{ margin: '0 1rem' }}>
+        <input 
+          type="text" 
+          placeholder="Search sales..." 
+          value={searchTerm} 
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPageForTab('salesDetails', 1);
+          }}
+          className="search-input"
+        />
+      </div>
       <div className="table-content">
         <table className="registered-table" style={{ margin: '-20px 0' }}>
           <thead>
@@ -151,10 +189,10 @@ function SalesDetailsTable({ agentId, onBack }) {
             </tr>
           </thead>
           <tbody>
-            {sales && sales.length > 0 ? (
-              sales.map((sale, index) => (
+            {paginatedSales.length > 0 ? (
+              paginatedSales.map((sale, index) => (
                 <tr key={sale.ref_id}>
-                  <td data-label="SN">{index + 1}</td>
+                  <td data-label="SN">{index + 1 + (currentPage - 1) * rowsPerPage}</td>
                   <td data-label="Agent Name">
                     {sale.first_name || agent?.first_name || 'N/A'} {sale.last_name || agent?.last_name || 'N/A'}
                   </td>
@@ -213,6 +251,26 @@ function SalesDetailsTable({ agentId, onBack }) {
             )}
           </tbody>
         </table>
+        {filteredSales.length > rowsPerPage && (
+          <div style={{ marginTop: '10px', textAlign: 'center' }}>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setPageForTab('salesDetails', page)}
+                style={{
+                  margin: '0 5px',
+                  padding: '5px 10px',
+                  backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                  color: currentPage === page ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
