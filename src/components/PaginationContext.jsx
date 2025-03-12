@@ -9,14 +9,32 @@ export const PaginationProvider = ({ children }) => {
     rejected: 1,
   });
 
-  const rowsPerPage = 20; 
+  const rowsPerPage = 2; 
 
   const setPageForTab = (tab, page) => {
     setPages((prev) => ({ ...prev, [tab]: page }));
   };
 
+
+  const adjustPageForTab = (tab, totalItems) => {
+    // Ensure that totalPages is at least 1.
+    const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
+    setPages((prev) => {
+      const currentPage = prev[tab] || 1;
+      // If there are no items, reset to page 1.
+      if (totalItems === 0) {
+        return { ...prev, [tab]: 1 };
+      }
+      // If the current page is now greater than total pages, update it.
+      if (currentPage > totalPages) {
+        return { ...prev, [tab]: totalPages };
+      }
+      return prev;
+    });
+  };
+
   return (
-    <PaginationContext.Provider value={{ pages, setPageForTab, rowsPerPage }}>
+    <PaginationContext.Provider value={{ pages, setPageForTab, adjustPageForTab, rowsPerPage }}>
       {children}
     </PaginationContext.Provider>
   );

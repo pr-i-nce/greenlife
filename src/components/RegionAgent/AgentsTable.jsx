@@ -6,8 +6,9 @@ import AgentsRegistration from './AgentRegistration';
 import AgentsUpdate from './AgentUpdate';
 import AgentsView from './AgentsView';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
+import { usePagination } from '../PaginationContext';
 
 function AgentsTable() {
   const groupData = useSelector((state) => state.auth.groupData);
@@ -19,10 +20,13 @@ function AgentsTable() {
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
 
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
+
   const fetchAgents = async () => {
     try {
-      const { data } = await apiClient.get('/agent/all');
-      setAgents(data);
+      const { data } = await apiClient.get('/agent/region');
+      setAgents(data[0]||[]);
       console.log(data);
     } catch (err) {
       setError(err.message);
@@ -32,6 +36,10 @@ function AgentsTable() {
   useEffect(() => {
     if (accessToken) fetchAgents();
   }, [accessToken]);
+
+  useEffect(() => {
+    setPageForTab("all", 1);
+  }, [searchTerm]);
 
   const filteredAgents = agents.filter(agent => {
     const fullName = `${agent.firstName} ${agent.lastName}`.toLowerCase();
@@ -44,6 +52,12 @@ function AgentsTable() {
       (agent.email && agent.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
+
+  const totalPages = Math.ceil(filteredAgents.length / rowsPerPage);
+  const paginatedAgents = filteredAgents.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   const handleDelete = async (email) => {
     const result = await Swal.fire({
@@ -145,10 +159,10 @@ function AgentsTable() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAgents.length > 0 ? (
-                  filteredAgents.map((agent, index) => (
+                {paginatedAgents.length > 0 ? (
+                  paginatedAgents.map((agent, index) => (
                     <tr key={agent.id}>
-                      <td data-label="SN">{index + 1}</td>
+                      <td data-label="SN">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                       <td data-label="Agent Name">{agent.firstName} {agent.lastName}</td>
                       <td data-label="ID Number">{agent.idNumber}</td>
                       <td data-label="Area">{agent.subRegion}</td>
@@ -197,6 +211,26 @@ function AgentsTable() {
                 )}
               </tbody>
             </table>
+            {filteredAgents.length >= rowsPerPage && (
+              <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setPageForTab('all', page)}
+                    style={{
+                      margin: '0 5px',
+                      padding: '5px 10px',
+                      backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                      color: currentPage === page ? '#fff' : '#000',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

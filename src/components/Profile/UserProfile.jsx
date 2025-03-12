@@ -35,7 +35,6 @@ function UserProfile() {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Fetch the user profile from /registration/user endpoint
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -70,7 +69,6 @@ function UserProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Build the payload with the editable fields
     const payload = {
       firstName: profile.firstName,
       lastName: profile.lastName,
@@ -78,7 +76,6 @@ function UserProfile() {
       email: profile.email
     };
 
-    // Include password field only if a new password is provided
     if (newPassword) {
       payload.password = newPassword;
     }
@@ -89,7 +86,7 @@ function UserProfile() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`
         },
-        // Pass staffNumber as a query parameter
+      
         params: {
           staffNumber: profile.staffNumber
         }

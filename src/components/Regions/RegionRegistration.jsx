@@ -39,14 +39,14 @@ const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {
   };
 
   return (
-    <div className="region-container">
-      <div className="region-header">
+    <div className="rm-container">
+      <div className="rm-header">
         <img 
           src="https://images.pexels.com/photos/8943323/pexels-photo-8943323.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
           alt="Region Registration"
-          className="region-header-image" 
+          className="rm-header-image" 
         />
-        <div className="region-header-overlay">
+        <div className="rm-header-overlay">
           <h2>Region Registration</h2>
         </div>
       </div>

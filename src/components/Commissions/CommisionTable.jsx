@@ -250,6 +250,7 @@ function CommissionsTable() {
     const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
     const totalPages = Math.ceil(data.length / rowsPerPage);
 
+    // For the payment table (initial tab), leave as is.
     if (tabName === 'initial') {
       return (
         <>
@@ -334,6 +335,7 @@ function CommissionsTable() {
         </>
       );
     } else {
+      // For approval1 and approval2 tabs: add Created Date and Created Time columns.
       return (
         <>
           <div className="table-content">
@@ -347,6 +349,8 @@ function CommissionsTable() {
                   <th className="region-name-col">Region</th>
                   <th>Sub Region</th>
                   <th>Amount</th>
+                  <th>Created Date</th>
+                  <th>Created Time</th>
                   <th>Commission</th>
                   <th>Confirmation</th>
                   <th>Approval</th>
@@ -368,9 +372,15 @@ function CommissionsTable() {
                       </td>
                       <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                       <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                      <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                      <td data-label="Approval1 Status">{sale.approval1 || 'N/A'}</td>
-                      <td data-label="Approval2 Status">{sale.approval2 || 'N/A'}</td>
+                      <td data-label="Created Date">
+                        {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
+                      </td>
+                      <td data-label="Created Time">
+                        {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
+                      </td>
+                      <td data-label="Commission">{sale.initial_commission || 'N/A'}</td>
+                      <td data-label="Confirmation">{sale.approval1 || 'N/A'}</td>
+                      <td data-label="Approval">{sale.approval2 || 'N/A'}</td>
                       <td data-label="Actions">
                         {currentTab === 'approval1' && (
                           <button
@@ -393,7 +403,7 @@ function CommissionsTable() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>
+                    <td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>
                       No records found.
                     </td>
                   </tr>
@@ -445,11 +455,6 @@ function CommissionsTable() {
             Payment
           </button>
         </div>
-        {/* {currentTab === 'initial' && (
-          <button className="action-btn view-btn no-print" onClick={handlePrint}>
-            Print Data
-          </button>
-        )} */}
         {currentTab === 'approval1' && (
           <button className="action-btn view-btn" onClick={() => fetchApproval1()}>
             Refresh

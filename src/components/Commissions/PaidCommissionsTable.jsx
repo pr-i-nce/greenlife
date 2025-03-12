@@ -195,39 +195,30 @@ function PaidCommissionsTable() {
           </thead>
           <tbody>
             {paginatedData.length > 0 ? (
-              paginatedData.map((item, index) => {
-                const { agent } = item;
-                return (
-                  <tr key={`${agent.agentId}-${index}`}>
-                    <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
-                    <td className="first-name-col" data-label="Agent Name">
-                      {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
-                    </td>
-                    <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
-                    <td data-label="Email">{agent.email || 'N/A'}</td>
-                    <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
-                    <td className="region-name-col" data-label="Region">{agent.region || 'N/A'}</td>
-                    <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
-                    <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
-                    <td data-label="Total Commission">{agent.totalCommission || 'N/A'}</td>
-                    <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
-                    <td data-label="Actions">
-                      <button
-                        className="action-btn view-btn no-print screen-only"
-                        onClick={() => handleViewDetails(agent.agentId)}
-                      >
-                        View Sales Details
-                      </button>
-                      <button
-                        className="action-btn pay-btn no-print screen-only"
-                        onClick={() => handlePay(agent.agentId)}
-                      >
-                        Pay Commission
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+              paginatedData.map((agent, index) => (
+                <tr key={`${agent.id}-${index}`}>
+                  <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
+                  <td className="first-name-col" data-label="Agent Name">
+                    {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
+                  </td>
+                  <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
+                  <td data-label="Email">{agent.email || 'N/A'}</td>
+                  <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
+                  <td className="region-name-col" data-label="Region">{agent.region_name || 'N/A'}</td>
+                  <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
+                  <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
+                  <td data-label="Total Commission">{agent.total_commission || 'N/A'}</td>
+                  <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
+                  <td data-label="Actions">
+                    <button
+                      className="action-btn view-btn no-print screen-only"
+                      onClick={() => handleViewDetails(agent.id)}
+                    >
+                      View Sales Details
+                    </button>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>
@@ -239,7 +230,7 @@ function PaidCommissionsTable() {
         </table>
       </div>
       <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+        {Array.from({ length: totalPages }, (_, page) => page + 1).map((page) => (
           <button
             key={page}
             onClick={() => setPageForTab('paid', page)}

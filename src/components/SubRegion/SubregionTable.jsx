@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
+import { usePagination } from '../PaginationContext';
 
 const SubregionTable = () => {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -22,6 +23,10 @@ const SubregionTable = () => {
   const [updateError, setUpdateError] = useState("");
   const [updating, setUpdating] = useState(false);
   const [viewRecord, setViewRecord] = useState(null);
+
+  // Pagination from context
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
 
   const fetchSubregions = async () => {
     try {
@@ -39,10 +44,22 @@ const SubregionTable = () => {
     if (accessToken) fetchSubregions();
   }, [accessToken]);
 
+  // Reset page to 1 when search term changes.
+  useEffect(() => {
+    setPageForTab('all', 1);
+   
+  }, [searchTerm]);
+
   const filteredSubregions = subregions.filter(r =>
     (r.subRegionName ? r.subRegionName.toLowerCase() : "").includes(searchTerm.toLowerCase()) ||
     (r.subRegionCode ? r.subRegionCode.toLowerCase() : "").includes(searchTerm.toLowerCase()) ||
     (r.regionName ? r.regionName.toLowerCase() : "").includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredSubregions.length / rowsPerPage);
+  const paginatedSubregions = filteredSubregions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
 
   const handleDelete = async (id) => {
@@ -95,7 +112,7 @@ const SubregionTable = () => {
           <img
             src="https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=1600"
             alt="Subregion Header"
-            className="subregion-header-image"
+            className="header-image"
           />
           <div className="header-overlay">
             <h2>Registered Area</h2>
@@ -137,7 +154,7 @@ const SubregionTable = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredSubregions.map((r) => (
+              {paginatedSubregions.map((r) => (
                 <tr key={r.id}>
                   <td data-label="Area Name">{r.subRegionName}</td>
                   <td data-label="Area Code">{r.subRegionCode}</td>
@@ -184,39 +201,53 @@ const SubregionTable = () => {
               ))}
             </tbody>
           </table>
+          {filteredSubregions.length >= rowsPerPage && (
+            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPageForTab('all', page)}
+                  style={{
+                    margin: '0 5px',
+                    padding: '5px 10px',
+                    backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                    color: currentPage === page ? '#fff' : '#000',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
   }
   if (mode === "register") {
     return (
-      <div className="subregion-container">
-        <GenericModal onClose={() => setMode("table")}>
-          <SubregionRegistration onClose={() => setMode("table")} onRegistrationSuccess={fetchSubregions} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setMode("table")}>
+        <SubregionRegistration onClose={() => setMode("table")} onRegistrationSuccess={fetchSubregions} />
+      </GenericModal>
     );
   }
   if (mode === "update" && editingSubregion) {
     return (
-      <div className="subregion-container">
-        <GenericModal onClose={() => setMode("table")}>
-          <SubregionUpdate
-            record={editingSubregion}
-            onClose={() => setMode("table")}
-            onUpdateSuccess={fetchSubregions}
-          />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setMode("table")}>
+        <SubregionUpdate
+          record={editingSubregion}
+          onClose={() => setMode("table")}
+          onUpdateSuccess={fetchSubregions}
+        />
+      </GenericModal>
     );
   }
   if (mode === "view" && viewRecord) {
     return (
-      <div className="subregion-container">
-        <GenericModal onClose={() => { setViewRecord(null); setMode("table"); }}>
-          <SubregionView record={viewRecord} onClose={() => { setViewRecord(null); setMode("table"); }} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => { setViewRecord(null); setMode("table"); }}>
+        <SubregionView record={viewRecord} onClose={() => { setViewRecord(null); setMode("table"); }} />
+      </GenericModal>
     );
   }
   return null;

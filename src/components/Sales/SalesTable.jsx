@@ -317,11 +317,13 @@ function SalesTable() {
                 <th>SN</th>
                 <th className="first-name-col">Agent name</th>
                 <th>Phone number</th>
-                <th>Email</th>
+                {/* <th>Email</th> */}
                 <th>Distributor</th>
                 <th className="region-name-col">Region</th>
                 <th>Sub region</th>
                 <th>Amount</th>
+                <th>Created Date</th>
+                <th>Created Time</th>
                 {tabName === 'accepted' && <th>Initial commission</th>}
                 <th>Status</th>
                 <th>Product details</th>
@@ -338,11 +340,17 @@ function SalesTable() {
                       {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
                     </td>
                     <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
-                    <td data-label="Email">{sale.email || 'N/A'}</td>
+                    {/* <td data-label="Email">{sale.email || 'N/A'}</td> */}
                     <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
                     <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
                     <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                     <td data-label="Amount">{sale.amount || 'N/A'}</td>
+                    <td data-label="Created Date">
+                      {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
+                    </td>
+                    <td data-label="Created Time">
+                      {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
+                    </td>
                     {tabName === 'accepted' && (
                       <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
                     )}
@@ -427,42 +435,42 @@ function SalesTable() {
     return renderTable(dataToRender, currentTab);
   };
 
+  if (selectedProduct) {
+    return (
+      <GenericModal onClose={() => setSelectedProduct(null)}>
+        <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      </GenericModal>
+    );
+  }
+
   return (
     <div className="registered-table">
-      {selectedProduct ? (
-        <GenericModal onClose={() => setSelectedProduct(null)}>
-          <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
-        </GenericModal>
-      ) : (
-        <>
-          <div className="table-header">
-            <img
-              src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
-              alt="Sales"
-              className="header-image"
-            />
-            <div className="header-overlay">
-              <h2>Sales Records</h2>
-            </div>
-          </div>
+      <div className="table-header">
+        <img
+          src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
+          alt="Sales"
+          className="header-image"
+        />
+        <div className="header-overlay">
+          <h2>Sales Records</h2>
+        </div>
+      </div>
 
-          <div className="table-controls">
-            <div className="tabs">
-              <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
-                New sales
-              </button>
-              <button className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`} onClick={() => setCurrentTab('accepted')}>
-                Accepted sales
-              </button>
-              <button className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`} onClick={() => setCurrentTab('rejected')}>
-                Rejected sales
-              </button>
-            </div>
-          </div>
+      <div className="table-controls">
+        <div className="tabs">
+          <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
+            New sales
+          </button>
+          <button className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`} onClick={() => setCurrentTab('accepted')}>
+            Accepted sales
+          </button>
+          <button className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`} onClick={() => setCurrentTab('rejected')}>
+            Rejected sales
+          </button>
+        </div>
+      </div>
 
-          {renderContent()}
-        </>
-      )}
+      {renderContent()}
     </div>
   );
 }

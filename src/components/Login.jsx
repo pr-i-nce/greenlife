@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setAccessToken, setGroupData } from './store/authSlice';
+import { setAccessToken, setGroupData, clearAuth } from './store/authSlice';
 import apiClient from './apiClient';
+import Swal from 'sweetalert2';
 import '../styles/login.css';
 import '../styles/hero.css';
 
@@ -38,6 +39,18 @@ function Login() {
         console.log('Group data:', filteredData);
         dispatch(setGroupData(filteredData));
         navigate('/landingpage');
+        
+        setTimeout(() => {
+          dispatch(clearAuth());
+          Swal.fire({
+            title: 'Session Timeout',
+            text: 'Your session has expired. Please login again.',
+            icon: 'warning',
+            confirmButtonText: 'Ok'
+          }).then(() => {
+            navigate('/');
+          });
+        }, 3600000);
       } else {
         setErrorMessage('No token received.');
       }

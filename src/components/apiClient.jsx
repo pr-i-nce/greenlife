@@ -53,10 +53,10 @@ apiClient.interceptors.response.use(
           title: 'Session Expired',
           text: 'Your session has expired. Please login again.',
           icon: 'warning',
-          confirmButtonText: 'Login'
+          confirmButtonText: 'Ok'
         }).then((result) => {
           if (result.isConfirmed) {
-            window.location.href = '/';
+            // window.location.href = '/';
           }
           isAlertShown = false;
         });

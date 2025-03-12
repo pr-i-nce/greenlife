@@ -7,6 +7,7 @@ import DistributorView from './DistributorView';
 import { useSelector } from 'react-redux';
 import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
+import { usePagination } from '../PaginationContext';
 
 const DistributorsTable = () => {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -20,13 +21,14 @@ const DistributorsTable = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
 
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
+
   const fetchDistributors = async () => {
     try {
       setLoading(true);
-      const { data } = await apiClient.get('/distributor/all', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      setDistributors(data);
+      const { data } = await apiClient.get('/distributor/region');
+      setDistributors(data[0]||[]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,6 +41,10 @@ const DistributorsTable = () => {
       fetchDistributors();
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    setPageForTab('all', 1);
+  }, [searchTerm]);
 
   const filteredDistributors = distributors.filter(distributor => {
     const businessName = (distributor.businessName || '').toLowerCase();
@@ -56,6 +62,12 @@ const DistributorsTable = () => {
     );
   });
 
+  const totalPages = Math.ceil(filteredDistributors.length / rowsPerPage);
+  const paginatedDistributors = filteredDistributors.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   const handleDelete = async (email) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -67,9 +79,10 @@ const DistributorsTable = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      const { data: successMessage } = await apiClient.delete(`/distributor/delete?email=${encodeURIComponent(email)}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
+      const { data: successMessage } = await apiClient.delete(
+        `/distributor/delete?email=${encodeURIComponent(email)}`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
       Swal.fire({ icon: 'success', title: 'Deleted!', text: successMessage });
       setDistributors(distributors.filter(distributor => distributor.email !== email));
     } catch (err) {
@@ -167,10 +180,10 @@ const DistributorsTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDistributors.length > 0 ? (
-                  filteredDistributors.map((distributor, index) => (
+                {paginatedDistributors.length > 0 ? (
+                  paginatedDistributors.map((distributor, index) => (
                     <tr key={distributor.id}>
-                      <td data-label="SN">{index + 1}</td>
+                      <td data-label="SN">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                       <td data-label="Business Name">{distributor.businessName}</td>
                       <td data-label="Region">{distributor.regionName}</td>
                       <td data-label="Area">{distributor.subRegionName}</td>
@@ -240,6 +253,26 @@ const DistributorsTable = () => {
                 )}
               </tbody>
             </table>
+            {filteredDistributors.length >= rowsPerPage && (
+              <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setPageForTab('all', page)}
+                    style={{
+                      margin: '0 5px',
+                      padding: '5px 10px',
+                      backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                      color: currentPage === page ? '#fff' : '#000',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

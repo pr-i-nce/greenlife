@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
+import { clearAuth } from './store/authSlice';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import {
   FaUserTie,
@@ -42,29 +44,20 @@ const mainMenuItems = [
     ]
   },
   {
-    key: 'settings',
-    label: 'Settings',
-    icon: <FaBoxOpen />,
-    subItems: [
-      { key: 'regions', label: 'Regions', icon: <FaMapMarkedAlt /> },
-      { key: 'subRegions', label: 'Areas', icon: <FaMapMarkerAlt /> },
-      { key: 'products', label: 'Products', icon: <FaBoxOpen /> },
-      { key: 'profile', label: 'Profile', icon: <FaUserTie /> }
-    ]
-  },
-  {
     key: 'regionSales',
     label: 'Region Sales',
     icon: <FaMoneyBill />,
-    subItems: [{ key: 'reports', label: 'Sales', icon: <FaChartLine /> }]
+    subItems: [{ key: 'reports', label: 'Sales', icon: <FaChartLine /> },
+    { key: 'groupedSales', label: 'Paid commisions', icon: <FaChartLine /> }
+    ]
   },
   {
     key: 'sales',
     label: 'Sales',
     icon: <FaMoneyBill />,
     subItems: [
-      { key: 'reports', label: 'Sales', icon: <FaChartLine /> },
-      { key: 'groupedSales', label: 'Grouped Sales', icon: <FaChartLine /> }
+      { key: 'reports', label: 'Sales', icon: <FaChartLine /> }
+     
     ]
   },
   {
@@ -84,15 +77,26 @@ const mainMenuItems = [
       { key: 'user', label: 'User', icon: <FaUserTie /> },
       { key: 'group', label: 'Group', icon: <FaStore /> }
     ]
+  },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: <FaBoxOpen />,
+    subItems: [
+      { key: 'regions', label: 'Regions', icon: <FaMapMarkedAlt /> },
+      { key: 'subRegions', label: 'Areas', icon: <FaMapMarkerAlt /> },
+      { key: 'products', label: 'Products', icon: <FaBoxOpen /> },
+      { key: 'profile', label: 'Profile', icon: <FaUserTie /> }
+    ]
   }
 ];
 
 function LandingPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const sidebarRef = useRef(null);
 
-  // Returns the full route path for a given mainKey and subKey
   const getRoutePath = (mainKey, subKey) => {
     if (mainKey === 'dashboard') return '/landingpage/dashboard';
     if (mainKey === 'onboarding'){
@@ -127,12 +131,10 @@ function LandingPage() {
     return '/landingpage/dashboard';
   };
 
-  // Uses startsWith so that extra segments are still considered active.
   const isSubItemActive = (mainKey, subKey) => {
     return location.pathname.startsWith(getRoutePath(mainKey, subKey));
   };
 
-  // Compute active state for a main menu based on its subItems.
   const isActiveMenu = (mainItem) => {
     return mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
   };
@@ -173,18 +175,17 @@ function LandingPage() {
   };
 
   const handleSignOut = () => {
+    dispatch(clearAuth());
     navigate('/');
   };
 
   const handleMainMenuClick = (mainItem) => {
     if (mainItem.subItems && mainItem.subItems.length > 0) {
-      // Toggle dropdown open/close regardless of active submenu.
       setOpenDropdowns((prev) => ({
         ...prev,
         [mainItem.key]: !prev[mainItem.key]
       }));
     } else {
-      // No subItems, navigate directly.
       const routePath = getRoutePath(mainItem.key, mainItem.key);
       navigate(routePath);
     }
@@ -198,7 +199,6 @@ function LandingPage() {
     }
   };
 
-  // Close dropdowns when clicking outside (mobile view)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (window.innerWidth < 780 && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -248,9 +248,7 @@ function LandingPage() {
               });
               if (filteredSubItems.length === 0) return null;
             }
-            // Compute if this main menu contains an active submenu.
             const activeInMenu = mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
-            // Dropdown open state is controlled solely by user toggling.
             const showSubMenu = openDropdowns[mainItem.key];
             return (
               <div key={mainItem.key} className="menu-section">

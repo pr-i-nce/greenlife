@@ -812,9 +812,17 @@ tbody tr:nth-child(even) {
   
 }
 
-/* Make table horizontally scrollable without affecting the fixed search bar and button */
+/* For small screens: make table horizontally scrollable */
 .registered-table table {
   display: block;
   overflow-x: auto;
   width: 100%;
+}
+
+/* For large screens: remove horizontal scrolling and use natural table layout */
+@media (min-width: 1720px) {
+  .registered-table table {
+    display: table;
+    overflow-x: visible;
+  }
 }

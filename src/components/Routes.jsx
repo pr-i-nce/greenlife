@@ -1,3 +1,4 @@
+import React from 'react';
 import { createBrowserRouter } from "react-router-dom";
 import Login from "./Login";
 import LandingPage from "./LandingPage";
@@ -18,6 +19,7 @@ import UserTable from "./User/UserTable";
 import GroupTable from "./Groups/GroupTable";
 import UserProfile from "./Profile/UserProfile";
 import ErrorPage from "./ErrorPage";
+import ProtectedRoute from "./ReduxProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +29,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/landingpage",
-    element: <LandingPage />,
+    element: (
+      <ProtectedRoute>
+        <LandingPage />
+      </ProtectedRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <DashboardContent /> },

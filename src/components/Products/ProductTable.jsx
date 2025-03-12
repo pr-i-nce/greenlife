@@ -7,6 +7,7 @@ import ProductView from './ProductView';
 import { useSelector } from 'react-redux';
 import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
+import { usePagination } from '../PaginationContext';
 
 function ProductTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -16,6 +17,9 @@ function ProductTable() {
   const [registerMode, setRegisterMode] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
+
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
 
   const fetchProducts = async () => {
     try {
@@ -30,8 +34,20 @@ function ProductTable() {
     fetchProducts();
   }, [accessToken]);
 
+  // Reset page to 1 when search term changes.
+  useEffect(() => {
+    setPageForTab('all', 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
   const filteredProducts = products.filter(product =>
     (product.productDescription || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
 
   const handleDelete = async (product) => {
@@ -71,38 +87,36 @@ function ProductTable() {
 
   if (registerMode) {
     return (
-      <div className="rm-container">
-        <GenericModal onClose={() => setRegisterMode(false)}>
-          <ProductRegistration onClose={() => setRegisterMode(false)} onRegistrationSuccess={fetchProducts} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setRegisterMode(false)}>
+        <ProductRegistration onClose={() => setRegisterMode(false)} onRegistrationSuccess={fetchProducts} />
+      </GenericModal>
     );
   }
 
   if (editingRecord) {
     return (
-      <div className="rm-container">
-        <GenericModal onClose={() => setEditingRecord(null)}>
-          <ProductUpdate record={editingRecord} onClose={() => setEditingRecord(null)} onUpdateSuccess={fetchProducts} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setEditingRecord(null)}>
+        <ProductUpdate record={editingRecord} onClose={() => setEditingRecord(null)} onUpdateSuccess={fetchProducts} />
+      </GenericModal>
     );
   }
 
   if (viewRecord) {
     return (
-      <div className="rm-container">
-        <GenericModal onClose={() => setViewRecord(null)}>
-          <ProductView record={viewRecord} onClose={() => setViewRecord(null)} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setViewRecord(null)}>
+        <ProductView record={viewRecord} onClose={() => setViewRecord(null)} />
+      </GenericModal>
     );
   }
 
   return (
     <div className="registered-table">
       <div className="table-header">
-        <img src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="Products" className="header-image" />
+        <img
+          src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
+          alt="Products"
+          className="header-image"
+        />
         <div className="header-overlay">
           <h2>Registered Products</h2>
         </div>
@@ -144,10 +158,10 @@ function ProductTable() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product, index) => (
+            {paginatedProducts.length > 0 ? (
+              paginatedProducts.map((product, index) => (
                 <tr key={product.id}>
-                  <td data-label="SN">{index + 1}</td>
+                  <td data-label="SN">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                   <td data-label="Product Description">{product.productDescription}</td>
                   <td data-label="Price">{product.price}</td>
                   <td data-label="Unit">{product.unit}</td>
@@ -210,9 +224,30 @@ function ProductTable() {
             )}
           </tbody>
         </table>
+        {filteredProducts.length >= rowsPerPage && (
+          <div style={{ marginTop: '10px', textAlign: 'center' }}>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setPageForTab('all', page)}
+                style={{
+                  margin: '0 5px',
+                  padding: '5px 10px',
+                  backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                  color: currentPage === page ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 export default ProductTable;
+

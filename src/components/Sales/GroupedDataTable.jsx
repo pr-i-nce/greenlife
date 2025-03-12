@@ -7,6 +7,7 @@ import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
   background: '#ffffff',
@@ -20,6 +21,10 @@ const GroupedDataTable = () => {
   const [loading, setLoading] = useState(false);
   const [showSalesDetails, setShowSalesDetails] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
+
+  // Pagination from context
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
 
   const fetchGroupedData = async () => {
     setLoading(true);
@@ -94,6 +99,13 @@ const GroupedDataTable = () => {
     return <div>No agent sales data available.</div>;
   }
 
+  // Pagination calculations:
+  const totalPages = Math.ceil(groupedData.length / rowsPerPage);
+  const paginatedData = groupedData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   return (
     <div className="registered-table">
       <div style={{ margin: '20px 0', textAlign: 'right' }}>
@@ -129,7 +141,7 @@ const GroupedDataTable = () => {
               </tr>
             </thead>
             <tbody>
-              {groupedData.map((item) => {
+              {paginatedData.map((item) => {
                 const { agent } = item;
                 return (
                   <tr key={agent.agentId}>
@@ -160,6 +172,26 @@ const GroupedDataTable = () => {
               })}
             </tbody>
           </table>
+          {groupedData.length > rowsPerPage && (
+            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPageForTab('all', page)}
+                  style={{
+                    margin: '0 5px',
+                    padding: '5px 10px',
+                    backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                    color: currentPage === page ? '#fff' : '#000',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

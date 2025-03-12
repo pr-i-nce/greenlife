@@ -61,8 +61,8 @@ const RegionsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   };
 
   return (
-    <div className="region-container">
-      <div className="region-header">
+    <div className="rm-container">
+      <div className="rm-header">
         <img
           src="https://images.pexels.com/photos/8943323/pexels-photo-8943323.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
           alt="Update Region"

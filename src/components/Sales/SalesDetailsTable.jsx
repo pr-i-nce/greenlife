@@ -130,7 +130,7 @@ function SalesDetailsTable({ agentId, onBack }) {
         <FaArrowLeft className="icon" /> Back
       </button>
       <div className="table-content">
-        <table className="registered-table"style={{ margin: '-20px 0' }}>
+        <table className="registered-table" style={{ margin: '-20px 0' }}>
           <thead>
             <tr>
               <th>SN</th>
@@ -141,6 +141,8 @@ function SalesDetailsTable({ agentId, onBack }) {
               <th>Sub Region</th>
               <th>Amount</th>
               <th>Initial Commission</th>
+              <th>Created Date</th>
+              <th>Created Time</th>
               <th>Status</th>
               <th>Approval1</th>
               <th>Approval2</th>
@@ -170,9 +172,15 @@ function SalesDetailsTable({ agentId, onBack }) {
                   </td>
                   <td data-label="Amount">{sale.amount || 'N/A'}</td>
                   <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
+                  <td data-label="Created Date">
+                    {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
+                  </td>
+                  <td data-label="Created Time">
+                    {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
+                  </td>
                   <td data-label="Status">{sale.status || 'N/A'}</td>
-                  <td data-label="confirmation">{sale.approval1 || 'N/A'}</td>
-                  <td data-label="Approval">{sale.approval2 || 'N/A'}</td>
+                  <td data-label="Approval1">{sale.approval1 || 'N/A'}</td>
+                  <td data-label="Approval2">{sale.approval2 || 'N/A'}</td>
                   <td data-label="Product Details">
                     <button 
                       className="action-btn view-btn"
@@ -198,7 +206,7 @@ function SalesDetailsTable({ agentId, onBack }) {
               ))
             ) : (
               <tr>
-                <td colSpan="14" className="no-records" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="15" className="no-records" style={{ textAlign: 'center', padding: '20px' }}>
                   No sales records found.
                 </td>
               </tr>

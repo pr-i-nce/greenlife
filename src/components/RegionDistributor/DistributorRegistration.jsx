@@ -80,10 +80,8 @@ const DistributorRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/all', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      setSubregions(data);
+      const { data } = await apiClient.get('/subregion/filter');
+      setSubregions(data[0]||[]);
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load subregions.' });

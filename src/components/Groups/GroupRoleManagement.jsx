@@ -178,8 +178,8 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
                   else if (perm === 'viewSales') label = 'View Sales';
                   else if (perm === 'viewDetails') label = 'View Sale Details';
                 } else if (key === 'approval') {
-                  if (perm === 'approve1') label = 'Approve 1';
-                  else if (perm === 'approve2') label = 'Approve 2';
+                  if (perm === 'approve1') label = 'Confirm';
+                  else if (perm === 'approve2') label = 'Approve';
                 } else if (key === 'payment') {
                   if (perm === 'viewReceiptImage') label = 'View Receipt Image';
                   else if (perm === 'pay') label = 'Process Payment';

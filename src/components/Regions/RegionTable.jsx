@@ -240,29 +240,23 @@ const RegionsManagement = () => {
   }
   if (mode === "register") {
     return (
-      <div className="region-container">
-        <GenericModal onClose={() => setMode("table")}>
-          <RegionsRegistration onClose={() => setMode("table")} onRegistrationSuccess={fetchRegions} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setMode("table")}>
+        <RegionsRegistration onClose={() => setMode("table")} onRegistrationSuccess={fetchRegions} />
+      </GenericModal>
     );
   }
   if (mode === "update" && editingRegion) {
     return (
-      <div className="region-container">
-        <GenericModal onClose={() => setMode("table")}>
-          <RegionsUpdate record={editingRegion} onClose={() => setMode("table")} onUpdateSuccess={fetchRegions} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => setMode("table")}>
+        <RegionsUpdate record={editingRegion} onClose={() => setMode("table")} onUpdateSuccess={fetchRegions} />
+      </GenericModal>
     );
   }
   if (mode === "view" && viewRecord) {
     return (
-      <div className="region-container">
-        <GenericModal onClose={() => { setViewRecord(null); setMode("table"); }}>
-          <RegionsView record={viewRecord} onClose={() => { setViewRecord(null); setMode("table"); }} />
-        </GenericModal>
-      </div>
+      <GenericModal onClose={() => { setViewRecord(null); setMode("table"); }}>
+        <RegionsView record={viewRecord} onClose={() => { setViewRecord(null); setMode("table"); }} />
+      </GenericModal>
     );
   }
   if (loading) {

@@ -87,8 +87,8 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchDistributors = async () => {
     try {
-      const { data } = await apiClient.get('/distributor/all');
-      setDistributors(data);
+      const { data } = await apiClient.get('/distributor/region');
+      setDistributors(data[0]||[]);
       console.log("Distributors data:", data);
     } catch (err) {
       console.error(err);
@@ -97,8 +97,8 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/all');
-      setSubregions(data);
+      const { data } = await apiClient.get('/subregion/filter');
+      setSubregions(data[0]||[]);
     } catch (err) {
       console.error(err);
     }

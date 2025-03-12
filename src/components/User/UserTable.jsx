@@ -8,6 +8,7 @@ import UserView from './UserView';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import apiClient, { BASE_URL } from '../apiClient';
+import { usePagination } from '../PaginationContext';
 
 function UserTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -22,6 +23,9 @@ function UserTable() {
   const [registrationMode, setRegistrationMode] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
+
+  const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages.all || 1;
 
   const fetchUsers = async () => {
     try {
@@ -39,6 +43,31 @@ function UserTable() {
   useEffect(() => {
     fetchUsers();
   }, [accessToken]);
+
+  // Reset page to 1 when search term changes.
+  useEffect(() => {
+    setPageForTab('all', 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  const filteredUsers = users.filter((user) => {
+    const first = (user.firstName || '').toLowerCase();
+    const last = (user.lastName || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    const group = (user.groupName || '').toLowerCase();
+    return (
+      first.includes(searchTerm.toLowerCase()) ||
+      last.includes(searchTerm.toLowerCase()) ||
+      email.includes(searchTerm.toLowerCase()) ||
+      group.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   const handleDelete = (staffNumber) => {
     const user = users.find((u) => u.staffNumber === staffNumber);
@@ -72,19 +101,6 @@ function UserTable() {
       }
     });
   };
-
-  const filteredUsers = users.filter((user) => {
-    const first = (user.firstName || '').toLowerCase();
-    const last = (user.lastName || '').toLowerCase();
-    const email = (user.email || '').toLowerCase();
-    const group = (user.groupName || '').toLowerCase();
-    return (
-      first.includes(searchTerm.toLowerCase()) ||
-      last.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase()) ||
-      group.includes(searchTerm.toLowerCase())
-    );
-  });
 
   if (registrationMode) {
     return (
@@ -156,19 +172,17 @@ function UserTable() {
               <th>Phone</th>
               <th>Email</th>
               <th>Group Name</th>
-              {/* <th>Staff Number</th> */}
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <tr key={user.staffNumber}>
                 <td data-label="First Name">{user.firstName}</td>
                 <td data-label="Last Name">{user.lastName}</td>
                 <td data-label="Phone">{user.phone}</td>
                 <td data-label="Email">{user.email}</td>
                 <td data-label="Group Name">{user.groupName}</td>
-                {/* <td data-label="Staff Number">{user.staffNumber}</td> */}
                 <td data-label="Actions">
                   <button
                     className="action-btn view-btn"
@@ -193,6 +207,26 @@ function UserTable() {
             ))}
           </tbody>
         </table>
+        {filteredUsers.length >= rowsPerPage && (
+          <div style={{ marginTop: '10px', textAlign: 'center' }}>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setPageForTab('all', page)}
+                style={{
+                  margin: '0 5px',
+                  padding: '5px 10px',
+                  backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                  color: currentPage === page ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
