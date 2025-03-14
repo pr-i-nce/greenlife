@@ -73,32 +73,34 @@ function UserProfile() {
       firstName: profile.firstName,
       lastName: profile.lastName,
       phone: profile.phone,
-      email: profile.email
+      email: profile.email,
     };
-
+  
     if (newPassword) {
-      payload.password = newPassword;
+      payload.oldPassword = oldPassword; // Include old password in payload
+      payload.newPassword = newPassword;
     }
-
+  
     try {
       const response = await apiClient.put('/registration/update', payload, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
-      
         params: {
-          staffNumber: profile.staffNumber
-        }
+          staffNumber: profile.staffNumber,
+        },
       });
+  
       Swal.fire('Success', response.data.message || 'Profile updated successfully', 'success');
       setOldPassword('');
       setNewPassword('');
     } catch (error) {
-      Swal.fire('Error', error.response?.data || error.message || 'Error updating profile', 'error');
+      console.error('Error updating profile:', error);
+      Swal.fire('Error', error.response?.data?.message || error.message || 'Error updating profile', 'error');
     }
   };
-
+  
   if (loading) {
     return (
       <div className="profile-container loading">

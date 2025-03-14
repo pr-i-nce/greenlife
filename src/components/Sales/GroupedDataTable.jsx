@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
-import SalesDetailsTable from './SalesDetailsTable';
+import SalesDetailsTable from '../Commissions/SalesDetailsTable';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
@@ -28,7 +28,7 @@ const GroupedDataTable = () => {
   const fetchGroupedData = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/sales/agent');
+      const { data } = await apiClient.get('/sales/region-aggregated');
       setGroupedData(data);
       console.log(data);
     } catch (error) {
@@ -114,7 +114,18 @@ const GroupedDataTable = () => {
   );
   return (
     <div className="registered-table">
-      <div style={{ margin: '20px 0', textAlign: 'right' }}>
+      <div id="printable-area">
+        <div className="table-header">
+          <img
+            src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
+            alt="Agent Sales"
+            className="header-image"
+          />
+          <div className="header-overlay">
+            <h2>Agent Details</h2>
+          </div>
+        </div>
+        <div style={{ margin: '20px 0', textAlign: 'right' }}>
       </div>
       <div style={{ margin: '0 1rem' }}>
         <input
@@ -128,17 +139,6 @@ const GroupedDataTable = () => {
           className="search-input"
         />
       </div>
-      <div id="printable-area">
-        <div className="table-header">
-          <img
-            src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
-            alt="Agent Sales"
-            className="header-image"
-          />
-          <div className="header-overlay">
-            <h2>Agent Details</h2>
-          </div>
-        </div>
         <div className="table-content">
           <table>
             <thead>

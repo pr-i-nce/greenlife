@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
-import ProductDetails from './ProductDetails';
+import ProductDetails from '../Sales/ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
@@ -31,7 +31,7 @@ function SalesDetailsTable({ agentId, onBack }) {
     const fetchSalesDetails = async () => {
       setLoading(true);
       try {
-        const { data } = await apiClient.get('/sales/false', {
+        const { data } = await apiClient.get('/sales/fetch', {
           params: { salesPersonId: agentId },
           headers: { Authorization: `Bearer ${accessToken}` },
         });

@@ -181,12 +181,25 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
     setRegError('');
     setIsLoading(true);
+    
+    // Show SweetAlert2 loading spinner
+    Swal.fire({
+      title: 'Loading...',
+      text: 'Please wait...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     const payload = { ...regData };
     try {
       const response = await apiClient.post('/agent', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
       const responseText = response.data;
+      // Close loading spinner before showing success alert
+      Swal.close();
       Swal.fire({
         icon: 'success',
         title: 'Success',
@@ -197,6 +210,8 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
         if (onRegistrationSuccess) onRegistrationSuccess();
       });
     } catch (err) {
+      // Close loading spinner before showing error alert
+      Swal.close();
       Swal.fire({
         icon: 'error',
         title: 'Error',

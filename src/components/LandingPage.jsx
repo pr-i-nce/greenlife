@@ -48,7 +48,7 @@ const mainMenuItems = [
     label: 'Region Sales',
     icon: <FaMoneyBill />,
     subItems: [{ key: 'reports', label: 'Sales', icon: <FaChartLine /> },
-    { key: 'groupedSales', label: 'Paid commisions', icon: <FaChartLine /> }
+               { key: 'groupedSales', label: 'Paid commisions', icon: <FaChartLine /> }
     ]
   },
   {
@@ -115,10 +115,11 @@ function LandingPage() {
     }
     if (mainKey === 'regionSales'){
       if (subKey === 'reports') return '/landingpage/region-sales';
+      if (subKey === 'groupedSales') return '/landingpage/grouped-sales';
+
     }
     if (mainKey === 'sales'){
       if (subKey === 'reports') return '/landingpage/sales';
-      if (subKey === 'groupedSales') return '/landingpage/grouped-sales';
     }
     if (mainKey === 'commissionMenu'){
       if (subKey === 'commissionDisbursement') return '/landingpage/commission-disbursement';

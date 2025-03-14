@@ -154,6 +154,17 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     }
     setUpdateError('');
     setIsLoading(true);
+    
+    // Show SweetAlert2 loading spinner for backend delay
+    Swal.fire({
+      title: 'Loading...',
+      text: 'Please wait...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     const payload = { ...regData, active: isActive };
     try {
       const response = await apiClient.put('/agent/update', payload, {
@@ -161,11 +172,15 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
         headers: { 'Content-Type': 'application/json' }
       });
       const responseText = response.data;
+      // Close spinner before showing success alert
+      Swal.close();
       Swal.fire({ icon: 'success', title: 'Success', text: responseText }).then(() => {
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();
       });
     } catch (err) {
+      // Close spinner before showing error alert
+      Swal.close();
       Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data || "An error occurred while updating. Please try again." });
     } finally {
       setIsLoading(false);

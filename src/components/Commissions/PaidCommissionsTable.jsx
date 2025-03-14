@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
 import GenericModal from '../GenericModal';
-import SalesDetailsTable from '../Sales/SalesDetailsTable';
+import SalesDetailsTable from './SalesDetailsTable';
 import apiClient from '../apiClient';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -25,16 +25,19 @@ function PaidCommissionsTable() {
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
-  // Function to fetch data. If isPolling is true, do not trigger loading/error alerts.
   const fetchGroupedData = async (isPolling = false) => {
     if (!isPolling) setLoading(true);
+
     try {
-      const { data } = await apiClient.get('/sales/paid');
-      // Update only if new data differs from the current state.
+      const { data } = await apiClient.get('/sales/initial');
+
+      // Transform data to extract agent details
+      const transformedData = data.map(item => item.agent);
+
       setGroupedData(prevData => {
-        if (JSON.stringify(data) !== JSON.stringify(prevData)) {
-          console.log('Updating grouped data:', data);
-          return data;
+        if (JSON.stringify(transformedData) !== JSON.stringify(prevData)) {
+          console.log('Updating grouped data:', transformedData);
+          return transformedData;
         }
         return prevData;
       });
@@ -58,6 +61,28 @@ function PaidCommissionsTable() {
     setPageForTab('paid', 1);
   }, [accessToken]);
 
+  const handlePrint = () => {
+  const originalShowState = showSalesDetails;
+  if (!showSalesDetails) {
+    setShowSalesDetails(true);
+  }
+  setTimeout(() => {
+    const printableArea = document.getElementById('printable-area');
+    if (!printableArea) return;
+    html2canvas(printableArea).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('paid-commissions.pdf');
+    });
+    if (!originalShowState) {
+      setShowSalesDetails(false);
+    }
+  }, 500);
+};
+
   // Poll every 5 seconds without triggering loading/error UI
   useEffect(() => {
     const interval = setInterval(() => {
@@ -66,34 +91,12 @@ function PaidCommissionsTable() {
     return () => clearInterval(interval);
   }, [accessToken]);
 
-  const handlePrint = () => {
-    const originalShowState = showSalesDetails;
-    if (!showSalesDetails) {
-      setShowSalesDetails(true);
-    }
-    setTimeout(() => {
-      const printableArea = document.getElementById('printable-area');
-      if (!printableArea) return;
-      html2canvas(printableArea).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('paid-commissions.pdf');
-      });
-      if (!originalShowState) {
-        setShowSalesDetails(false);
-      }
-    }, 500);
-  };
-
   const handleViewDetails = (agentId) => {
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
 
-  // Logic to pay commission: prompt for confirmation and call /sales/pay with agent id.
+  // Logic to pay commission: prompt with agent id.
   const handlePay = async (agentId) => {
     const { value } = await Swal.fire({
       ...swalOptions,
@@ -196,7 +199,7 @@ function PaidCommissionsTable() {
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((agent, index) => (
-                <tr key={`${agent.id}-${index}`}>
+                <tr key={`${agent.agentId}-${index}`}>
                   <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
                   <td className="first-name-col" data-label="Agent Name">
                     {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
@@ -204,15 +207,15 @@ function PaidCommissionsTable() {
                   <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
                   <td data-label="Email">{agent.email || 'N/A'}</td>
                   <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
-                  <td className="region-name-col" data-label="Region">{agent.region_name || 'N/A'}</td>
+                  <td className="region-name-col" data-label="Region">{agent.region || 'N/A'}</td>
                   <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
                   <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
-                  <td data-label="Total Commission">{agent.total_commission || 'N/A'}</td>
+                  <td data-label="Total Commission">{agent.totalCommission || 'N/A'}</td>
                   <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
                   <td data-label="Actions">
                     <button
                       className="action-btn view-btn no-print screen-only"
-                      onClick={() => handleViewDetails(agent.id)}
+                      onClick={() => handleViewDetails(agent.agentId)}
                     >
                       View Sales Details
                     </button>
@@ -267,3 +270,6 @@ function PaidCommissionsTable() {
 }
 
 export default PaidCommissionsTable;
+
+
+
