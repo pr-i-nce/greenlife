@@ -8,12 +8,10 @@ import {
   FaToggleOn,
   FaToggleOff
 } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
   const [updateError, setUpdateError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isActive, setIsActive] = useState(record?.active || false);
@@ -58,11 +56,9 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   };
 
   useEffect(() => {
-    if (accessToken) {
-      fetchDistributors();
-      fetchSubregions();
-    }
-  }, [accessToken]);
+    fetchDistributors();
+    fetchSubregions();
+  }, []);
 
   useEffect(() => {
     if (record) {

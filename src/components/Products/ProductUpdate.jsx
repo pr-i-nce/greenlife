@@ -28,12 +28,6 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
       });
       const responseText = response.data;
       if (response.status >= 200 && response.status < 300) {
-        let updatedRecord;
-        try {
-          updatedRecord = JSON.parse(responseText);
-        } catch (err) {
-          updatedRecord = record;
-        }
         Swal.fire({ icon: 'success', title: 'Update Successful', text: "Product updated successfully!" });
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();
