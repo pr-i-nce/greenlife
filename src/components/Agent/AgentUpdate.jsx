@@ -162,7 +162,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     
     const payload = { ...regData, active: isActive };
     try {
-      const response = await apiClient.put('/agent/update', payload, {
+      await apiClient.put('/agent/update', payload, {
         params: { email: regData.email },
         headers: { 'Content-Type': 'application/json' }
       });
