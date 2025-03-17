@@ -18,6 +18,7 @@ const swalOptions = {
 
 function PaidCommissionsTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [groupedData, setGroupedData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showSalesDetails, setShowSalesDetails] = useState(false);
@@ -62,42 +63,52 @@ function PaidCommissionsTable() {
   }, [accessToken]);
 
   const handlePrint = () => {
-  const originalShowState = showSalesDetails;
-  if (!showSalesDetails) {
-    setShowSalesDetails(true);
-  }
-  setTimeout(() => {
-    const printableArea = document.getElementById('printable-area');
-    if (!printableArea) return;
-    html2canvas(printableArea).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'pt', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('paid-commissions.pdf');
-    });
-    if (!originalShowState) {
-      setShowSalesDetails(false);
+    const originalShowState = showSalesDetails;
+    if (!showSalesDetails) {
+      setShowSalesDetails(true);
     }
-  }, 500);
-};
-
-  // Poll every 5 seconds without triggering loading/error UI
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchGroupedData(true);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [accessToken]);
+    setTimeout(() => {
+      const printableArea = document.getElementById('printable-area');
+      if (!printableArea) return;
+      html2canvas(printableArea).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('paid-commissions.pdf');
+      });
+      if (!originalShowState) {
+        setShowSalesDetails(false);
+      }
+    }, 500);
+  };
 
   const handleViewDetails = (agentId) => {
+    if (!groupData?.permissions?.readCommission) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to view commission details.'
+      });
+      return;
+    }
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
 
   // Logic to pay commission: prompt with agent id.
   const handlePay = async (agentId) => {
+    if (!groupData?.permissions?.pay) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to pay commission.'
+      });
+      return;
+    }
     const { value } = await Swal.fire({
       ...swalOptions,
       title: 'Are you sure you want to pay commission for this agent?',
@@ -161,8 +172,8 @@ function PaidCommissionsTable() {
   }
 
   // Pagination calculation using the 'paid' key
-  const currentPage = pages['paid'] || 1;
-  const indexOfLastRow = currentPage * rowsPerPage;
+  const currentPageValue = pages['paid'] || 1;
+  const indexOfLastRow = currentPageValue * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const paginatedData = groupedData.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(groupedData.length / rowsPerPage);
@@ -270,6 +281,3 @@ function PaidCommissionsTable() {
 }
 
 export default PaidCommissionsTable;
-
-
-

@@ -3,16 +3,15 @@ import Swal from 'sweetalert2';
 import { store } from './store/store';
 import { clearAuth } from './store/authSlice';
 
-export const BASE_URL = 'https://jituze.greenlife.co.ke/rest';
+export const BASE_URL = 'http://18.117.141.255/rest';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
 });
 
-// Request interceptor: Attach token if available except for login endpoints.
 apiClient.interceptors.request.use(
   (config) => {
-    // If the request is not for login endpoints, attach the token.
+
     if (
       !config.url.includes('/registration/login') &&
       !config.url.includes('/region-manager/login')

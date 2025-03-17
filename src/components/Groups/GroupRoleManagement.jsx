@@ -79,9 +79,9 @@ const roleMapping = {
     'approve2'  // Second-level approval (e.g., final confirmation).
   ],
   payment: [
-    'viewReceiptImage',   // View images of payment receipts.
+    'viewRecieptImage',   // View images of payment receipts.
     'pay',                // Process a payment.
-    'viewPayment',        // View payment details.
+    // 'viewPayment',        // View payment details.
     'viewPaidCommissions' // View details of paid commissions.
   ]
 };
@@ -118,7 +118,6 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
         }
       });
       const data = response.data;
-      console.log('Roles updated:', data);
 
       if (data && data.groupId) {
         const existingLocalData = JSON.parse(localStorage.getItem('roles') || '{}');
@@ -181,9 +180,9 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
                   if (perm === 'approve1') label = 'Confirm';
                   else if (perm === 'approve2') label = 'Approve';
                 } else if (key === 'payment') {
-                  if (perm === 'viewReceiptImage') label = 'View Receipt Image';
-                  else if (perm === 'pay') label = 'Process Payment';
-                  else if (perm === 'viewPayment') label = 'View Payment';
+                  if (perm === 'viewRecieptImage') label = 'View Receipt Image';
+                  else if (perm === 'pay') label = 'Make Payment';
+                  // else if (perm === 'viewPayment') label = 'View Payment';
                   else if (perm === 'viewPaidCommissions') label = 'View Paid Commissions';
                 } else {
                   label = perm.startsWith('create')

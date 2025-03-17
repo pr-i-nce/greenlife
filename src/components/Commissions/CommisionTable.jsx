@@ -18,6 +18,7 @@ const swalOptions = {
 
 function CommissionsTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [approval1Data, setApproval1Data] = useState([]);
   const [approval2Data, setApproval2Data] = useState([]);
   const [initialData, setInitialData] = useState([]);
@@ -136,6 +137,15 @@ function CommissionsTable() {
   }, [currentTab, accessToken]);
 
   const handleApproval1 = async (id) => {
+    if (!groupData?.permissions?.approve1) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to confirm commission.'
+      });
+      return;
+    }
     const sale = approval1Data.find((s) => s.id === id);
     const confirmed = await confirmAction(
       `Are you sure you want to confirm commission for ${sale ? sale.first_name : 'this sale'}?`
@@ -168,6 +178,15 @@ function CommissionsTable() {
   };
 
   const handleApproval2 = async (id) => {
+    if (!groupData?.permissions?.approve2) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to approve commission.'
+      });
+      return;
+    }
     const sale = approval2Data.find((s) => s.id === id);
     const confirmed = await confirmAction(
       `Are you sure you want to approve commission for ${sale ? sale.first_name : 'this sale'}?`
@@ -200,8 +219,33 @@ function CommissionsTable() {
   };
 
   const handleInitialPay = (id) => {
-    console.log('Pay initial commission for sale id:', id);
-    // Implement your pay logic here.
+    if (!groupData?.permissions?.pay) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to pay commission.'
+      });
+      return;
+    }
+    apiClient.post(`/sales/agent/${id}`)
+      .then((response) => {
+        Swal.fire({
+          title: 'Success!',
+          text: `Initial commission paid successfully for Agent ID: ${id}`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      })
+      .catch((error) => {
+        Swal.fire({
+          title: 'Error!',
+          text: `Failed to pay initial commission for Agent ID: ${id}`,
+          icon: 'error',
+          confirmButtonText: 'Try Again'
+        });
+        console.error('Error paying initial commission:', error);
+      });
   };
 
   const handlePrint = () => {
@@ -227,6 +271,15 @@ function CommissionsTable() {
   };
 
   const handleViewDetails = (agentId) => {
+    if (!groupData?.permissions?.readCommission) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to view commission details.'
+      });
+      return;
+    }
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };

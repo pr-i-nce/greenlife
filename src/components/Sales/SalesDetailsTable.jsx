@@ -18,6 +18,7 @@ const swalOptions = {
 
 function SalesDetailsTable({ agentId, onBack }) {
   const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [agent, setAgent] = useState(null);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -70,6 +71,15 @@ function SalesDetailsTable({ agentId, onBack }) {
   }, [agentId, accessToken]);
 
   const handleViewProductDetails = async (ref_id) => {
+    if (!groupData?.permissions?.readProduct) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to view product details.'
+      });
+      return;
+    }
     Swal.fire({
       ...swalOptions,
       title: 'Fetching Product Details...',
@@ -96,6 +106,29 @@ function SalesDetailsTable({ agentId, onBack }) {
         icon: 'error'
       });
     }
+  };
+
+  // Added module for rendering the receipt image using Swal
+  const handleViewImage = (reciept_image_path) => {
+    if (!groupData?.permissions?.viewRecieptImage) {
+      Swal.fire({ 
+        ...swalOptions,
+        icon: 'error', 
+        title: 'Access Denied', 
+        text: 'You do not have permission to view receipt images.' 
+      });
+      return;
+    }
+    const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
+    console.log('Image URL:', imageUrl);
+    Swal.fire({
+      ...swalOptions,
+      title: 'Receipt Image',
+      html: `<img src="${imageUrl}" style="width:100%; height:auto; max-height:80vh;" />`,
+      heightAuto: false,
+      showConfirmButton: true,
+      confirmButtonText: 'Close'
+    });
   };
 
   if (loading) {
@@ -234,12 +267,7 @@ function SalesDetailsTable({ agentId, onBack }) {
                   <td data-label="Receipt Image">
                     <button 
                       className="action-btn view-btn no-print screen-only"
-                      onClick={() =>
-                        window.open(
-                          `${BASE_URL}/serve/getImage/${sale.reciept_image_path}`,
-                          '_blank'
-                        )
-                      }
+                      onClick={() => handleViewImage(sale.reciept_image_path)}
                     >
                       View
                     </button>

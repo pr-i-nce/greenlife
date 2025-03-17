@@ -4,9 +4,10 @@ import '../../styles/registeredTables.css';
 import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
-import { usePagination } from '../PaginationContext';
-import { jsPDF } from 'jspdf';
+import apiClient from '../apiClient';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { usePagination } from '../PaginationContext';
 import { useSelector } from 'react-redux';
 
 const swalOptions = {
@@ -18,6 +19,7 @@ const swalOptions = {
 
 function SalesTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [salesData, setSalesData] = useState([]);
   const [acceptedSales, setAcceptedSales] = useState([]);
   const [rejectedSales, setRejectedSales] = useState([]);
@@ -25,6 +27,7 @@ function SalesTable() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const currentPage = pages[currentTab] || 1;
 
   const confirmAction = async (promptText) => {
     const { value } = await Swal.fire({
@@ -51,33 +54,27 @@ function SalesTable() {
     }
   };
 
-  const fetchRegionSales = () => {
-    fetch(`${BASE_URL}/sales/region`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
-      .then((data) => {
+  const fetchAllSales = () => {
+    apiClient.get('/sales/all')
+      .then((response) => {
+        const data = response.data;
         if (Array.isArray(data)) {
           setSalesData(data);
-          console.log('Region sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
       })
       .catch((error) => {
-        console.error('Error fetching region sales data:', error);
+        console.error('Error fetching all sales data:', error);
       });
   };
 
   const fetchAcceptedSales = () => {
-    fetch(`${BASE_URL}/sales/region-accepted`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
-      .then((data) => {
+    apiClient.get('/sales/approved')
+      .then((response) => {
+        const data = response.data;
         if (Array.isArray(data)) {
           setAcceptedSales(data);
-          console.log('Accepted sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -88,14 +85,11 @@ function SalesTable() {
   };
 
   const fetchRejectedSales = () => {
-    fetch(`${BASE_URL}/sales/region-rejected`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject('Network error')))
-      .then((data) => {
+    apiClient.get('/sales/rejected')
+      .then((response) => {
+        const data = response.data;
         if (Array.isArray(data)) {
           setRejectedSales(data);
-          console.log('Rejected sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -107,7 +101,7 @@ function SalesTable() {
 
   useEffect(() => {
     if (currentTab === 'all') {
-      fetchRegionSales();
+      fetchAllSales();
     } else if (currentTab === 'accepted') {
       fetchAcceptedSales();
     } else if (currentTab === 'rejected') {
@@ -119,7 +113,7 @@ function SalesTable() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (currentTab === 'all') {
-        fetchRegionSales();
+        fetchAllSales();
       } else if (currentTab === 'accepted') {
         fetchAcceptedSales();
       } else if (currentTab === 'rejected') {
@@ -141,30 +135,27 @@ function SalesTable() {
   };
 
   const handleAccept = async (saleId) => {
+    if (!groupData?.permissions?.acceptSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+      return;
+    }
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
+      `Are you sure you want to accept sale for createdBy ${sale.email}?`
     );
     if (!confirmed) return;
     showLoadingAlert();
     try {
-      const response = await fetch(
-        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
-      );
-      if (!response.ok) throw new Error('Network error');
+      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Accepted`);
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'success',
         title: 'Sale Accepted',
-        text: `Sale accepted for createdBy ${sale.createdBy}`
+        text: `Sale accepted for createdBy ${sale.email}`
       });
-      fetchRegionSales();
+      fetchAllSales();
       fetchAcceptedSales();
     } catch (error) {
       console.error('Error accepting sale:', error);
@@ -179,30 +170,27 @@ function SalesTable() {
   };
 
   const handleReject = async (saleId) => {
+    if (!groupData?.permissions?.rejectSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+      return;
+    }
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to reject sale for ${sale.createdBy}?`
+      `Are you sure you want to reject sale for ${sale.email}?`
     );
     if (!confirmed) return;
     showLoadingAlert();
     try {
-      const response = await fetch(
-        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
-      );
-      if (!response.ok) throw new Error('Network error');
+      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'error',
         title: 'Sale Rejected',
-        text: `Sale rejected for createdBy ${sale.createdBy}`
+        text: `Sale rejected for createdBy ${sale.email}`
       });
-      fetchRegionSales();
+      fetchAllSales();
       fetchRejectedSales();
     } catch (error) {
       console.error('Error rejecting sale:', error);
@@ -217,28 +205,25 @@ function SalesTable() {
   };
 
   const moveAcceptedToRejected = async (saleId) => {
+    if (!groupData?.permissions?.rejectSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+      return;
+    }
     const sale = acceptedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to reject sale for createdBy ${sale.createdBy}?`
+      `Are you sure you want to reject sale for createdBy ${sale.email}?`
     );
     if (!confirmed) return;
     showLoadingAlert();
     try {
-      const response = await fetch(
-        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Rejected`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
-      );
-      if (!response.ok) throw new Error('Network error');
+      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Rejected`);
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'error',
         title: 'Sale Rejected',
-        text: `Sale rejected for createdBy ${sale.createdBy}`
+        text: `Sale rejected for createdBy ${sale.email}`
       });
       fetchAcceptedSales();
       fetchRejectedSales();
@@ -255,28 +240,25 @@ function SalesTable() {
   };
 
   const moveRejectedToAccepted = async (saleId) => {
+    if (!groupData?.permissions?.acceptSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+      return;
+    }
     const sale = rejectedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
-      `Are you sure you want to accept sale for createdBy ${sale.createdBy}?`
+      `Are you sure you want to accept sale for ${sale.email}?`
     );
     if (!confirmed) return;
     showLoadingAlert();
     try {
-      const response = await fetch(
-        `${BASE_URL}/sales/update?id=${sale.id}&newStatus=Approved`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
-      );
-      if (!response.ok) throw new Error('Network error');
+      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Accepted`);
       Swal.close();
       Swal.fire({
         ...swalOptions,
         icon: 'success',
         title: 'Sale Accepted',
-        text: `Sale accepted for createdBy ${sale.createdBy}`
+        text: `Sale accepted for createdBy ${sale.email}`
       });
       fetchAcceptedSales();
       fetchRejectedSales();
@@ -293,6 +275,10 @@ function SalesTable() {
   };
 
   const handleViewImage = (reciept_image_path) => {
+    if (!groupData?.permissions?.viewRecieptImage) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+      return;
+    }
     const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
     console.log('Image URL:', imageUrl);
     Swal.fire({
@@ -306,6 +292,10 @@ function SalesTable() {
   };
 
   const handleViewProductDetails = async (ref_id) => {
+    if (!groupData?.permissions?.readProduct) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
+      return;
+    }
     Swal.fire({
       ...swalOptions,
       title: 'Fetching Product Details...',
@@ -315,13 +305,9 @@ function SalesTable() {
       }
     });
     try {
-      const response = await fetch(`${BASE_URL}/sales/sold-products?id=${ref_id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      if (!response.ok) throw new Error('Network error');
-      const data = await response.json();
+      const response = await apiClient.get(`/sales/sold-products?id=${ref_id}`);
+      const data = response.data;
       const productDetails = Array.isArray(data.object) ? data.object : [];
-      console.log('Product details:', productDetails);
       Swal.close();
       setSelectedProduct(productDetails);
     } catch (error) {
@@ -366,11 +352,12 @@ function SalesTable() {
                 <th>SN</th>
                 <th className="first-name-col">Agent name</th>
                 <th>Phone number</th>
-                <th>Email</th>
                 <th>Distributor</th>
                 <th className="region-name-col">Region</th>
                 <th>Sub region</th>
                 <th>Amount</th>
+                <th>Created Date</th>
+                <th>Created Time</th>
                 {tabName === 'accepted' && <th>Initial commission</th>}
                 <th>Status</th>
                 <th>Product details</th>
@@ -381,49 +368,90 @@ function SalesTable() {
             <tbody>
               {paginatedData.length > 0 ? (
                 paginatedData.map((sale, index) => (
-                  <tr key={sale.id}>
+                  <tr key={`${sale.id}-${index}`}>
                     <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
                     <td className="first-name-col" data-label="Agent Name">
                       {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
                     </td>
                     <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
-                    <td data-label="Email">{sale.email || 'N/A'}</td>
                     <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
                     <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
                     <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
                     <td data-label="Amount">{sale.amount || 'N/A'}</td>
+                    <td data-label="Created Date">
+                      {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
+                    </td>
+                    <td data-label="Created Time">
+                      {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
+                    </td>
                     {tabName === 'accepted' && (
                       <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
                     )}
                     <td data-label="Status">{sale.status || 'Pending'}</td>
                     <td data-label="Product Details">
-                      <button className="action-btn view-btn" onClick={() => handleViewProductDetails(sale.ref_id)}>
+                      <button className="action-btn view-btn" onClick={() => {
+                        if (!groupData?.permissions?.readProduct) {
+                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
+                          return;
+                        }
+                        handleViewProductDetails(sale.ref_id);
+                      }}>
                         View Details
                       </button>
                     </td>
                     <td data-label="Receipt Image">
-                      <button className="action-btn view-btn" onClick={() => handleViewImage(sale.reciept_image_path)}>
+                      <button className="action-btn view-btn" onClick={() => {
+                        if (!groupData?.permissions?.viewRecieptImage) {
+                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+                          return;
+                        }
+                        handleViewImage(sale.reciept_image_path);
+                      }}>
                         View
                       </button>
                     </td>
                     <td data-label="Actions">
                       {tabName === 'all' && (
                         <>
-                          <button className="action-btn view-btn" onClick={() => handleAccept(sale.id)}>
+                          <button className="action-btn view-btn" onClick={() => {
+                            if (!groupData?.permissions?.acceptSales) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                              return;
+                            }
+                            handleAccept(sale.id);
+                          }}>
                             Accept
                           </button>
-                          <button className="action-btn delete-btn" onClick={() => handleReject(sale.id)}>
+                          <button className="action-btn delete-btn" onClick={() => {
+                            if (!groupData?.permissions?.rejectSales) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                              return;
+                            }
+                            handleReject(sale.id);
+                          }}>
                             Reject
                           </button>
                         </>
                       )}
                       {tabName === 'accepted' && (
-                        <button className="action-btn delete-btn" onClick={() => moveAcceptedToRejected(sale.id)}>
+                        <button className="action-btn delete-btn" onClick={() => {
+                          if (!groupData?.permissions?.rejectSales) {
+                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                            return;
+                          }
+                          moveAcceptedToRejected(sale.id);
+                        }}>
                           Reject
                         </button>
                       )}
                       {tabName === 'rejected' && (
-                        <button className="action-btn view-btn" onClick={() => moveRejectedToAccepted(sale.id)}>
+                        <button className="action-btn view-btn" onClick={() => {
+                          if (!groupData?.permissions?.acceptSales) {
+                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                            return;
+                          }
+                          moveRejectedToAccepted(sale.id);
+                        }}>
                           Accept
                         </button>
                       )}
@@ -475,6 +503,16 @@ function SalesTable() {
     }
     return renderTable(dataToRender, currentTab);
   };
+
+  if (selectedProduct) {
+    return (
+      <GenericModal onClose={() => setSelectedProduct(null)}>
+        <div className="modal-inner-content" style={{ padding: '1rem' }}>
+          <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        </div>
+      </GenericModal>
+    );
+  }
 
   return (
     <div className="registered-table">

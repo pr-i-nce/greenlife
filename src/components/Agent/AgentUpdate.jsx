@@ -171,15 +171,12 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
         params: { email: regData.email },
         headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = response.data;
-      // Close spinner before showing success alert
       Swal.close();
-      Swal.fire({ icon: 'success', title: 'Success', text: responseText }).then(() => {
+      Swal.fire({ icon: 'success', title: 'Successfully updated' }).then(() => {
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();
       });
     } catch (err) {
-      // Close spinner before showing error alert
       Swal.close();
       Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data || "An error occurred while updating. Please try again." });
     } finally {
@@ -350,7 +347,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
               required
             />
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="email">
               <FaEnvelope className="icon" /> Email
             </label>
@@ -362,7 +359,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
               onChange={handleChange}
               required
             />
-          </div>
+          </div> */}
         </div>
         <div className="form-row">
           <div className="form-group">

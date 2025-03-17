@@ -156,9 +156,9 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
         params: { email: regData.email },
         headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = response.data;
+      const responseText = response.businessName;
       if (response.status >= 200 && response.status < 300) {
-        Swal.fire({ icon: 'success', title: 'Successfully registered Dealer', text: responseText }).then(() => {
+        Swal.fire({ icon: 'success', title: 'Successfully updated Dealer', text: responseText }).then(() => {
           onClose();
           if (onUpdateSuccess) onUpdateSuccess();
         });
@@ -334,7 +334,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
               required
             />
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="email">
               <FaEnvelope className="icon" /> Email
             </label>
@@ -346,7 +346,7 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
               onChange={handleChange}
               required
             />
-          </div>
+          </div> */}
         </div>
         <div className="form-row">
           <div className="form-group full-width">

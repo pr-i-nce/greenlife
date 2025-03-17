@@ -19,6 +19,7 @@ const swalOptions = {
 
 function SalesTable() {
   const accessToken = useSelector((state) => state.auth.accessToken);
+  const groupData = useSelector((state) => state.auth.groupData);
   const [salesData, setSalesData] = useState([]);
   const [acceptedSales, setAcceptedSales] = useState([]);
   const [rejectedSales, setRejectedSales] = useState([]);
@@ -59,7 +60,6 @@ function SalesTable() {
         const data = response.data;
         if (Array.isArray(data)) {
           setSalesData(data);
-          console.log('Sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -75,7 +75,6 @@ function SalesTable() {
         const data = response.data;
         if (Array.isArray(data)) {
           setAcceptedSales(data);
-          console.log('Accepted sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -91,7 +90,6 @@ function SalesTable() {
         const data = response.data;
         if (Array.isArray(data)) {
           setRejectedSales(data);
-          console.log('Rejected sales data:', data);
         } else {
           return Promise.reject('Invalid data format');
         }
@@ -137,6 +135,10 @@ function SalesTable() {
   };
 
   const handleAccept = async (saleId) => {
+    if (!groupData?.permissions?.acceptSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+      return;
+    }
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
@@ -168,6 +170,10 @@ function SalesTable() {
   };
 
   const handleReject = async (saleId) => {
+    if (!groupData?.permissions?.rejectSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+      return;
+    }
     const sale = salesData.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
@@ -199,6 +205,10 @@ function SalesTable() {
   };
 
   const moveAcceptedToRejected = async (saleId) => {
+    if (!groupData?.permissions?.rejectSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+      return;
+    }
     const sale = acceptedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
@@ -230,6 +240,10 @@ function SalesTable() {
   };
 
   const moveRejectedToAccepted = async (saleId) => {
+    if (!groupData?.permissions?.acceptSales) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+      return;
+    }
     const sale = rejectedSales.find((s) => s.id === saleId);
     if (!sale) return;
     const confirmed = await confirmAction(
@@ -238,7 +252,7 @@ function SalesTable() {
     if (!confirmed) return;
     showLoadingAlert();
     try {
-      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Approved`);
+      await apiClient.put(`/sales/update?id=${sale.id}&newStatus=Accepted`);
       Swal.close();
       Swal.fire({
         ...swalOptions,
@@ -261,6 +275,10 @@ function SalesTable() {
   };
 
   const handleViewImage = (reciept_image_path) => {
+    if (!groupData?.permissions?.viewRecieptImage) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+      return;
+    }
     const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
     console.log('Image URL:', imageUrl);
     Swal.fire({
@@ -274,6 +292,10 @@ function SalesTable() {
   };
 
   const handleViewProductDetails = async (ref_id) => {
+    if (!groupData?.permissions?.readProduct) {
+      Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
+      return;
+    }
     Swal.fire({
       ...swalOptions,
       title: 'Fetching Product Details...',
@@ -368,33 +390,69 @@ function SalesTable() {
                     )}
                     <td data-label="Status">{sale.status || 'Pending'}</td>
                     <td data-label="Product Details">
-                      <button className="action-btn view-btn" onClick={() => handleViewProductDetails(sale.ref_id)}>
+                      <button className="action-btn view-btn" onClick={() => {
+                        if (!groupData?.permissions?.readProduct) {
+                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
+                          return;
+                        }
+                        handleViewProductDetails(sale.ref_id);
+                      }}>
                         View Details
                       </button>
                     </td>
                     <td data-label="Receipt Image">
-                      <button className="action-btn view-btn" onClick={() => handleViewImage(sale.reciept_image_path)}>
+                      <button className="action-btn view-btn" onClick={() => {
+                        if (!groupData?.permissions?.viewRecieptImage) {
+                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+                          return;
+                        }
+                        handleViewImage(sale.reciept_image_path);
+                      }}>
                         View
                       </button>
                     </td>
                     <td data-label="Actions">
                       {tabName === 'all' && (
                         <>
-                          <button className="action-btn view-btn" onClick={() => handleAccept(sale.id)}>
+                          <button className="action-btn view-btn" onClick={() => {
+                            if (!groupData?.permissions?.acceptSales) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                              return;
+                            }
+                            handleAccept(sale.id);
+                          }}>
                             Accept
                           </button>
-                          <button className="action-btn delete-btn" onClick={() => handleReject(sale.id)}>
+                          <button className="action-btn delete-btn" onClick={() => {
+                            if (!groupData?.permissions?.rejectSales) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                              return;
+                            }
+                            handleReject(sale.id);
+                          }}>
                             Reject
                           </button>
                         </>
                       )}
                       {tabName === 'accepted' && (
-                        <button className="action-btn delete-btn" onClick={() => moveAcceptedToRejected(sale.id)}>
+                        <button className="action-btn delete-btn" onClick={() => {
+                          if (!groupData?.permissions?.rejectSales) {
+                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                            return;
+                          }
+                          moveAcceptedToRejected(sale.id);
+                        }}>
                           Reject
                         </button>
                       )}
                       {tabName === 'rejected' && (
-                        <button className="action-btn view-btn" onClick={() => moveRejectedToAccepted(sale.id)}>
+                        <button className="action-btn view-btn" onClick={() => {
+                          if (!groupData?.permissions?.acceptSales) {
+                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                            return;
+                          }
+                          moveRejectedToAccepted(sale.id);
+                        }}>
                           Accept
                         </button>
                       )}
@@ -450,7 +508,7 @@ function SalesTable() {
   if (selectedProduct) {
     return (
       <GenericModal onClose={() => setSelectedProduct(null)}>
-        <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        <SalesDetailsTable records={selectedProduct} onClose={() => setSelectedProduct(null)} />
       </GenericModal>
     );
   }

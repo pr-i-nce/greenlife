@@ -30,7 +30,6 @@ const Dashboard = () => {
           );
         }
         setDailySales(dailyTotal);
-        console.log('Daily sales total:', dailyTotal);
 
         // Monthly stat card from /sales/monthly
         const monthlyResponse = await apiClient.get('/sales/monthly');
@@ -44,7 +43,6 @@ const Dashboard = () => {
           monthlyTotal = monthlyResponse.data.monthlySales;
         }
         setMonthlySales(monthlyTotal);
-        console.log('Monthly stat card sales:', monthlyTotal);
 
         // Annual sales from /sales/annual
         const annualResponse = await apiClient.get('/sales/annual');
@@ -56,7 +54,6 @@ const Dashboard = () => {
           );
         }
         setAnnualSales(annualTotal);
-        console.log('Annual sales total:', annualTotal);
 
         // Monthly chart data from /sales/all-monthly
         const allMonthlyResponse = await apiClient.get('/sales/all-monthly');
@@ -78,7 +75,6 @@ const Dashboard = () => {
               },
             ],
           });
-          console.log('Monthly chart data:', { labels, dataPoints });
         }
 
         // Subregion chart data from /sales/subregion
@@ -97,7 +93,6 @@ const Dashboard = () => {
               },
             ],
           });
-          console.log('Subregion chart data:', { labels, dataPoints });
         }
 
         // Agent details from /sales/agent

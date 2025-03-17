@@ -47,8 +47,9 @@ const mainMenuItems = [
     key: 'regionSales',
     label: 'Region Sales',
     icon: <FaMoneyBill />,
-    subItems: [{ key: 'reports', label: 'Sales', icon: <FaChartLine /> },
-               { key: 'groupedSales', label: 'Paid commisions', icon: <FaChartLine /> }
+    subItems: [
+      { key: 'reports', label: 'Sales', icon: <FaChartLine /> },
+      { key: 'groupedSales', label: 'Paid commisions', icon: <FaChartLine /> }
     ]
   },
   {
@@ -57,7 +58,6 @@ const mainMenuItems = [
     icon: <FaMoneyBill />,
     subItems: [
       { key: 'reports', label: 'Sales', icon: <FaChartLine /> }
-     
     ]
   },
   {
@@ -116,7 +116,6 @@ function LandingPage() {
     if (mainKey === 'regionSales'){
       if (subKey === 'reports') return '/landingpage/region-sales';
       if (subKey === 'groupedSales') return '/landingpage/grouped-sales';
-
     }
     if (mainKey === 'sales'){
       if (subKey === 'reports') return '/landingpage/sales';
@@ -240,9 +239,7 @@ function LandingPage() {
         <aside ref={sidebarRef} className={`sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Sidebar Navigation">
           {filteredMenuItems.map((mainItem) => {
             let filteredSubItems = [];
-            if (mainItem.key === 'regionSales' || mainItem.key === 'regionOnboarding') {
-              filteredSubItems = mainItem.subItems;
-            } else if (mainItem.subItems && mainItem.subItems.length > 0) {
+            if (mainItem.subItems && mainItem.subItems.length > 0) {
               filteredSubItems = mainItem.subItems.filter((subItem) => {
                 const requiredPermission = menuPermissionMapping[subItem.key];
                 return requiredPermission ? permissions[requiredPermission] : true;

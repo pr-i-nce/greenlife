@@ -25,12 +25,13 @@ const GroupedDataTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
   const currentPage = pages.all || 1;
+  const groupData = useSelector((state) => state.auth.groupData);
+
   const fetchGroupedData = async () => {
     setLoading(true);
     try {
       const { data } = await apiClient.get('/sales/region-aggregated');
       setGroupedData(data);
-      console.log(data);
     } catch (error) {
       Swal.fire({
         ...swalOptions,
@@ -42,9 +43,11 @@ const GroupedDataTable = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchGroupedData();
   }, []);
+
   const handlePrint = () => {
     const originalShowState = showSalesDetails;
     if (!showSalesDetails) {
@@ -71,13 +74,25 @@ const GroupedDataTable = () => {
       }
     }, 500);
   };
+
   const handleViewDetails = (agentId) => {
+    if (!groupData?.permissions?.viewDetails) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to view sales details.'
+      });
+      return;
+    }
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
+
   if (loading) {
     return <div>Loading agent sales data...</div>;
   }
+
   if (showSalesDetails) {
     return (
       <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
@@ -88,9 +103,11 @@ const GroupedDataTable = () => {
       </GenericModal>
     );
   }
+
   if (!groupedData.length) {
     return <div>No agent sales data available.</div>;
   }
+
   const filteredData = groupedData.filter((item) => {
     const { agent } = item;
     const search = searchTerm.toLowerCase();
@@ -107,11 +124,13 @@ const GroupedDataTable = () => {
       (agent.totalSalesCount ? agent.totalSalesCount.toString().toLowerCase() : '').includes(search)
     );
   });
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
   return (
     <div className="registered-table">
       <div id="printable-area">
@@ -126,19 +145,19 @@ const GroupedDataTable = () => {
           </div>
         </div>
         <div style={{ margin: '20px 0', textAlign: 'right' }}>
-      </div>
-      <div style={{ margin: '0 1rem' }}>
-        <input
-          type="text"
-          placeholder="Search agents..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setPageForTab('all', 1);
-          }}
-          className="search-input"
-        />
-      </div>
+        </div>
+        <div style={{ margin: '0 1rem' }}>
+          <input
+            type="text"
+            placeholder="Search agents..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPageForTab('all', 1);
+            }}
+            className="search-input"
+          />
+        </div>
         <div className="table-content">
           <table>
             <thead>

@@ -40,8 +40,8 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
 
   const fetchDistributors = async () => {
     try {
-      const { data } = await apiClient.get('/distributor/all');
-      setDistributors(data);
+      const { data } = await apiClient.get('/distributor/region');
+      setDistributors(data[0]||[]);
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load distributors.' });
@@ -50,8 +50,8 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/all');
-      setSubregions(data);
+      const { data } = await apiClient.get('/subregion/filter');
+      setSubregions(data[0]||[]);
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load subregions.' });
@@ -335,7 +335,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
               required
             />
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="email">
               <FaEnvelope className="icon" /> Email
             </label>
@@ -347,7 +347,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
               onChange={handleChange}
               required
             />
-          </div>
+          </div> */}
         </div>
         <div className="form-row">
           <div className="form-group">
