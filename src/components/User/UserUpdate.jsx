@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
-import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
+import { FaUser, FaPhone, FaEnvelope, FaIdBadge } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import { BASE_URL } from '../apiClient';
 

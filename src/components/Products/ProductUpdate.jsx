@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '' });
   const [updating, setUpdating] = useState(false);
 

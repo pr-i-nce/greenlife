@@ -7,7 +7,7 @@ import UserUpdate from './UserUpdate';
 import UserView from './UserView';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import { usePagination } from '../PaginationContext';
 
 function UserTable() {

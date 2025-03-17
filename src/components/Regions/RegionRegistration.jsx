@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import swal from 'sweetalert';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {

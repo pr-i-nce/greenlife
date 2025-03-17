@@ -6,7 +6,6 @@ import GroupRegistration from './GroupRegistration';
 import GroupRoleManagement from './GroupRoleManagement';
 import GroupView from './GroupView'; 
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { FaClipboardList, FaMapMarkerAlt, FaArrowLeft, FaTrash, FaEye } from 'react-icons/fa';
+import { FaTrash, FaEye } from 'react-icons/fa';
 import GenericModal from '../GenericModal';
 import RegionsRegistration from './RegionRegistration';
 import RegionsUpdate from './RegionUpdate';
 import RegionsView from './RegionsView';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
@@ -48,62 +47,62 @@ const RegionsManagement = () => {
     setRegFormData({ ...regFormData, [e.target.id]: e.target.value }); 
   };
 
-  const handleRegSubmit = async (e) => {
-    e.preventDefault();
-    if (!regFormData.regionName.trim() || !regFormData.regionCode.trim()) {
-      setRegError("All fields are required.");
-      Swal.fire({ title: "Validation Error", text: "All fields are required.", icon: "error", button: "OK" });
-      return;
-    }
-    setRegError("");
-    const payload = { regionName: regFormData.regionName, regionCode: regFormData.regionCode };
-    try {
-      const response = await apiClient.post('/region', payload, {
-        headers: { "Content-Type": "application/json" }
-      });
-      const responseText = response.data;
-      Swal.fire({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
-        setRegFormData({ regionName: "", regionCode: "" });
-        setMode("table");
-        fetchRegions();
-      });
-    } catch (err) {
-      Swal.fire({ icon: "error", title: "Error", text: err.response?.data || err.message });
-    }
-  };
+  // const handleRegSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!regFormData.regionName.trim() || !regFormData.regionCode.trim()) {
+  //     setRegError("All fields are required.");
+  //     Swal.fire({ title: "Validation Error", text: "All fields are required.", icon: "error", button: "OK" });
+  //     return;
+  //   }
+  //   setRegError("");
+  //   const payload = { regionName: regFormData.regionName, regionCode: regFormData.regionCode };
+  //   try {
+  //     const response = await apiClient.post('/region', payload, {
+  //       headers: { "Content-Type": "application/json" }
+  //     });
+  //     const responseText = response.data;
+  //     Swal.fire({ icon: "success", title: "Success", text: responseText, confirmButtonColor: "#2B9843" }).then(() => {
+  //       setRegFormData({ regionName: "", regionCode: "" });
+  //       setMode("table");
+  //       fetchRegions();
+  //     });
+  //   } catch (err) {
+  //     Swal.fire({ icon: "error", title: "Error", text: err.response?.data || err.message });
+  //   }
+  // };
 
-  const handleUpdateChange = (e) => { 
-    setUpdateFormData({ ...updateFormData, [e.target.id]: e.target.value }); 
-  };
+  // const handleUpdateChange = (e) => { 
+  //   setUpdateFormData({ ...updateFormData, [e.target.id]: e.target.value }); 
+  // };
 
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-    if (!updateFormData.regionName.trim() || !updateFormData.regionCode.trim()) {
-      setUpdateError("All fields are required.");
-      Swal.fire({ icon: "error", title: "Update Error", text: "All fields are required." });
-      return;
-    }
-    setUpdateError("");
-    const payload = { regionName: updateFormData.regionName, regionCode: updateFormData.regionCode };
-    try {
-      setUpdating(true);
-      const response = await apiClient.put('/region/update', payload, {
-        params: { regionCode: editingRegion.regionCode },
-        headers: { "Content-Type": "application/json" }
-      });
-      const updatedRegion = response.data;
-      setRegions(regions.map(region => region.id === updatedRegion.id ? updatedRegion : region));
-      setEditingRegion(null);
-      setMode("table");
-      Swal.fire({ icon: "success", title: "Update Successful", text: "Region updated successfully!", confirmButtonColor: "#2B9843" });
-      fetchRegions();
-    } catch (err) {
-      setUpdateError(err.message);
-      Swal.fire({ icon: "error", title: "Update Failed", text: err.response?.data || err.message });
-    } finally {
-      setUpdating(false);
-    }
-  };
+  // const handleUpdateSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!updateFormData.regionName.trim() || !updateFormData.regionCode.trim()) {
+  //     setUpdateError("All fields are required.");
+  //     Swal.fire({ icon: "error", title: "Update Error", text: "All fields are required." });
+  //     return;
+  //   }
+  //   setUpdateError("");
+  //   const payload = { regionName: updateFormData.regionName, regionCode: updateFormData.regionCode };
+  //   try {
+  //     setUpdating(true);
+  //     const response = await apiClient.put('/region/update', payload, {
+  //       params: { regionCode: editingRegion.regionCode },
+  //       headers: { "Content-Type": "application/json" }
+  //     });
+  //     const updatedRegion = response.data;
+  //     setRegions(regions.map(region => region.id === updatedRegion.id ? updatedRegion : region));
+  //     setEditingRegion(null);
+  //     setMode("table");
+  //     Swal.fire({ icon: "success", title: "Update Successful", text: "Region updated successfully!", confirmButtonColor: "#2B9843" });
+  //     fetchRegions();
+  //   } catch (err) {
+  //     setUpdateError(err.message);
+  //     Swal.fire({ icon: "error", title: "Update Failed", text: err.response?.data || err.message });
+  //   } finally {
+  //     setUpdating(false);
+  //   }
+  // };
 
   const handleDelete = async (regionCode) => {
     const region = regions.find(r => r.regionCode === regionCode);

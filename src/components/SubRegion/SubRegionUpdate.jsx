@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {

@@ -5,8 +5,7 @@ import SalesDetailsTable from './SalesDetailsTable';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+
 import { usePagination } from '../PaginationContext';
 import { useSelector } from 'react-redux';
 
@@ -27,7 +26,6 @@ function SalesTable() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
-  const currentPage = pages[currentTab] || 1;
 
   const confirmAction = async (promptText) => {
     const { value } = await Swal.fire({

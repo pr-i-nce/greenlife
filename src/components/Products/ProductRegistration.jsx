@@ -5,7 +5,6 @@ import apiClient, { BASE_URL } from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '' });
   const [error, setError] = useState('');
 

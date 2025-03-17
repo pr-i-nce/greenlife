@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { FaClipboardList, FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 
 const roleMapping = {
   agent: [

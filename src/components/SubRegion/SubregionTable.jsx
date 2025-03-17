@@ -6,7 +6,6 @@ import SubregionRegistration from './SubregionRegistration';
 import SubregionUpdate from './SubRegionUpdate';
 import SubregionView from './SubregionView';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import { usePagination } from '../PaginationContext';

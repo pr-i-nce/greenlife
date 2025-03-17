@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import swal from 'sweetalert';
-import { FaClipboardList, FaArrowLeft } from 'react-icons/fa';
+import { FaClipboardList } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
-import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
 
 const GroupRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
+  // const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ groupName: '', groupId: '' });
   const [error, setError] = useState('');
   

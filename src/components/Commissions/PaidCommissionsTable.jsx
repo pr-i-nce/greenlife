@@ -98,70 +98,70 @@ function PaidCommissionsTable() {
     setShowSalesDetails(true);
   };
 
-  // Logic to pay commission: prompt with agent id.
-  const handlePay = async (agentId) => {
-    if (!groupData?.permissions?.pay) {
-      Swal.fire({
-        ...swalOptions,
-        icon: 'error',
-        title: 'Access Denied',
-        text: 'You do not have permission to pay commission.'
-      });
-      return;
-    }
-    const { value } = await Swal.fire({
-      ...swalOptions,
-      title: 'Are you sure you want to pay commission for this agent?',
-      input: 'text',
-      inputPlaceholder: 'Type "yes" to confirm',
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return 'You need to type yes to confirm!';
-        }
-      },
-    });
-    if (!(value && value.toLowerCase() === 'yes')) {
-      Swal.fire({
-        ...swalOptions,
-        title: 'Action canceled',
-        icon: 'info',
-      });
-      return;
-    }
+  // // Logic to pay commission: prompt with agent id.
+  // const handlePay = async (agentId) => {
+  //   if (!groupData?.permissions?.pay) {
+  //     Swal.fire({
+  //       ...swalOptions,
+  //       icon: 'error',
+  //       title: 'Access Denied',
+  //       text: 'You do not have permission to pay commission.'
+  //     });
+  //     return;
+  //   }
+  //   const { value } = await Swal.fire({
+  //     ...swalOptions,
+  //     title: 'Are you sure you want to pay commission for this agent?',
+  //     input: 'text',
+  //     inputPlaceholder: 'Type "yes" to confirm',
+  //     showCancelButton: true,
+  //     inputValidator: (value) => {
+  //       if (!value) {
+  //         return 'You need to type yes to confirm!';
+  //       }
+  //     },
+  //   });
+  //   if (!(value && value.toLowerCase() === 'yes')) {
+  //     Swal.fire({
+  //       ...swalOptions,
+  //       title: 'Action canceled',
+  //       icon: 'info',
+  //     });
+  //     return;
+  //   }
 
-    Swal.fire({
-      ...swalOptions,
-      title: 'Processing...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+  //   Swal.fire({
+  //     ...swalOptions,
+  //     title: 'Processing...',
+  //     allowOutsideClick: false,
+  //     didOpen: () => {
+  //       Swal.showLoading();
+  //     },
+  //   });
 
-    try {
-      await apiClient.put('/sales/pay', null, {
-        params: { id: agentId },
-      });
-      Swal.close();
-      Swal.fire({
-        ...swalOptions,
-        title: 'Success',
-        text: 'Commission paid successfully.',
-        icon: 'success',
-      });
-      fetchGroupedData(); // Update list after payment.
-    } catch (error) {
-      console.error('Error paying commission:', error);
-      Swal.close();
-      Swal.fire({
-        ...swalOptions,
-        title: 'Error',
-        text: error.message,
-        icon: 'error',
-      });
-    }
-  };
+  //   try {
+  //     await apiClient.put('/sales/pay', null, {
+  //       params: { id: agentId },
+  //     });
+  //     Swal.close();
+  //     Swal.fire({
+  //       ...swalOptions,
+  //       title: 'Success',
+  //       text: 'Commission paid successfully.',
+  //       icon: 'success',
+  //     });
+  //     fetchGroupedData(); // Update list after payment.
+  //   } catch (error) {
+  //     console.error('Error paying commission:', error);
+  //     Swal.close();
+  //     Swal.fire({
+  //       ...swalOptions,
+  //       title: 'Error',
+  //       text: error.message,
+  //       icon: 'error',
+  //     });
+  //   }
+  // };
 
   if (showSalesDetails) {
     return (

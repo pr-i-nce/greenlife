@@ -4,10 +4,9 @@ import { FaClipboardList } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 
 const GroupUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ groupName: '', groupId: '' });
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);

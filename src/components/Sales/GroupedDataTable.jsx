@@ -48,32 +48,32 @@ const GroupedDataTable = () => {
     fetchGroupedData();
   }, []);
 
-  const handlePrint = () => {
-    const originalShowState = showSalesDetails;
-    if (!showSalesDetails) {
-      setShowSalesDetails(true);
-    }
-    setTimeout(() => {
-      const printableArea = document.getElementById('printable-area');
-      if (!printableArea) return;
-      html2canvas(printableArea).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('agent-sales.pdf');
-        const pdfBlob = pdf.output('bloburl');
-        const printWindow = window.open(pdfBlob);
-        printWindow.addEventListener('load', () => {
-          printWindow.print();
-        });
-      });
-      if (!originalShowState) {
-        setShowSalesDetails(false);
-      }
-    }, 500);
-  };
+  // const handlePrint = () => {
+  //   const originalShowState = showSalesDetails;
+  //   if (!showSalesDetails) {
+  //     setShowSalesDetails(true);
+  //   }
+  //   setTimeout(() => {
+  //     const printableArea = document.getElementById('printable-area');
+  //     if (!printableArea) return;
+  //     html2canvas(printableArea).then((canvas) => {
+  //       const imgData = canvas.toDataURL('image/png');
+  //       const pdf = new jsPDF('p', 'pt', 'a4');
+  //       const pdfWidth = pdf.internal.pageSize.getWidth();
+  //       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  //       pdf.save('agent-sales.pdf');
+  //       const pdfBlob = pdf.output('bloburl');
+  //       const printWindow = window.open(pdfBlob);
+  //       printWindow.addEventListener('load', () => {
+  //         printWindow.print();
+  //       });
+  //     });
+  //     if (!originalShowState) {
+  //       setShowSalesDetails(false);
+  //     }
+  //   }, 500);
+  // };
 
   const handleViewDetails = (agentId) => {
     if (!groupData?.permissions?.viewDetails) {

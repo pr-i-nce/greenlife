@@ -27,7 +27,6 @@ function SalesTable() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
-  const currentPage = pages[currentTab] || 1;
 
   const confirmAction = async (promptText) => {
     const { value } = await Swal.fire({
