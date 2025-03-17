@@ -4,12 +4,11 @@ import {
   FaBuilding,
   FaMapMarkedAlt,
   FaPhone,
-  FaEnvelope,
   FaToggleOn,
   FaToggleOff
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {

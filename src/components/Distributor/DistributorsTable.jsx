@@ -5,7 +5,7 @@ import DistributorRegistration from './DistributorRegistration';
 import DistributorUpdate from './DistributorUpdate';
 import DistributorView from './DistributorView';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 import { usePagination } from '../PaginationContext';
 

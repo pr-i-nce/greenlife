@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
 import GenericModal from '../GenericModal';
 import SalesDetailsTable from '../Sales/SalesDetailsTable';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import apiClient from '../apiClient';
+
+
 import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
@@ -246,28 +246,6 @@ function CommissionsTable() {
         });
         console.error('Error paying initial commission:', error);
       });
-  };
-
-  const handlePrint = () => {
-    const originalShowState = showSalesDetails;
-    if (!showSalesDetails) {
-      setShowSalesDetails(true);
-    }
-    setTimeout(() => {
-      const printableArea = document.getElementById('printable-area');
-      if (!printableArea) return;
-      html2canvas(printableArea).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('agent-sales.pdf');
-      });
-      if (!originalShowState) {
-        setShowSalesDetails(false);
-      }
-    }, 500);
   };
 
   const handleViewDetails = (agentId) => {

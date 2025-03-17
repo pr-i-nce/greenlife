@@ -5,8 +5,6 @@ import apiClient from './apiClient';
 import '../styles/dashboardcontent.css';
 
 const Dashboard = () => {
-  const userName = 'Wanjiku';
-  const brandName = 'GreenLife';
 
   // State for daily, monthly, and annual stat card data,
   // monthly chart data, subregion chart data, and top agent details.

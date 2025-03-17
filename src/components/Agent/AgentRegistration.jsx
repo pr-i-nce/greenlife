@@ -8,7 +8,7 @@ import {
   FaMapMarkerAlt
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import apiClient, { BASE_URL } from '../apiClient';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
