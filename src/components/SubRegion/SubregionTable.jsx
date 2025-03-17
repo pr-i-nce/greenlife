@@ -15,12 +15,9 @@ const SubregionTable = () => {
   const groupData = useSelector((state) => state.auth.groupData);
   const [mode, setMode] = useState("table");
   const [subregions, setSubregions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingSubregion, setEditingSubregion] = useState(null);
-  const [updateError, setUpdateError] = useState("");
-  const [updating, setUpdating] = useState(false);
   const [viewRecord, setViewRecord] = useState(null);
 
   // Pagination from context

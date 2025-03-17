@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../styles/registeredTables.css';
 
-const ProductView = ({ record, onClose }) => {
+const ProductView = ({ record }) => {
   const displayValue = (value) =>
     value !== null && value !== undefined && String(value).trim() !== '' ? value : 'null';
 

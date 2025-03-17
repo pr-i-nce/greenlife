@@ -20,7 +20,6 @@ const RegionsManagement = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [regFormData, setRegFormData] = useState({ regionName: "", regionCode: "" });
-  const [regError, setRegError] = useState("");
   const [editingRegion, setEditingRegion] = useState(null);
   const [updateFormData, setUpdateFormData] = useState({ regionName: "", regionCode: "" });
   const [updateError, setUpdateError] = useState("");

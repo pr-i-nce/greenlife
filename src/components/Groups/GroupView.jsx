@@ -2,7 +2,7 @@ import React from 'react';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 
-const GroupView = ({ group, onClose }) => {
+const GroupView = ({ group }) => {
   return (
     <div className="region-container">
       {/* Header with an image and title */}
