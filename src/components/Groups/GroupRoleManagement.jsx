@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { FaArrowLeft } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
 import { useSelector } from 'react-redux';
@@ -87,7 +86,6 @@ const roleMapping = {
 };
 
 const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
 
   const defaultPermissions = {};
   Object.keys(roleMapping).forEach((key) => {

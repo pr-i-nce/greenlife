@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 

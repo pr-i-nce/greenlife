@@ -6,7 +6,6 @@ import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const RegionsRegistration = ({ onClose, onRegistrationSuccess }) => {
-  const accessToken = useSelector((state) => state.auth.accessToken);
   const [formData, setFormData] = useState({ regionName: "", regionCode: "" });
   const [error, setError] = useState("");
 

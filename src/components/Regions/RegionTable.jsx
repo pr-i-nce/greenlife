@@ -43,9 +43,9 @@ const RegionsManagement = () => {
     if (accessToken) fetchRegions(); 
   }, [accessToken]);
 
-  const handleRegChange = (e) => { 
-    setRegFormData({ ...regFormData, [e.target.id]: e.target.value }); 
-  };
+  // const handleRegChange = (e) => { 
+  //   setRegFormData({ ...regFormData, [e.target.id]: e.target.value }); 
+  // };
 
   // const handleRegSubmit = async (e) => {
   //   e.preventDefault();

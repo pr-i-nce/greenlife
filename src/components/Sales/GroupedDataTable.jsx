@@ -3,10 +3,7 @@ import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import SalesDetailsTable from '../Commissions/SalesDetailsTable';
 import GenericModal from '../GenericModal';
-import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { usePagination } from '../PaginationContext';
 import { useSelector } from 'react-redux';
 

@@ -135,9 +135,9 @@ function LandingPage() {
     return location.pathname.startsWith(getRoutePath(mainKey, subKey));
   };
 
-  const isActiveMenu = (mainItem) => {
-    return mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
-  };
+  // const isActiveMenu = (mainItem) => {
+  //   return mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
+  // };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState({});

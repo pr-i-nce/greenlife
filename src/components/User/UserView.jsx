@@ -1,5 +1,4 @@
 import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 
 function UserView({ user, onClose }) {

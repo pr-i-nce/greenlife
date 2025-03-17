@@ -3,7 +3,6 @@ import Swal from 'sweetalert2';
 import { FaClipboardList } from 'react-icons/fa';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
-import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 
 const GroupUpdate = ({ record, onClose, onUpdateSuccess }) => {

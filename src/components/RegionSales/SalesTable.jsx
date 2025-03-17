@@ -5,8 +5,6 @@ import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { usePagination } from '../PaginationContext';
 import { useSelector } from 'react-redux';
 

@@ -2,8 +2,6 @@ import React from 'react';
 import '../../styles/registeredTables.css';
 
 const DistributorView = ({ record, onClose }) => {
-  const displayValue = (value) =>
-    value !== null && value !== undefined && String(value).trim() !== '' ? value : 'null';
 
   return (
     <div className="rm-container">
