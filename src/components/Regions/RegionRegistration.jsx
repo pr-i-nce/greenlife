@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import swal from 'sweetalert';
 import { FaClipboardList, FaMapMarkerAlt } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 

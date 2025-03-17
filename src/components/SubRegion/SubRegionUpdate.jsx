@@ -87,7 +87,6 @@ const SubregionUpdate = ({ record, onClose, onUpdateSuccess }) => {
         }
       });
       if (response.status >= 200 && response.status < 300) {
-        const updatedRecord = response.data;
         setUpdateError("");
         onClose();
         if (onUpdateSuccess) onUpdateSuccess();

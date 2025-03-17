@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import '../../styles/roles.css';
-import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 
 const roleMapping = {
