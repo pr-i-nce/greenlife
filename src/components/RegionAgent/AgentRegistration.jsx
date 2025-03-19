@@ -1,20 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
-import {
-  FaUser,
-  FaIdBadge,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt
-} from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaUser, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
+import Swal from 'sweetalert2';
+
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef(null);
+  const dropdownRef = React.useRef(null);
+
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -40,7 +36,9 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
   return (
     <div className="searchable-dropdown" ref={dropdownRef}>
       <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
-        {value ? options.find(opt => opt.value === value)?.label : placeholder}
+        {value
+          ? options.find(opt => opt.value === value)?.label
+          : placeholder}
         <span className="dropdown-arrow">&#9662;</span>
       </div>
       {isOpen && (
@@ -83,24 +81,15 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   });
   const [regError, setRegError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
-  // Map field keys to display names
-  const fieldNames = {
-    firstName: 'First Name',
-    lastName: 'Last Name',
-    idNumber: 'ID Number',
-    email: 'Email',
-    phoneNumber: 'Phone Number',
-    subRegion: 'Area',
-    distributor: 'Dealer'
-  };
-
   const fetchDistributors = async () => {
     try {
-      const { data } = await apiClient.get('/distributor/all');
-      setDistributors(data);
+      const { data } = await apiClient.get('/distributor/region');
+      setDistributors(data[0]||[]);
+      console.log("Distributors data:", data);
     } catch (err) {
       console.error(err);
     }
@@ -108,8 +97,8 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/all');
-      setSubregions(data);
+      const { data } = await apiClient.get('/subregion/filter');
+      setSubregions(data[0]||[]);
     } catch (err) {
       console.error(err);
     }
@@ -134,16 +123,28 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     value: sub.subRegionName
   }));
 
-  // Use a simple loop over regData to check for missing values.
-  // Also, for the email field, check its format inline.
-  const validateRegistrationForm = () => {
-    for (const [key, value] of Object.entries(regData)) {
-      if (!value.trim()) return `${fieldNames[key] || key} is required.`;
-      if (key === 'email' && (!value.includes('@') || !value.includes('.')))
-        return "Please enter a valid email address.";
+  const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
+
+  const isFieldEmpty = (field) => !field.trim();
+
+  const validateRequiredFields = () => {
+    const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
+    const requiredFields = { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor };
+  
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (isFieldEmpty(value)) return `${key.replace(/([A-Z])/g, ' $1')} is required.`;
     }
     return "";
   };
+  
+  const validateEmailFormat = (email) => {
+    return simpleEmailValid(email) ? "" : "Please enter a valid email address.";
+  };
+  
+  const validateRegistrationForm = () => {
+    return validateRequiredFields() || validateEmailFormat(regData.email);
+  };
+  
 
   const clearRegistrationForm = () => {
     setRegData({
@@ -162,42 +163,44 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setRegData({ ...regData, [e.target.id]: e.target.value });
   };
 
-  const showAlert = (icon, title, text) => Swal.fire({ icon, title, text });
-  const showLoadingSpinner = () => {
-    Swal.fire({
-      title: 'Loading...',
-      text: 'Please wait...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
-  };
-  const closeLoadingSpinner = () => Swal.close();
-
-  const submitRegistration = (payload) =>
-    apiClient.post('/agent', payload, { headers: { 'Content-Type': 'application/json' } });
-
-  // Refactored to reduce branching and lines.
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
-    const error = validateRegistrationForm();
-    if (error) {
-      setRegError(error);
-      return showAlert('error', 'Validation Error', error);
+    if (isLoading) return; 
+    const validationError = validateRegistrationForm();
+    if (validationError) {
+      setRegError(validationError);
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: validationError,
+      });
+      return;
     }
     setRegError('');
     setIsLoading(true);
-    showLoadingSpinner();
+    const payload = { ...regData };
     try {
-      const { data } = await submitRegistration({ ...regData });
-      closeLoadingSpinner();
-      await showAlert('success', 'Success', data);
-      clearRegistrationForm();
-      onClose();
-      onRegistrationSuccess && onRegistrationSuccess();
+      const response = await apiClient.post('/agent', payload, {
+        headers: { 
+          'Content-Type': 'application/json'
+        }
+      });
+      const responseText = response.data;
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: responseText,
+      }).then(() => {
+        clearRegistrationForm();
+        onClose();
+        if (onRegistrationSuccess) onRegistrationSuccess();
+      });
     } catch (err) {
-      closeLoadingSpinner();
-      showAlert('error', 'Error', err.response?.data || "An error occurred while registering. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.response?.data || "An error occurred while registering. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -221,35 +224,72 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             <label htmlFor="firstName">
               <FaUser className="icon" /> First Name
             </label>
-            <input type="text" id="firstName" placeholder="First name" value={regData.firstName} onChange={handleRegChange} required />
+            <input
+              type="text"
+              id="firstName"
+              placeholder="First name"
+              value={regData.firstName}
+              onChange={handleRegChange}
+              required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="lastName">
               <FaUser className="icon" /> Last Name
             </label>
-            <input type="text" id="lastName" placeholder="Last name" value={regData.lastName} onChange={handleRegChange} required />
+            <input
+              type="text"
+              id="lastName"
+              placeholder="Last name"
+              value={regData.lastName}
+              onChange={handleRegChange}
+              required
+            />
           </div>
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="idNumber">
               <FaIdBadge className="icon" /> ID Number
             </label>
-            <input type="text" id="idNumber" placeholder="ID number" value={regData.idNumber} onChange={handleRegChange} required />
+            <input
+              type="text"
+              id="idNumber"
+              placeholder="ID number"
+              value={regData.idNumber}
+              onChange={handleRegChange}
+              required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="email">
               <FaEnvelope className="icon" /> Email
             </label>
-            <input type="email" id="email" placeholder="Email" value={regData.email} onChange={handleRegChange} required />
+            <input
+              type="email"
+              id="email"
+              placeholder="Email"
+              value={regData.email}
+              onChange={handleRegChange}
+              required
+            />
           </div>
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="phoneNumber">
               <FaPhone className="icon" /> Phone
             </label>
-            <input type="tel" id="phoneNumber" placeholder="Phone number" value={regData.phoneNumber} onChange={handleRegChange} required />
+            <input
+              type="tel"
+              id="phoneNumber"
+              placeholder="Phone number"
+              value={regData.phoneNumber}
+              onChange={handleRegChange}
+              required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="subRegion">
@@ -265,6 +305,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             />
           </div>
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="distributor">
@@ -280,6 +321,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             />
           </div>
         </div>
+
         {regError && <p className="error-message">{regError}</p>}
         <button type="submit" className="submit-btn" disabled={isLoading}>
           {isLoading ? 'Registering...' : 'Register Agent'}
