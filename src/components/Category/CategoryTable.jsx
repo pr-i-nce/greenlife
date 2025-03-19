@@ -10,7 +10,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 
 function CategoryTable({ onBack }) {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  const groupData = useSelector((state) => state.auth.groupData);
+  //const groupData = useSelector((state) => state.auth.groupData);
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [registerMode, setRegisterMode] = useState(false);

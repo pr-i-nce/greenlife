@@ -16,7 +16,7 @@ const GroupView = ({ group }) => {
           <h2>{group.groupName} Details</h2>
         </div>
       </div>
-      
+    
       {/* Details Form */}
       <div className="region-form">
         <div className="grid-container">
