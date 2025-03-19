@@ -1,7 +1,40 @@
 import React from 'react';
 import '../../styles/registeredTables.css';
 
-const DistributorView = ({record}) => {
+const DistributorView = ({ record }) => {
+  const rows = [
+    [
+      { label: 'ID', value: record.id || 'null' },
+      { label: 'Business Name', value: record.businessName || 'null' }
+    ],
+    [
+      { label: 'Region', value: record.regionName || 'null' },
+      { label: 'Subregion', value: record.subRegionName || 'null' }
+    ],
+    [
+      { label: 'Phone Number', value: record.phoneNumber || 'null' },
+      { label: 'Email', value: record.email || 'null' }
+    ],
+    [
+      { label: 'Status', value: record.active ? 'Active' : 'Inactive' }
+    ],
+    [
+      { label: 'Created By', value: record.createdBy || 'null' },
+      { label: 'Updated By', value: record.updatedBy || 'null' }
+    ],
+    [
+      { label: 'Deleted By', value: record.deletedBy || 'null' },
+      { label: 'Deactivated By', value: record.deactivatedBy || 'null' }
+    ],
+    [
+      { label: 'Created Date', value: record.createdDate ? record.createdDate.toString() : 'null' },
+      { label: 'Updated Date', value: record.updatedDate ? record.updatedDate.toString() : 'null' }
+    ],
+    [
+      { label: 'Deleted Date', value: record.deletedDate ? record.deletedDate.toString() : 'null' },
+      { label: 'Deactivated Date', value: record.deactivatedDate ? record.deactivatedDate.toString() : 'null' }
+    ]
+  ];
 
   return (
     <div className="rm-container">
@@ -16,82 +49,16 @@ const DistributorView = ({record}) => {
         </div>
       </div>
       <form className="rm-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label>ID:</label>
-            <input type="text" value={record.id || 'null'} readOnly />
+        {rows.map((row, rowIndex) => (
+          <div className="form-row" key={rowIndex}>
+            {row.map((field, index) => (
+              <div className="form-group" key={index}>
+                <label>{field.label}:</label>
+                <input type="text" value={field.value} readOnly />
+              </div>
+            ))}
           </div>
-          <div className="form-group">
-            <label>Business Name:</label>
-            <input type="text" value={record.businessName || 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Region:</label>
-            <input type="text" value={record.regionName || 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Subregion:</label>
-            <input type="text" value={record.subRegionName || 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Phone Number:</label>
-            <input type="text" value={record.phoneNumber || 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Email:</label>
-            <input type="text" value={record.email || 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Status:</label>
-            <input type="text" value={record.active ? 'Active' : 'Inactive'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Created By:</label>
-            <input type="text" value={record.createdBy || 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Updated By:</label>
-            <input type="text" value={record.updatedBy || 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Deleted By:</label>
-            <input type="text" value={record.deletedBy || 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Deactivated By:</label>
-            <input type="text" value={record.deactivatedBy || 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Created Date:</label>
-            <input type="text" value={record.createdDate ? record.createdDate.toString() : 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Updated Date:</label>
-            <input type="text" value={record.updatedDate ? record.updatedDate.toString() : 'null'} readOnly />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Deleted Date:</label>
-            <input type="text" value={record.deletedDate ? record.deletedDate.toString() : 'null'} readOnly />
-          </div>
-          <div className="form-group">
-            <label>Deactivated Date:</label>
-            <input type="text" value={record.deactivatedDate ? record.deactivatedDate.toString() : 'null'} readOnly />
-          </div>
-        </div>
+        ))}
       </form>
     </div>
   );
