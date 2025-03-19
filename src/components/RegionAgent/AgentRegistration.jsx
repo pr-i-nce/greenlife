@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { FaUser, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
+import {
+  FaUser,
+  FaIdBadge,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt
+} from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
-import Swal from 'sweetalert2';
-
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = React.useRef(null);
+  const dropdownRef = useRef(null);
 
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -81,14 +86,13 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   });
   const [regError, setRegError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
   const fetchDistributors = async () => {
     try {
-      const { data } = await apiClient.get('/distributor/region');
-      setDistributors(data[0]||[]);
+      const { data } = await apiClient.get('/distributor/all');
+      setDistributors(data);
       console.log("Distributors data:", data);
     } catch (err) {
       console.error(err);
@@ -97,8 +101,8 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/filter');
-      setSubregions(data[0]||[]);
+      const { data } = await apiClient.get('/subregion/all');
+      setSubregions(data);
     } catch (err) {
       console.error(err);
     }
@@ -124,27 +128,24 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   }));
 
   const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
-
   const isFieldEmpty = (field) => !field.trim();
 
   const validateRequiredFields = () => {
     const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
     const requiredFields = { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor };
-  
     for (const [key, value] of Object.entries(requiredFields)) {
       if (isFieldEmpty(value)) return `${key.replace(/([A-Z])/g, ' $1')} is required.`;
     }
     return "";
   };
-  
+
   const validateEmailFormat = (email) => {
     return simpleEmailValid(email) ? "" : "Please enter a valid email address.";
   };
-  
+
   const validateRegistrationForm = () => {
     return validateRequiredFields() || validateEmailFormat(regData.email);
   };
-  
 
   const clearRegistrationForm = () => {
     setRegData({
@@ -163,44 +164,46 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setRegData({ ...regData, [e.target.id]: e.target.value });
   };
 
+  // Helper functions for alerts and spinners
+  const showAlert = (icon, title, text) => Swal.fire({ icon, title, text });
+  const showLoadingSpinner = () => {
+    Swal.fire({
+      title: 'Loading...',
+      text: 'Please wait...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+  };
+  const closeLoadingSpinner = () => Swal.close();
+
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return; 
+    if (isLoading) return;
+    
     const validationError = validateRegistrationForm();
     if (validationError) {
       setRegError(validationError);
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: validationError,
-      });
+      showAlert('error', 'Validation Error', validationError);
       return;
     }
+    
     setRegError('');
     setIsLoading(true);
+    showLoadingSpinner();
     const payload = { ...regData };
+    
     try {
-      const response = await apiClient.post('/agent', payload, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
+      const { data: responseText } = await apiClient.post('/agent', payload, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = response.data;
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: responseText,
-      }).then(() => {
-        clearRegistrationForm();
-        onClose();
-        if (onRegistrationSuccess) onRegistrationSuccess();
-      });
+      closeLoadingSpinner();
+      await showAlert('success', 'Success', responseText);
+      clearRegistrationForm();
+      onClose();
+      if (onRegistrationSuccess) onRegistrationSuccess();
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: err.response?.data || "An error occurred while registering. Please try again.",
-      });
+      closeLoadingSpinner();
+      showAlert('error', 'Error', err.response?.data || "An error occurred while registering. Please try again.");
     } finally {
       setIsLoading(false);
     }

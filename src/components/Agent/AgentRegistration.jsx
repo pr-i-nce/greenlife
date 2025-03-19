@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-//import Swal from 'sweetalert2';
 import Swal from 'sweetalert2';
-
-
 import {
   FaUser,
   FaIdBadge,
@@ -89,7 +86,6 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   });
   const [regError, setRegError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
@@ -132,27 +128,24 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   }));
 
   const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
-
   const isFieldEmpty = (field) => !field.trim();
 
   const validateRequiredFields = () => {
     const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
     const requiredFields = { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor };
-  
     for (const [key, value] of Object.entries(requiredFields)) {
       if (isFieldEmpty(value)) return `${key.replace(/([A-Z])/g, ' $1')} is required.`;
     }
     return "";
   };
-  
+
   const validateEmailFormat = (email) => {
     return simpleEmailValid(email) ? "" : "Please enter a valid email address.";
   };
-  
+
   const validateRegistrationForm = () => {
     return validateRequiredFields() || validateEmailFormat(regData.email);
   };
-  
 
   const clearRegistrationForm = () => {
     setRegData({
@@ -171,57 +164,46 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setRegData({ ...regData, [e.target.id]: e.target.value });
   };
 
-  const handleRegistrationSubmit = async (e) => {
-    e.preventDefault();
-    if (isLoading) return;
-    const validationError = validateRegistrationForm();
-    if (validationError) {
-      setRegError(validationError);
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: validationError,
-      });
-      return;
-    }
-    setRegError('');
-    setIsLoading(true);
-    
-    // Show SweetAlert2 loading spinner
+  // Helper functions for alerts and spinners
+  const showAlert = (icon, title, text) => Swal.fire({ icon, title, text });
+  const showLoadingSpinner = () => {
     Swal.fire({
       title: 'Loading...',
       text: 'Please wait...',
       allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+      didOpen: () => Swal.showLoading()
     });
+  };
+  const closeLoadingSpinner = () => Swal.close();
+
+  const handleRegistrationSubmit = async (e) => {
+    e.preventDefault();
+    if (isLoading) return;
     
+    const validationError = validateRegistrationForm();
+    if (validationError) {
+      setRegError(validationError);
+      showAlert('error', 'Validation Error', validationError);
+      return;
+    }
+    
+    setRegError('');
+    setIsLoading(true);
+    showLoadingSpinner();
     const payload = { ...regData };
+    
     try {
-      const response = await apiClient.post('/agent', payload, {
+      const { data: responseText } = await apiClient.post('/agent', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
-      const responseText = response.data;
-      // Close loading spinner before showing success alert
-      Swal.close();
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: responseText,
-      }).then(() => {
-        clearRegistrationForm();
-        onClose();
-        if (onRegistrationSuccess) onRegistrationSuccess();
-      });
+      closeLoadingSpinner();
+      await showAlert('success', 'Success', responseText);
+      clearRegistrationForm();
+      onClose();
+      if (onRegistrationSuccess) onRegistrationSuccess();
     } catch (err) {
-      // Close loading spinner before showing error alert
-      Swal.close();
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: err.response?.data || "An error occurred while registering. Please try again.",
-      });
+      closeLoadingSpinner();
+      showAlert('error', 'Error', err.response?.data || "An error occurred while registering. Please try again.");
     } finally {
       setIsLoading(false);
     }
