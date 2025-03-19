@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaTrash, FaEye } from 'react-icons/fa';
