@@ -125,24 +125,26 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
 
-  const validateRegistrationForm = () => {
+  const isFieldEmpty = (field) => !field.trim();
+
+  const validateRequiredFields = () => {
     const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !idNumber.trim() ||
-      !email.trim() ||
-      !phoneNumber.trim() ||
-      !subRegion.trim() ||
-      !distributor.trim()
-    ) {
-      return "All fields are required.";
-    }
-    if (!simpleEmailValid(email)) {
-      return "Please enter a valid email address.";
+    const requiredFields = { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor };
+  
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (isFieldEmpty(value)) return `${key.replace(/([A-Z])/g, ' $1')} is required.`;
     }
     return "";
   };
+  
+  const validateEmailFormat = (email) => {
+    return simpleEmailValid(email) ? "" : "Please enter a valid email address.";
+  };
+  
+  const validateRegistrationForm = () => {
+    return validateRequiredFields() || validateEmailFormat(regData.email);
+  };
+  
 
   const clearRegistrationForm = () => {
     setRegData({
