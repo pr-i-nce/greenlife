@@ -4,6 +4,7 @@ import GenericModal from '../GenericModal';
 import ProductRegistration from './ProductRegistration';
 import ProductUpdate from './ProductUpdate';
 import ProductView from './ProductView';
+import CategoriesTable from '../Category/CategoryTable';
 import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
@@ -17,6 +18,7 @@ function ProductTable() {
   const [registerMode, setRegisterMode] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
+  const [categoriesMode, setCategoriesMode] = useState(false);
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
   const currentPage = pages.all || 1;
@@ -109,6 +111,18 @@ function ProductTable() {
     );
   }
 
+  if (categoriesMode) {
+    return (
+      <GenericModal onClose={() => setCategoriesMode(false)} showBackButton = {false}>
+        <CategoriesTable onClose={() => setCategoriesMode(false)} 
+                         onBack={() => setCategoriesMode(false)}
+                                  />
+      </GenericModal>
+
+
+    );
+  }
+
   return (
     <div className="registered-table">
       <div className="table-header">
@@ -123,6 +137,13 @@ function ProductTable() {
       </div>
       <div className="table-content">
         <div className="table-controls">
+          <button
+            className="modal-close-btn"
+            onClick={() => setCategoriesMode(true)}
+            style={{ margin: '1rem' }}
+          >
+            View Categories
+          </button>
           <button
             className="register-btn"
             onClick={() => {
@@ -152,6 +173,7 @@ function ProductTable() {
             <tr>
               <th>SN</th>
               <th>Product Description</th>
+              <th>Category</th>
               <th>Price</th>
               <th>Unit</th>
               <th>Actions</th>
@@ -163,6 +185,7 @@ function ProductTable() {
                 <tr key={product.id}>
                   <td data-label="SN">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                   <td data-label="Product Description">{product.productDescription}</td>
+                  <td data-label="Category">{product.category}</td>
                   <td data-label="Price">{product.price}</td>
                   <td data-label="Unit">{product.unit}</td>
                   <td data-label="Actions">
@@ -250,4 +273,3 @@ function ProductTable() {
 }
 
 export default ProductTable;
-

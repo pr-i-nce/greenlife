@@ -5,8 +5,6 @@ import { useSelector } from 'react-redux';
 import GenericModal from '../GenericModal';
 import SalesDetailsTable from './SalesDetailsTable';
 import apiClient from '../apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
@@ -62,28 +60,6 @@ function PaidCommissionsTable() {
     setPageForTab('paid', 1);
   }, [accessToken]);
 
-  const handlePrint = () => {
-    const originalShowState = showSalesDetails;
-    if (!showSalesDetails) {
-      setShowSalesDetails(true);
-    }
-    setTimeout(() => {
-      const printableArea = document.getElementById('printable-area');
-      if (!printableArea) return;
-      html2canvas(printableArea).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('paid-commissions.pdf');
-      });
-      if (!originalShowState) {
-        setShowSalesDetails(false);
-      }
-    }, 500);
-  };
-
   const handleViewDetails = (agentId) => {
     if (!groupData?.permissions?.readCommission) {
       Swal.fire({
@@ -97,71 +73,6 @@ function PaidCommissionsTable() {
     setSelectedAgentId(agentId);
     setShowSalesDetails(true);
   };
-
-  // // Logic to pay commission: prompt with agent id.
-  // const handlePay = async (agentId) => {
-  //   if (!groupData?.permissions?.pay) {
-  //     Swal.fire({
-  //       ...swalOptions,
-  //       icon: 'error',
-  //       title: 'Access Denied',
-  //       text: 'You do not have permission to pay commission.'
-  //     });
-  //     return;
-  //   }
-  //   const { value } = await Swal.fire({
-  //     ...swalOptions,
-  //     title: 'Are you sure you want to pay commission for this agent?',
-  //     input: 'text',
-  //     inputPlaceholder: 'Type "yes" to confirm',
-  //     showCancelButton: true,
-  //     inputValidator: (value) => {
-  //       if (!value) {
-  //         return 'You need to type yes to confirm!';
-  //       }
-  //     },
-  //   });
-  //   if (!(value && value.toLowerCase() === 'yes')) {
-  //     Swal.fire({
-  //       ...swalOptions,
-  //       title: 'Action canceled',
-  //       icon: 'info',
-  //     });
-  //     return;
-  //   }
-
-  //   Swal.fire({
-  //     ...swalOptions,
-  //     title: 'Processing...',
-  //     allowOutsideClick: false,
-  //     didOpen: () => {
-  //       Swal.showLoading();
-  //     },
-  //   });
-
-  //   try {
-  //     await apiClient.put('/sales/pay', null, {
-  //       params: { id: agentId },
-  //     });
-  //     Swal.close();
-  //     Swal.fire({
-  //       ...swalOptions,
-  //       title: 'Success',
-  //       text: 'Commission paid successfully.',
-  //       icon: 'success',
-  //     });
-  //     fetchGroupedData(); // Update list after payment.
-  //   } catch (error) {
-  //     console.error('Error paying commission:', error);
-  //     Swal.close();
-  //     Swal.fire({
-  //       ...swalOptions,
-  //       title: 'Error',
-  //       text: error.message,
-  //       icon: 'error',
-  //     });
-  //   }
-  // };
 
   if (showSalesDetails) {
     return (
@@ -270,11 +181,6 @@ function PaidCommissionsTable() {
 
   return (
     <div className="registered-table">
-      <div style={{ margin: '20px 0', textAlign: 'right' }}>
-        <button className="action-btn view-btn no-print" onClick={handlePrint}>
-          Print Data
-        </button>
-      </div>
       {renderTable()}
     </div>
   );

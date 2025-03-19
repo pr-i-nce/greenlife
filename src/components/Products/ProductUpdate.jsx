@@ -4,16 +4,29 @@ import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
-  const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '' });
+  const [formData, setFormData] = useState({ productDescription: '', price: '', unit: '', category: '' });
   const [updating, setUpdating] = useState(false);
-
+  const [categories, setCategories] = useState([]);
+  
   useEffect(() => {
     setFormData({
       productDescription: record.productDescription || '',
       price: record.price || '',
-      unit: record.unit || ''
+      unit: record.unit || '',
+      category: record.category || ''
     });
   }, [record]);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await apiClient.get('/category/all');
+        setCategories(data);
+      } catch (err) {
+        console.error("Error fetching categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -23,7 +36,7 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
     e.preventDefault();
     try {
       setUpdating(true);
-      const response = await apiClient.put(`/product/${record.id}`, formData, {
+      const response = await apiClient.put(`/product/update?id=${record.id}`, formData, {
         headers: { 'Content-Type': 'application/json' }
       });
       const responseText = response.data;
@@ -89,6 +102,22 @@ const ProductUpdate = ({ record, onClose, onUpdateSuccess }) => {
               onChange={handleChange} 
               required 
             />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="category">Category</label>
+            <select 
+              id="category" 
+              value={formData.category} 
+              onChange={handleChange} 
+              required
+            >
+              <option value="">Select category</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.category}>{cat.category}</option>
+              ))}
+            </select>
           </div>
         </div>
         <button type="submit" className="submit-btn" disabled={updating}>

@@ -123,18 +123,18 @@ function CommissionsTable() {
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentTab === 'approval1') {
-        fetchApproval1();
-      } else if (currentTab === 'approval2') {
-        fetchApproval2();
-      } else if (currentTab === 'initial') {
-        fetchInitial();
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentTab, accessToken]);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (currentTab === 'approval1') {
+  //       fetchApproval1();
+  //     } else if (currentTab === 'approval2') {
+  //       fetchApproval2();
+  //     } else if (currentTab === 'initial') {
+  //       fetchInitial();
+  //     }
+  //   }, 5000);
+  //   return () => clearInterval(interval);
+  // }, [currentTab, accessToken]);
 
   const handleApproval1 = async (id) => {
     if (!groupData?.permissions?.approve1) {
@@ -228,7 +228,7 @@ function CommissionsTable() {
       });
       return;
     }
-    apiClient.post(`/sales/agent/${id}`)
+    apiClient.post(`/credit-transfer?id=${id}`)
       .then((response) => {
         Swal.fire({
           title: 'Success!',
@@ -486,16 +486,6 @@ function CommissionsTable() {
             Payment
           </button>
         </div>
-        {currentTab === 'approval1' && (
-          <button className="action-btn view-btn" onClick={() => fetchApproval1()}>
-            Refresh
-          </button>
-        )}
-        {currentTab === 'approval2' && (
-          <button className="action-btn view-btn" onClick={() => fetchApproval2()}>
-            Refresh
-          </button>
-        )}
       </div>
     </div>
   );

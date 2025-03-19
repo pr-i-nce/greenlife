@@ -37,6 +37,10 @@ const ProductView = ({ record }) => {
             <label>Unit:</label>
             <input type="text" value={displayValue(record.unit)} readOnly />
           </div>
+          <div className="form-group">
+            <label>Category:</label>
+            <input type="text" value={displayValue(record.category)} readOnly />
+          </div>
         </div>
       </div>
     </div>

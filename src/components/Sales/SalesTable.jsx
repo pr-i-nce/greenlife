@@ -108,18 +108,18 @@ function SalesTable() {
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentTab === 'all') {
-        fetchAllSales();
-      } else if (currentTab === 'accepted') {
-        fetchAcceptedSales();
-      } else if (currentTab === 'rejected') {
-        fetchRejectedSales();
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentTab, accessToken]);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (currentTab === 'all') {
+  //       fetchAllSales();
+  //     } else if (currentTab === 'accepted') {
+  //       fetchAcceptedSales();
+  //     } else if (currentTab === 'rejected') {
+  //       fetchRejectedSales();
+  //     }
+  //   }, 5000);
+  //   return () => clearInterval(interval);
+  // }, [currentTab, accessToken]);
 
   const showLoadingAlert = () => {
     Swal.fire({
