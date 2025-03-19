@@ -229,7 +229,7 @@ function CommissionsTable() {
       return;
     }
     apiClient.post(`/credit-transfer?id=${id}`)
-      .then((response) => {
+      .then(() => {
         Swal.fire({
           title: 'Success!',
           text: `Initial commission paid successfully for Agent ID: ${id}`,

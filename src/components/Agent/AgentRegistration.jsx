@@ -8,7 +8,6 @@ import {
   FaMapMarkerAlt
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import swal from 'sweetalert2'; 
 import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 

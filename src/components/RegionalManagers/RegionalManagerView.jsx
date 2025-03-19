@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../styles/registeredTables.css';
 
-const RegionalManagerView = ({ record, onClose }) => {
+const RegionalManagerView = ({ record }) => {
   const displayValue = (value) =>
     value !== null && value !== undefined && String(value).trim() !== '' ? value : 'null';
 

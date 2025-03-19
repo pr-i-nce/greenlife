@@ -15,7 +15,7 @@ const SubregionTable = () => {
   const groupData = useSelector((state) => state.auth.groupData);
   const [mode, setMode] = useState("table");
   const [subregions, setSubregions] = useState([]);
-  const [error, setError] = useState("");
+  const [setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingSubregion, setEditingSubregion] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
@@ -26,7 +26,7 @@ const SubregionTable = () => {
 
   const fetchSubregions = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const { data } = await apiClient.get('/subregion/all');
       setSubregions(data);
     } catch (err) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../styles/registeredTables.css';
 
-function UserView({ user, onClose }) {
+function UserView({ user }) {
   return (
     <div className="region-container">
       <div className="region-header">

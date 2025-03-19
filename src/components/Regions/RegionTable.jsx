@@ -19,10 +19,8 @@ const RegionsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [regFormData, setRegFormData] = useState({ regionName: "", regionCode: "" });
   const [editingRegion, setEditingRegion] = useState(null);
   const [updateFormData, setUpdateFormData] = useState({ regionName: "", regionCode: "" });
-  const [updateError, setUpdateError] = useState("");
   const [updating, setUpdating] = useState(false);
   const [viewRecord, setViewRecord] = useState(null);
 
