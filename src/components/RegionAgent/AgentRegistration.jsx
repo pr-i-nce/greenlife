@@ -41,9 +41,7 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
   return (
     <div className="searchable-dropdown" ref={dropdownRef}>
       <div className="dropdown-selected" onClick={() => setIsOpen(!isOpen)}>
-        {value
-          ? options.find(opt => opt.value === value)?.label
-          : placeholder}
+        {value ? options.find(opt => opt.value === value)?.label : placeholder}
         <span className="dropdown-arrow">&#9662;</span>
       </div>
       {isOpen && (
@@ -127,24 +125,23 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     value: sub.subRegionName
   }));
 
-  const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
-  const isFieldEmpty = (field) => !field.trim();
-
-  const validateRequiredFields = () => {
-    const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
-    const requiredFields = { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor };
-    for (const [key, value] of Object.entries(requiredFields)) {
-      if (isFieldEmpty(value)) return `${key.replace(/([A-Z])/g, ' $1')} is required.`;
+  // Combined validation: required field check and email format check.
+  const validateRegistrationForm = () => {
+    const validations = [
+      { field: regData.firstName, name: 'First Name' },
+      { field: regData.lastName, name: 'Last Name' },
+      { field: regData.idNumber, name: 'ID Number' },
+      { field: regData.email, name: 'Email' },
+      { field: regData.phoneNumber, name: 'Phone Number' },
+      { field: regData.subRegion, name: 'Area' },
+      { field: regData.distributor, name: 'Dealer' }
+    ];
+    const missing = validations.find(v => !v.field.trim());
+    if (missing) return `${missing.name} is required.`;
+    if (!(regData.email.includes('@') && regData.email.includes('.'))) {
+      return "Please enter a valid email address.";
     }
     return "";
-  };
-
-  const validateEmailFormat = (email) => {
-    return simpleEmailValid(email) ? "" : "Please enter a valid email address.";
-  };
-
-  const validateRegistrationForm = () => {
-    return validateRequiredFields() || validateEmailFormat(regData.email);
   };
 
   const clearRegistrationForm = () => {
@@ -179,19 +176,16 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
-    
-    const validationError = validateRegistrationForm();
-    if (validationError) {
-      setRegError(validationError);
-      showAlert('error', 'Validation Error', validationError);
+    const error = validateRegistrationForm();
+    if (error) {
+      setRegError(error);
+      showAlert('error', 'Validation Error', error);
       return;
     }
-    
     setRegError('');
     setIsLoading(true);
     showLoadingSpinner();
     const payload = { ...regData };
-    
     try {
       const { data: responseText } = await apiClient.post('/agent', payload, {
         headers: { 'Content-Type': 'application/json' }
