@@ -15,7 +15,6 @@ const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptio
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
-
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -87,11 +86,21 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
+  // Map field keys to display names
+  const fieldNames = {
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    idNumber: 'ID Number',
+    email: 'Email',
+    phoneNumber: 'Phone Number',
+    subRegion: 'Area',
+    distributor: 'Dealer'
+  };
+
   const fetchDistributors = async () => {
     try {
       const { data } = await apiClient.get('/distributor/all');
       setDistributors(data);
-      console.log("Distributors data:", data);
     } catch (err) {
       console.error(err);
     }
@@ -125,21 +134,13 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     value: sub.subRegionName
   }));
 
-  // Combined validation: required field check and email format check.
+  // Use a simple loop over regData to check for missing values.
+  // Also, for the email field, check its format inline.
   const validateRegistrationForm = () => {
-    const validations = [
-      { field: regData.firstName, name: 'First Name' },
-      { field: regData.lastName, name: 'Last Name' },
-      { field: regData.idNumber, name: 'ID Number' },
-      { field: regData.email, name: 'Email' },
-      { field: regData.phoneNumber, name: 'Phone Number' },
-      { field: regData.subRegion, name: 'Area' },
-      { field: regData.distributor, name: 'Dealer' }
-    ];
-    const missing = validations.find(v => !v.field.trim());
-    if (missing) return `${missing.name} is required.`;
-    if (!(regData.email.includes('@') && regData.email.includes('.'))) {
-      return "Please enter a valid email address.";
+    for (const [key, value] of Object.entries(regData)) {
+      if (!value.trim()) return `${fieldNames[key] || key} is required.`;
+      if (key === 'email' && (!value.includes('@') || !value.includes('.')))
+        return "Please enter a valid email address.";
     }
     return "";
   };
@@ -161,7 +162,6 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     setRegData({ ...regData, [e.target.id]: e.target.value });
   };
 
-  // Helper functions for alerts and spinners
   const showAlert = (icon, title, text) => Swal.fire({ icon, title, text });
   const showLoadingSpinner = () => {
     Swal.fire({
@@ -173,28 +173,28 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   };
   const closeLoadingSpinner = () => Swal.close();
 
+  const submitRegistration = (payload) =>
+    apiClient.post('/agent', payload, { headers: { 'Content-Type': 'application/json' } });
+
+  // Refactored to reduce branching and lines.
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
     const error = validateRegistrationForm();
     if (error) {
       setRegError(error);
-      showAlert('error', 'Validation Error', error);
-      return;
+      return showAlert('error', 'Validation Error', error);
     }
     setRegError('');
     setIsLoading(true);
     showLoadingSpinner();
-    const payload = { ...regData };
     try {
-      const { data: responseText } = await apiClient.post('/agent', payload, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const { data } = await submitRegistration({ ...regData });
       closeLoadingSpinner();
-      await showAlert('success', 'Success', responseText);
+      await showAlert('success', 'Success', data);
       clearRegistrationForm();
       onClose();
-      if (onRegistrationSuccess) onRegistrationSuccess();
+      onRegistrationSuccess && onRegistrationSuccess();
     } catch (err) {
       closeLoadingSpinner();
       showAlert('error', 'Error', err.response?.data || "An error occurred while registering. Please try again.");
@@ -221,72 +221,35 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             <label htmlFor="firstName">
               <FaUser className="icon" /> First Name
             </label>
-            <input
-              type="text"
-              id="firstName"
-              placeholder="First name"
-              value={regData.firstName}
-              onChange={handleRegChange}
-              required
-            />
+            <input type="text" id="firstName" placeholder="First name" value={regData.firstName} onChange={handleRegChange} required />
           </div>
           <div className="form-group">
             <label htmlFor="lastName">
               <FaUser className="icon" /> Last Name
             </label>
-            <input
-              type="text"
-              id="lastName"
-              placeholder="Last name"
-              value={regData.lastName}
-              onChange={handleRegChange}
-              required
-            />
+            <input type="text" id="lastName" placeholder="Last name" value={regData.lastName} onChange={handleRegChange} required />
           </div>
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="idNumber">
               <FaIdBadge className="icon" /> ID Number
             </label>
-            <input
-              type="text"
-              id="idNumber"
-              placeholder="ID number"
-              value={regData.idNumber}
-              onChange={handleRegChange}
-              required
-            />
+            <input type="text" id="idNumber" placeholder="ID number" value={regData.idNumber} onChange={handleRegChange} required />
           </div>
           <div className="form-group">
             <label htmlFor="email">
               <FaEnvelope className="icon" /> Email
             </label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Email"
-              value={regData.email}
-              onChange={handleRegChange}
-              required
-            />
+            <input type="email" id="email" placeholder="Email" value={regData.email} onChange={handleRegChange} required />
           </div>
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="phoneNumber">
               <FaPhone className="icon" /> Phone
             </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              placeholder="Phone number"
-              value={regData.phoneNumber}
-              onChange={handleRegChange}
-              required
-            />
+            <input type="tel" id="phoneNumber" placeholder="Phone number" value={regData.phoneNumber} onChange={handleRegChange} required />
           </div>
           <div className="form-group">
             <label htmlFor="subRegion">
@@ -302,7 +265,6 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             />
           </div>
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="distributor">
@@ -318,7 +280,6 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
             />
           </div>
         </div>
-
         {regError && <p className="error-message">{regError}</p>}
         <button type="submit" className="submit-btn" disabled={isLoading}>
           {isLoading ? 'Registering...' : 'Register Agent'}
