@@ -1,4 +1,3 @@
-/* eslint-disable complexity */
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaTrash, FaEye } from 'react-icons/fa';
@@ -102,6 +101,7 @@ const RegionsManagement = () => {
   //   }
   // };
 
+  // eslint-disable-next-line complexity
   const handleDelete = async (regionCode) => {
     const region = regions.find(r => r.regionCode === regionCode);
     const result = await Swal.fire({
@@ -125,12 +125,9 @@ const RegionsManagement = () => {
         const response = await apiClient.delete('/region/delete', {
           params: { regionCode }
         });
-        const successMessage = response.data;
-        Swal.fire({ icon: "success", title: "Deleted!", text: successMessage, confirmButtonColor: "#2B9843" });
+        const successMessage = response.data;Swal.fire({ icon: "success", title: "Deleted!", text: successMessage, confirmButtonColor: "#2B9843" });
         setRegions(regions.filter(r => r.regionCode !== regionCode));
-      } catch (err) {
-        Swal.fire({ icon: "error", title: "Delete Failed", text: err.response?.data || err.message });
-      }
+      } catch (err) {Swal.fire({ icon: "error", title: "Delete Failed", text: err.response?.data || err.message });}
     }
   };
 
