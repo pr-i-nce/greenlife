@@ -20,8 +20,8 @@ const RegionsManagement = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingRegion, setEditingRegion] = useState(null);
- // const [updateFormData, setUpdateFormData] = useState({ regionName: "", regionCode: "" });
- // const [updating, setUpdating] = useState(false);
+  const [setUpdateFormData] = useState({ regionName: "", regionCode: "" });
+  //const [updating, setUpdating] = useState(false);
   const [viewRecord, setViewRecord] = useState(null);
 
   const fetchRegions = async () => {

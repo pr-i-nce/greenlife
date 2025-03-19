@@ -64,7 +64,7 @@ const GroupTable = () => {
 
   const handleManageRoles = (group) => {
     setManagingRoles(group);
-    const {  groupName, groupId, createdBy, createdDate, ...roles } = group;
+    const {  groupId, createdBy, createdDate, ...roles } = group;
     setRoleFormData({ ...roles });
     setMode('roles');
   };
