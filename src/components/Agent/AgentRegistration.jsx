@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 //import Swal from 'sweetalert2';
-import * as Swal from 'sweetalert2';
+import Swal from 'sweetalert2';
 
 
 import {

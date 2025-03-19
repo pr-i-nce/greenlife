@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../styles/registeredTables.css';
 
-const DistributorView = ({ record, onClose }) => {
+const DistributorView = ({record}) => {
 
   return (
     <div className="rm-container">

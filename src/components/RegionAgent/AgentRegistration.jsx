@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import apiClient from '../apiClient';
+import Swal from 'sweetalert2';
+
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
