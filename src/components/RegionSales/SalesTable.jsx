@@ -27,19 +27,14 @@ function SalesTable() {
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
   const confirmAction = async (promptText) => {
-    const { value } = await Swal.fire({
+    const result = await Swal.fire({
       ...swalOptions,
       title: promptText,
-      input: 'text',
-      inputPlaceholder: 'Type "yes" to confirm',
       showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return 'You need to type yes to confirm!';
-        }
-      }
+      confirmButtonText: 'Okay',
+      cancelButtonText: 'Cancel',
     });
-    if (value && value.toLowerCase() === 'yes') {
+    if (result.isConfirmed) {
       return true;
     } else {
       Swal.fire({
@@ -107,18 +102,18 @@ function SalesTable() {
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentTab === 'all') {
-        fetchAllSales();
-      } else if (currentTab === 'accepted') {
-        fetchAcceptedSales();
-      } else if (currentTab === 'rejected') {
-        fetchRejectedSales();
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentTab, accessToken]);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (currentTab === 'all') {
+  //       fetchAllSales();
+  //     } else if (currentTab === 'accepted') {
+  //       fetchAcceptedSales();
+  //     } else if (currentTab === 'rejected') {
+  //       fetchRejectedSales();
+  //     }
+  //   }, 5000);
+  //   return () => clearInterval(interval);
+  // }, [currentTab, accessToken]);
 
   const showLoadingAlert = () => {
     Swal.fire({

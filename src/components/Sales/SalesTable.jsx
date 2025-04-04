@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
-import SalesDetailsTable from './SalesDetailsTable';
+import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
-
 import { usePagination } from '../PaginationContext';
 import { useSelector } from 'react-redux';
 
@@ -27,20 +26,18 @@ function SalesTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
+  // Ref for the pages container to enable scrolling.
+  const pagesContainerRef = useRef(null);
+
   const confirmAction = async (promptText) => {
-    const { value } = await Swal.fire({
+    const result = await Swal.fire({
       ...swalOptions,
       title: promptText,
-      input: 'text',
-      inputPlaceholder: 'Type "yes" to confirm',
       showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return 'You need to type yes to confirm!';
-        }
-      }
+      confirmButtonText: 'Okay',
+      cancelButtonText: 'Cancel',
     });
-    if (value && value.toLowerCase() === 'yes') {
+    if (result.isConfirmed) {
       return true;
     } else {
       Swal.fire({
@@ -108,19 +105,7 @@ function SalesTable() {
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (currentTab === 'all') {
-  //       fetchAllSales();
-  //     } else if (currentTab === 'accepted') {
-  //       fetchAcceptedSales();
-  //     } else if (currentTab === 'rejected') {
-  //       fetchRejectedSales();
-  //     }
-  //   }, 5000);
-  //   return () => clearInterval(interval);
-  // }, [currentTab, accessToken]);
-
+  // useEffect interval commented out...
   const showLoadingAlert = () => {
     Swal.fire({
       ...swalOptions,
@@ -278,7 +263,6 @@ function SalesTable() {
       return;
     }
     const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
-    console.log('Image URL:', imageUrl);
     Swal.fire({
       ...swalOptions,
       title: 'Receipt Image',
@@ -306,7 +290,6 @@ function SalesTable() {
       const response = await apiClient.get(`/sales/sold-products?id=${ref_id}`);
       const data = response.data;
       const productDetails = Array.isArray(data.object) ? data.object : [];
-      console.log('Product details:', productDetails);
       Swal.close();
       setSelectedProduct(productDetails);
     } catch (error) {
@@ -467,23 +450,49 @@ function SalesTable() {
             </tbody>
           </table>
         </div>
-        <div style={{ marginTop: '10px', textAlign: 'center' }}>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setPageForTab(tabName, page)}
-              style={{
-                margin: '0 5px',
-                padding: '5px 10px',
-                backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
-                color: (pages[tabName] || 1) === page ? '#fff' : '#000',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {page}
-            </button>
-          ))}
+        <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button
+            onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: -50, behavior: 'smooth' })}
+            style={{
+              margin: '0 5px',
+              padding: '5px 10px',
+              backgroundColor: '#f0f0f0',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            &#x25C0;
+          </button>
+          <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setPageForTab(tabName, page)}
+                style={{
+                  margin: '0 5px',
+                  padding: '5px 10px',
+                  backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
+                  color: (pages[tabName] || 1) === page ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: 50, behavior: 'smooth' })}
+            style={{
+              margin: '0 5px',
+              padding: '5px 10px',
+              backgroundColor: '#f0f0f0',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            &#x25B6;
+          </button>
         </div>
       </div>
     );
@@ -506,7 +515,7 @@ function SalesTable() {
   if (selectedProduct) {
     return (
       <GenericModal onClose={() => setSelectedProduct(null)}>
-        <SalesDetailsTable records={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        <ProductDetails records={selectedProduct} onClose={() => setSelectedProduct(null)} />
       </GenericModal>
     );
   }

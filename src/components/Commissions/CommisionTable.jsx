@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
+import { BASE_URL } from '../apiClient';
 import { useSelector } from 'react-redux';
 import GenericModal from '../GenericModal';
 import SalesDetailsTable from '../Sales/SalesDetailsTable';
+import AgentDetailsTable from './AgentDetailsTable'; // For viewing batch details
 import apiClient from '../apiClient';
-
-
 import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
@@ -14,6 +14,70 @@ const swalOptions = {
   confirmButtonColor: '#2ECC71',
   cancelButtonColor: '#e74c3c',
   color: '#283e56',
+};
+
+// Simple confirmation dialog (no text input) for confirm/approve actions.
+const confirmAction = async (promptText) => {
+  const result = await Swal.fire({
+    ...swalOptions,
+    title: promptText,
+    showCancelButton: true,
+    confirmButtonText: 'Okay',
+    cancelButtonText: 'Cancel',
+  });
+  if (result.isConfirmed) {
+    return true;
+  } else {
+    Swal.fire({
+      ...swalOptions,
+      title: 'Action canceled',
+      icon: 'info',
+    });
+    return false;
+  }
+};
+
+// Confirmation dialog for the Pay action that requires text input.
+const confirmPay = async (promptText) => {
+  const { value } = await Swal.fire({
+    ...swalOptions,
+    title: promptText,
+    input: 'text',
+    inputPlaceholder: 'Type "yes" to confirm',
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return 'You need to type yes to confirm!';
+      }
+    }
+  });
+  if (value && value.toLowerCase() === 'yes') {
+    return true;
+  } else {
+    Swal.fire({
+      ...swalOptions,
+      title: 'Action canceled',
+      icon: 'info',
+    });
+    return false;
+  }
+};
+
+// New function to view receipt images.
+const handleViewImage = (reciept_image_path, groupData) => {
+  if (!groupData?.permissions?.viewRecieptImage) {
+    Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+    return;
+  }
+  const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
+  Swal.fire({
+    ...swalOptions,
+    title: 'Receipt Image',
+    html: `<img src="${imageUrl}" style="width:100%; height:auto; max-height:80vh;" />`,
+    heightAuto: false,
+    showConfirmButton: true,
+    confirmButtonText: 'Close'
+  });
 };
 
 function CommissionsTable() {
@@ -25,33 +89,14 @@ function CommissionsTable() {
   const [currentTab, setCurrentTab] = useState('approval1');
   const [showSalesDetails, setShowSalesDetails] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
+  // New state for handling batch details modal
+  const [showBatchDetails, setShowBatchDetails] = useState(false);
+  const [selectedRefNo, setSelectedRefNo] = useState(null);
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
-  const confirmAction = async (promptText) => {
-    const { value } = await Swal.fire({
-      ...swalOptions,
-      title: promptText,
-      input: 'text',
-      inputPlaceholder: 'Type "yes" to confirm',
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return 'You need to type yes to confirm!';
-        }
-      }
-    });
-    if (value && value.toLowerCase() === 'yes') {
-      return true;
-    } else {
-      Swal.fire({
-        ...swalOptions,
-        title: 'Action canceled',
-        icon: 'info'
-      });
-      return false;
-    }
-  };
+  // Ref for the pages container to enable horizontal scrolling of page buttons.
+  const pagesContainerRef = useRef(null);
 
   const showLoadingAlert = () => {
     Swal.fire({
@@ -122,19 +167,6 @@ function CommissionsTable() {
     }
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
-
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (currentTab === 'approval1') {
-  //       fetchApproval1();
-  //     } else if (currentTab === 'approval2') {
-  //       fetchApproval2();
-  //     } else if (currentTab === 'initial') {
-  //       fetchInitial();
-  //     }
-  //   }, 5000);
-  //   return () => clearInterval(interval);
-  // }, [currentTab, accessToken]);
 
   const handleApproval1 = async (id) => {
     if (!groupData?.permissions?.approve1) {
@@ -218,7 +250,8 @@ function CommissionsTable() {
     }
   };
 
-  const handleInitialPay = (id) => {
+  // Modified handleInitialPay remains for non-batch pay actions (if needed)
+  const handleInitialPay = async (id) => {
     if (!groupData?.permissions?.pay) {
       Swal.fire({
         ...swalOptions,
@@ -228,6 +261,8 @@ function CommissionsTable() {
       });
       return;
     }
+    const confirmed = await confirmPay(`Are you sure you want to pay commission for Agent ID: ${id}?`);
+    if (!confirmed) return;
     apiClient.post(`/credit-transfer?id=${id}`)
       .then(() => {
         Swal.fire({
@@ -262,7 +297,69 @@ function CommissionsTable() {
     setShowSalesDetails(true);
   };
 
-  // If the Sales Details modal is active, render only the modal.
+  // New functions for batch actions
+  const handleCloseBatch = async (refNo) => {
+    const confirmed = await confirmAction(`Are you sure you want to close batch ${refNo}?`);
+    if (!confirmed) return;
+    showLoadingAlert();
+    try {
+      await apiClient.put('/batch/close', null, { params: { refNo } });
+      Swal.close();
+      Swal.fire({
+        ...swalOptions,
+        title: 'Success',
+        text: 'Batch closed successfully!',
+        icon: 'success',
+      });
+      // Optionally refresh data if needed.
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        ...swalOptions,
+        title: 'Error',
+        text: error.message,
+        icon: 'error',
+      });
+    }
+  };
+
+  const handlePayBatch = async (refNo) => {
+    if (!groupData?.permissions?.pay) {
+      Swal.fire({
+        ...swalOptions,
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You do not have permission to pay commission.'
+      });
+      return;
+    }
+    const confirmed = await confirmPay(`Are you sure you want to pay commission for batch ${refNo}?`);
+    if (!confirmed) return;
+    try {
+      await apiClient.post('/batch/pay', null, { params: { refNo } });
+      Swal.fire({
+        title: 'Success!',
+        text: `Batch paid successfully for Ref No: ${refNo}`,
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
+    } catch (error) {
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to pay batch for Ref No: ${refNo}`,
+        icon: 'error',
+        confirmButtonText: 'Try Again'
+      });
+      console.error('Error paying batch:', error);
+    }
+  };
+
+  const handleViewBatch = (refNo) => {
+    setSelectedRefNo(refNo);
+    setShowBatchDetails(true);
+  };
+
+  // Render modals if active
   if (showSalesDetails) {
     return (
       <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
@@ -274,99 +371,25 @@ function CommissionsTable() {
     );
   }
 
-  const renderTable = (data, tabName) => {
-    const currentPage = pages[tabName] || 1;
-    const indexOfLastRow = currentPage * rowsPerPage;
-    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
-    const totalPages = Math.ceil(data.length / rowsPerPage);
+  if (showBatchDetails) {
+    return (
+      <GenericModal onClose={() => setShowBatchDetails(false)} showBackButton={false}>
+        <AgentDetailsTable
+          refNo={selectedRefNo}
+          onBack={() => setShowBatchDetails(false)}
+        />
+      </GenericModal>
+    );
+  }
 
-    // For the payment table (initial tab), leave as is.
-    if (tabName === 'initial') {
-      return (
-        <>
-          <div id="printable-area" className="table-content">
-            <table>
-              <thead>
-                <tr>
-                  <th>SN</th>
-                  <th className="first-name-col">Agent Name</th>
-                  <th>Phone Number</th>
-                  <th>Distributor</th>
-                  <th className="region-name-col">Region</th>
-                  <th>Sub Region</th>
-                  <th>Total Sales</th>
-                  <th>Total Commission</th>
-                  <th>Total Sales Count</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item, index) => {
-                    const agent = item.agent || {};
-                    return (
-                      <tr key={(agent.agentId || item.id) + '-' + index}>
-                        <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
-                        <td data-label="Agent Name">
-                          {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
-                        </td>
-                        <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
-                        <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
-                        <td data-label="Region">{agent.region || 'N/A'}</td>
-                        <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
-                        <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
-                        <td data-label="Total Commission">{agent.totalCommission || 'N/A'}</td>
-                        <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
-                        <td data-label="Actions">
-                          <button
-                            className="action-btn view-btn no-print screen-only"
-                            onClick={() => handleViewDetails(agent.agentId)}
-                          >
-                            View Sales Details
-                          </button>
-                          <button
-                            className="action-btn view-btn"
-                            onClick={() => handleInitialPay(agent.agentId)}
-                          >
-                            Pay
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>
-                      No records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ marginTop: '10px', textAlign: 'center' }}>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setPageForTab(tabName, page)}
-                style={{
-                  margin: '0 5px',
-                  padding: '5px 10px',
-                  backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
-                  color: (pages[tabName] || 1) === page ? '#fff' : '#000',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-        </>
-      );
-    } else {
-      // For approval1 and approval2 tabs: add Created Date and Created Time columns.
+  const renderTable = (data, tabName) => {
+    // For the Confirmation tab (approval1), keep the original table format with added receipt view button.
+    if (tabName === 'approval1') {
+      const currentPage = pages[tabName] || 1;
+      const indexOfLastRow = currentPage * rowsPerPage;
+      const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+      const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
+      const totalPages = Math.ceil(data.length / rowsPerPage);
       return (
         <>
           <div className="table-content">
@@ -385,6 +408,7 @@ function CommissionsTable() {
                   <th>Commission</th>
                   <th>Confirmation</th>
                   <th>Approval</th>
+                  <th>Receipt</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -412,29 +436,27 @@ function CommissionsTable() {
                       <td data-label="Commission">{sale.initial_commission || 'N/A'}</td>
                       <td data-label="Confirmation">{sale.approval1 || 'N/A'}</td>
                       <td data-label="Approval">{sale.approval2 || 'N/A'}</td>
+                      <td data-label="Receipt">
+                        <button
+                          className="action-btn view-btn"
+                          onClick={() => handleViewImage(sale.reciept_image_path, groupData)}
+                        >
+                          View Receipt
+                        </button>
+                      </td>
                       <td data-label="Actions">
-                        {currentTab === 'approval1' && (
-                          <button
-                            className="action-btn view-btn"
-                            onClick={() => handleApproval1(sale.id)}
-                          >
-                            Confirm
-                          </button>
-                        )}
-                        {currentTab === 'approval2' && (
-                          <button
-                            className="action-btn view-btn"
-                            onClick={() => handleApproval2(sale.id)}
-                          >
-                            Approve
-                          </button>
-                        )}
+                        <button
+                          className="action-btn view-btn"
+                          onClick={() => handleApproval1(sale.id)}
+                        >
+                          Confirm
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>
+                    <td colSpan="14" style={{ textAlign: 'center', padding: '20px' }}>
                       No records found.
                     </td>
                   </tr>
@@ -442,23 +464,171 @@ function CommissionsTable() {
               </tbody>
             </table>
           </div>
-          <div style={{ marginTop: '10px', textAlign: 'center' }}>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setPageForTab(currentTab, page)}
-                style={{
-                  margin: '0 5px',
-                  padding: '5px 10px',
-                  backgroundColor: (pages[currentTab] || 1) === page ? '#0a803e' : '#f0f0f0',
-                  color: (pages[currentTab] || 1) === page ? '#fff' : '#000',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                {page}
-              </button>
-            ))}
+          <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: -50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              &#x25C0;
+            </button>
+            <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPageForTab(tabName, page)}
+                  style={{
+                    margin: '0 5px',
+                    padding: '5px 10px',
+                    backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
+                    color: (pages[tabName] || 1) === page ? '#fff' : '#000',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: 50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              &#x25B6;
+            </button>
+          </div>
+        </>
+      );
+    } else if (tabName === 'approval2' || tabName === 'initial') {
+      // New table format for Approval and Payment tabs
+      const currentPage = pages[tabName] || 1;
+      const indexOfLastRow = currentPage * rowsPerPage;
+      const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+      const paginatedData = data.slice(indexOfFirstRow, indexOfLastRow);
+      const totalPages = Math.ceil(data.length / rowsPerPage);
+      return (
+        <>
+          <div className="table-content">
+            <table>
+              <thead>
+                <tr>
+                  <th>SN</th>
+                  <th>State</th>
+                  <th>Ref No</th>
+                  <th>No of Sales</th>
+                  <th>Commission</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((item, index) => (
+                    <tr key={item.refNo + '-' + index}>
+                      <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
+                      <td data-label="State">{item.state || 'N/A'}</td>
+                      <td data-label="Ref No">{item.refNo || 'N/A'}</td>
+                      <td data-label="No of Sales">{item.no_of_sales || 'N/A'}</td>
+                      <td data-label="Commission">{item.commission || 'N/A'}</td>
+                      <td data-label="Actions">
+                        {tabName === 'approval2' && (
+                          <>
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => handleCloseBatch(item.refNo)}
+                            >
+                              Close Batch
+                            </button>
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => handleViewBatch(item.refNo)}
+                            >
+                              View
+                            </button>
+                          </>
+                        )}
+                        {tabName === 'initial' && (
+                          <>
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => handlePayBatch(item.refNo)}
+                            >
+                              Pay
+                            </button>
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => handleViewBatch(item.refNo)}
+                            >
+                              View
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+                      No records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: -50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              &#x25C0;
+            </button>
+            <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPageForTab(tabName, page)}
+                  style={{
+                    margin: '0 5px',
+                    padding: '5px 10px',
+                    backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
+                    color: (pages[tabName] || 1) === page ? '#fff' : '#000',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: 50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              &#x25B6;
+            </button>
           </div>
         </>
       );

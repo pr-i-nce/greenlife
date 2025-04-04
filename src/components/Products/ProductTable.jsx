@@ -69,7 +69,7 @@ function ProductTable() {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const { data: responseText } = await apiClient.delete(`/product/${product.id}`);
+          const { data: responseText } = await apiClient.delete(`/product/delete?id=${product.id}`);
           Swal.fire('Deleted!', responseText, 'success');
           setProducts(products.filter(p => p.id !== product.id));
         } catch (err) {

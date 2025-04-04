@@ -135,10 +135,6 @@ function LandingPage() {
     return location.pathname.startsWith(getRoutePath(mainKey, subKey));
   };
 
-  // const isActiveMenu = (mainItem) => {
-  //   return mainItem.subItems && mainItem.subItems.some(sub => isSubItemActive(mainItem.key, sub.key));
-  // };
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState({});
 
@@ -151,7 +147,7 @@ function LandingPage() {
     if (keyLower === 'onboarding' || keyLower === 'sales') {
       return groupName === 'admin';
     } else if (keyLower === 'regiononboarding' || keyLower === 'regionsales') {
-      return groupName === 'managers';
+      return groupName === 'regional managers';
     }
     return true;
   });

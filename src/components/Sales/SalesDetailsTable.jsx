@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import { useSelector } from 'react-redux';
@@ -6,7 +6,7 @@ import ProductDetails from './ProductDetails';
 import GenericModal from '../GenericModal';
 import { BASE_URL } from '../apiClient';
 import apiClient from '../apiClient';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { usePagination } from '../PaginationContext';
 
 const swalOptions = {
@@ -27,6 +27,9 @@ function SalesDetailsTable({ agentId, onBack }) {
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
   const currentPage = pages.salesDetails || 1;
+
+  // Ref for the pages container for scrolling.
+  const pagesContainerRef = useRef(null);
 
   useEffect(() => {
     const fetchSalesDetails = async () => {
@@ -108,7 +111,6 @@ function SalesDetailsTable({ agentId, onBack }) {
     }
   };
 
-  // Added module for rendering the receipt image using Swal
   const handleViewImage = (reciept_image_path) => {
     if (!groupData?.permissions?.viewRecieptImage) {
       Swal.fire({ 
@@ -284,23 +286,49 @@ function SalesDetailsTable({ agentId, onBack }) {
           </tbody>
         </table>
         {filteredSales.length > rowsPerPage && (
-          <div style={{ marginTop: '10px', textAlign: 'center' }}>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setPageForTab('salesDetails', page)}
-                style={{
-                  margin: '0 5px',
-                  padding: '5px 10px',
-                  backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
-                  color: currentPage === page ? '#fff' : '#000',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                {page}
-              </button>
-            ))}
+          <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: -50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <FaArrowLeft />
+            </button>
+            <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPageForTab('salesDetails', page)}
+                  style={{
+                    margin: '0 5px',
+                    padding: '5px 10px',
+                    backgroundColor: currentPage === page ? '#0a803e' : '#f0f0f0',
+                    color: currentPage === page ? '#fff' : '#000',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => pagesContainerRef.current && pagesContainerRef.current.scrollBy({ left: 50, behavior: 'smooth' })}
+              style={{
+                margin: '0 5px',
+                padding: '5px 10px',
+                backgroundColor: '#f0f0f0',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <FaArrowRight />
+            </button>
           </div>
         )}
       </div>

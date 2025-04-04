@@ -77,7 +77,7 @@ const roleMapping = {
     'approve2'  // Second-level approval (e.g., final confirmation).
   ],
   payment: [
-    'viewRecieptImage',   // View images of payment receipts.
+    'viewReceiptImage',   // View images of payment receipts.
     'pay',                // Process a payment.
     // 'viewPayment',        // View payment details.
     'viewPaidCommissions' // View details of paid commissions.
@@ -86,6 +86,16 @@ const roleMapping = {
 
 const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) => {
 
+  // Convert old key "viewRecieptImage" to new key "viewReceiptImage" if needed
+  const fixInitialRoles = (roles) => {
+    const fixed = { ...roles };
+    if (fixed.viewRecieptImage !== undefined) {
+      fixed.viewReceiptImage = fixed.viewRecieptImage;
+      delete fixed.viewRecieptImage;
+    }
+    return fixed;
+  };
+
   const defaultPermissions = {};
   Object.keys(roleMapping).forEach((key) => {
     roleMapping[key].forEach((perm) => {
@@ -93,10 +103,11 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
     });
   });
 
-  const [roleData, setRoleData] = useState({ ...defaultPermissions, ...initialRoles });
+  const [roleData, setRoleData] = useState({ ...defaultPermissions, ...fixInitialRoles(initialRoles) });
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
+    console.log('Checkbox changed:', name, checked); // Debug log
     setRoleData({ ...roleData, [name]: checked });
   };
 
@@ -107,6 +118,8 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
       groupName: group.groupName,
       ...roleData
     };
+
+    console.log('Submitting payload:', payload); // Debug log
 
     try {
       const response = await apiClient.put('/group/update', payload, {
@@ -177,7 +190,7 @@ const GroupRoleManagement = ({ group, onClose, onUpdateSuccess, initialRoles }) 
                   if (perm === 'approve1') label = 'Confirm';
                   else if (perm === 'approve2') label = 'Approve';
                 } else if (key === 'payment') {
-                  if (perm === 'viewRecieptImage') label = 'View Receipt Image';
+                  if (perm === 'viewReceiptImage') label = 'View Receipt Image';
                   else if (perm === 'pay') label = 'Make Payment';
                   // else if (perm === 'viewPayment') label = 'View Payment';
                   else if (perm === 'viewPaidCommissions') label = 'View Paid Commissions';

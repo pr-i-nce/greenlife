@@ -133,7 +133,15 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
   }, [accessToken]);
 
   const handleRegChange = (e) => {
-    setRegFormData({ ...regFormData, [e.target.id]: e.target.value });
+    const { id, value } = e.target;
+    setRegFormData(prev => {
+      const newData = { ...prev, [id]: value };
+      // If groupName is "Regional Managers", clear the subRegion field
+      if (id === "groupName" && value === "Regional Managers") {
+        newData.subRegion = "";
+      }
+      return newData;
+    });
   };
 
   const handleRegSubmit = async (e) => {
@@ -213,6 +221,19 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
               required
             />
           </div>
+          <div className="form-group">
+            <label htmlFor="groupName">
+              <FaIdBadge className="icon" /> Group Name
+            </label>
+            <SearchableDropdown
+              id="groupName"
+              value={regFormData.groupName}
+              onChange={handleRegChange}
+              options={groupOptions}
+              placeholder="Select Group"
+              noOptionsText="No groups found"
+            />
+          </div>
         </div>
         <div className="form-row">
           <div className="form-group">
@@ -256,19 +277,21 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
               noOptionsText="No regions found"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="subRegion">
-              <FaIdBadge className="icon" /> Sub Region
-            </label>
-            <SearchableDropdown
-              id="subRegion"
-              value={regFormData.subRegion}
-              onChange={handleRegChange}
-              options={subregionOptions}
-              placeholder="Select Sub Region"
-              noOptionsText="No subregions found"
-            />
-          </div>
+          {regFormData.groupName !== "Regional Managers" && (
+            <div className="form-group">
+              <label htmlFor="subRegion">
+                <FaIdBadge className="icon" /> Sub Region
+              </label>
+              <SearchableDropdown
+                id="subRegion"
+                value={regFormData.subRegion}
+                onChange={handleRegChange}
+                options={subregionOptions}
+                placeholder="Select Sub Region"
+                noOptionsText="No subregions found"
+              />
+            </div>
+          )}
         </div>
         <div className="form-row">
           <div className="form-group">
@@ -284,29 +307,18 @@ const UserRegistration = ({ onClose, onRegistrationSuccess }) => {
               <option value="">Select User Title</option>
               <option value="001">Admin</option>
               <option value="002">Director</option>
-              <option value="003">Regional Manager</option>
-              <option value="004">Sub Regional Manager</option>
+              <option value="003">IT</option>
+              <option value="004">Finance</option>
+              <option value="005">Regional Manager</option>
+              <option value="006">Sub Regional Manager</option>
             </select>
           </div>
-          <div className="form-group">
-            <label htmlFor="groupName">
-              <FaIdBadge className="icon" /> Group Name
-            </label>
-            <SearchableDropdown
-              id="groupName"
-              value={regFormData.groupName}
-              onChange={handleRegChange}
-              options={groupOptions}
-              placeholder="Select Group"
-              noOptionsText="No groups found"
-            />
-          </div>
+
         </div>
         <button type="submit" className="submit-btn">
           Register User
-      </button>
+        </button>
       </form>
-
     </div>
   );
 };

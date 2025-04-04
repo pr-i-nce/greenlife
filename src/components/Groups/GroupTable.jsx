@@ -52,7 +52,7 @@ const GroupTable = () => {
     }).then(async (result) => {
       if (result.isConfirmed && result.value === 'yes') {
         try {
-          const { data: responseText } = await apiClient.delete(`/group/${id}`);
+          const { data: responseText } = await apiClient.delete(`/group/delete?id=${id}`);
           Swal.fire('Deleted!', responseText, 'success');
           setGroups(groups.filter((g) => g.id !== id));
         } catch (err) {

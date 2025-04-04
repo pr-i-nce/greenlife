@@ -85,7 +85,18 @@ function UserUpdate({ user, onClose }) {
       ? { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
       : { 'Content-Type': 'application/json' };
 
-  // Extend update form data to include userTitle, region, and subRegion
+  // Define static options for user titles.
+  // Note: We've added an entry for "005" (fetched value) so that it maps properly.
+  const userTitleOptions = [
+    { id: '001', label: 'Admin', value: '001' },
+    { id: '002', label: 'Director', value: '002' },
+    { id: '003', label: 'Regional Manager', value: '003' },
+    { id: '004', label: 'Sub Regional Manager', value: '004' },
+    { id: '005', label: 'Regional Managers', value: '005' },
+  ];
+
+  // Initialize update form data.
+  // Note: For region we use user.regionName (fetched property) and for user title we map using user.userTitle.
   const [updateFormData, setUpdateFormData] = useState({
     firstName: user.firstName || '',
     lastName: user.lastName || '',
@@ -93,23 +104,20 @@ function UserUpdate({ user, onClose }) {
     email: user.email || '',
     password: '',
     confirmPassword: '',
-    userTitle: user.userTitle || '',
+    userTitle: (() => {
+      const found = userTitleOptions.find(
+        (opt) => opt.label === user.userTitle || opt.value === user.userTitle
+      );
+      return found ? found.value : user.userTitle || '';
+    })(),
     groupName: user.groupName || '',
-    region: user.region || '',
+    region: user.regionName || '',
     subRegion: user.subRegion || '',
   });
 
   const [groups, setGroups] = useState([]);
   const [regions, setRegions] = useState([]);
   const [subregions, setSubregions] = useState([]);
-
-  // Static options for user titles
-  const userTitleOptions = [
-    { id: '001', label: 'Admin', value: '001' },
-    { id: '002', label: 'Director', value: '002' },
-    { id: '003', label: 'Regional Manager', value: '003' },
-    { id: '004', label: 'Sub Regional Manager', value: '004' },
-  ];
 
   // Fetch groups for Group Name dropdown
   useEffect(() => {
@@ -153,8 +161,27 @@ function UserUpdate({ user, onClose }) {
       });
   }, [accessToken]);
 
+  // When regions are fetched, map the user's region (using user.regionName) to the regionName value.
+  useEffect(() => {
+    if (regions.length > 0 && user.regionName) {
+      const foundRegion = regions.find(
+        (r) => r.id === user.regionName || r.regionName === user.regionName
+      );
+      if (foundRegion && updateFormData.region !== foundRegion.regionName) {
+        setUpdateFormData(prev => ({ ...prev, region: foundRegion.regionName }));
+      }
+    }
+  }, [regions, user.regionName, updateFormData.region]);
+
   const handleUpdateChange = (e) => {
-    setUpdateFormData({ ...updateFormData, [e.target.id]: e.target.value });
+    const { id, value } = e.target;
+    setUpdateFormData(prev => {
+      const newData = { ...prev, [id]: value };
+      if (id === "groupName" && value === "Regional Managers") {
+        newData.subRegion = "";
+      }
+      return newData;
+    });
   };
 
   const handleUpdateSubmit = (e) => {
@@ -290,7 +317,7 @@ function UserUpdate({ user, onClose }) {
             />
           </div>
         </div>
-        {/* Row for Region and Sub Region dropdowns */}
+        {/* Row for Region and conditional Sub Region dropdown */}
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="region">
@@ -305,19 +332,21 @@ function UserUpdate({ user, onClose }) {
               noOptionsText="No regions found"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="subRegion">
-              <FaIdBadge className="icon" /> Sub Region
-            </label>
-            <SearchableDropdown
-              id="subRegion"
-              value={updateFormData.subRegion}
-              onChange={handleUpdateChange}
-              options={subregionOptions}
-              placeholder="Select Sub Region"
-              noOptionsText="No subregions found"
-            />
-          </div>
+          {updateFormData.groupName !== "Regional Managers" && (
+            <div className="form-group">
+              <label htmlFor="subRegion">
+                <FaIdBadge className="icon" /> Sub Region
+              </label>
+              <SearchableDropdown
+                id="subRegion"
+                value={updateFormData.subRegion}
+                onChange={handleUpdateChange}
+                options={subregionOptions}
+                placeholder="Select Sub Region"
+                noOptionsText="No subregions found"
+              />
+            </div>
+          )}
         </div>
         {/* Row for Group Name dropdown */}
         <div className="form-row">
