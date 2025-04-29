@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
+import { BASE_URL } from '../apiClient';
 import { useSelector } from 'react-redux';
 import GenericModal from '../GenericModal';
-import SalesDetailsTable from './SalesDetailsTable';
+import BatchDetails from './BatchSales';
 import apiClient from '../apiClient';
 import { usePagination } from '../PaginationContext';
 
@@ -14,176 +15,158 @@ const swalOptions = {
   color: '#283e56',
 };
 
-function PaidCommissionsTable() {
-  const accessToken = useSelector((state) => state.auth.accessToken);
+// View receipt image
+const handleViewImage = (reciept_image_path, groupData) => {
+  if (!groupData?.permissions?.viewRecieptImage) {
+    Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+    return;
+  }
+  const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
+  Swal.fire({
+    ...swalOptions,
+    title: 'Receipt Image',
+    html: `<img src=\"${imageUrl}\" style=\"width:100%; height:auto; max-height:80vh;\" />`,
+    heightAuto: false,
+    confirmButtonText: 'Close'
+  });
+};
+
+export default function PaidCommissionsTable() {
   const groupData = useSelector((state) => state.auth.groupData);
-  const [groupedData, setGroupedData] = useState([]);
+  const [batchData, setBatchData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showSalesDetails, setShowSalesDetails] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState(null);
+
+  const [showBatchDetails, setShowBatchDetails] = useState(false);
+  const [batchSalesData, setBatchSalesData] = useState(null);
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
+  const pagesContainerRef = useRef(null);
 
-  const fetchGroupedData = async (isPolling = false) => {
-    if (!isPolling) setLoading(true);
+  // init pagination & fetch
+  useEffect(() => {
+    setPageForTab('paidBatches', 1);
+    fetchBatches();
+  }, []);
 
+  const fetchBatches = async () => {
+    setLoading(true);
     try {
-      const { data } = await apiClient.get('/sales/initial');
-
-      // Transform data to extract agent details
-      const transformedData = data.map(item => item.agent);
-
-      setGroupedData(prevData => {
-        if (JSON.stringify(transformedData) !== JSON.stringify(prevData)) {
-          console.log('Updating grouped data:', transformedData);
-          return transformedData;
-        }
-        return prevData;
-      });
+      const { data } = await apiClient.get('/sales/paid-batches');
+      setBatchData(data.object || []);
     } catch (error) {
-      if (!isPolling) {
-        Swal.fire({
-          ...swalOptions,
-          title: 'Error fetching data',
-          text: error.message,
-          icon: 'error',
-        });
-      }
+      Swal.fire({ ...swalOptions, title: 'Error fetching batches', text: error.message, icon: 'error' });
     } finally {
-      if (!isPolling) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // Initial fetch and set pagination key 'paid'
-  useEffect(() => {
-    fetchGroupedData();
-    setPageForTab('paid', 1);
-  }, [accessToken]);
-
-  const handleViewDetails = (agentId) => {
+  const handleViewBatch = async (refNo) => {
     if (!groupData?.permissions?.readCommission) {
-      Swal.fire({
-        ...swalOptions,
-        icon: 'error',
-        title: 'Access Denied',
-        text: 'You do not have permission to view commission details.'
-      });
+      Swal.fire({ ...swalOptions, icon: 'error', title: 'Access Denied', text: 'No permission to view batch.' });
       return;
     }
-    setSelectedAgentId(agentId);
-    setShowSalesDetails(true);
+    Swal.fire({ ...swalOptions, title: 'Loading...', didOpen: () => Swal.showLoading() });
+    try {
+      const { data } = await apiClient.get('/sales/get-batch', { params: { refNo } });
+      Swal.close();
+      if (data.successful) {
+        setBatchSalesData(data.object);
+        setShowBatchDetails(true);
+      } else throw new Error(data.message);
+    } catch (err) {
+      Swal.close();
+      Swal.fire({ ...swalOptions, title: 'Error', text: err.message, icon: 'error' });
+    }
   };
 
-  if (showSalesDetails) {
+  if (showBatchDetails) {
     return (
-      <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
-        <SalesDetailsTable agentId={selectedAgentId} onBack={() => setShowSalesDetails(false)} />
+      <GenericModal onClose={() => setShowBatchDetails(false)} showBackButton={true}>
+        <BatchDetails batchSales={batchSalesData} onBack={() => setShowBatchDetails(false)} />
       </GenericModal>
     );
   }
 
-  // Pagination calculation using the 'paid' key
-  const currentPageValue = pages['paid'] || 1;
-  const indexOfLastRow = currentPageValue * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const paginatedData = groupedData.slice(indexOfFirstRow, indexOfLastRow);
-  const totalPages = Math.ceil(groupedData.length / rowsPerPage);
-
-  const renderTable = () => (
-    <div id="printable-area">
-      <div className="table-header">
-        <img
-          src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
-          alt="Paid Commissions"
-          className="header-image"
-        />
-        <div className="header-overlay">
-          <h2>Paid Commissions Records</h2>
+  // pagination controls
+  const renderPagination = () => {
+    const key = 'paidBatches';
+    const totalPages = Math.ceil(batchData.length / rowsPerPage);
+    const currentPage = pages[key] || 1;
+    return (
+      <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+        <button onClick={() => pagesContainerRef.current?.scrollBy({ left: -50, behavior: 'smooth' })} style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>&#x25C0;</button>
+        <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button key={p} onClick={() => setPageForTab(key, p)} style={{ margin: '0 5px', padding: '5px 10px', backgroundColor: currentPage === p ? '#0a803e' : '#f0f0f0', color: currentPage === p ? '#fff' : '#000', border: 'none', cursor: 'pointer' }}>{p}</button>
+          ))}
         </div>
+        <button onClick={() => pagesContainerRef.current?.scrollBy({ left: 50, behavior: 'smooth' })} style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>&#x25B6;</button>
       </div>
-      <div className="table-content">
-        <table>
-          <thead>
-            <tr>
-              <th>SN</th>
-              <th className="first-name-col">Agent Name</th>
-              <th>Phone Number</th>
-              <th>Email</th>
-              <th>Distributor</th>
-              <th className="region-name-col">Region</th>
-              <th>Sub Region</th>
-              <th>Total Sales</th>
-              <th>Total Commission</th>
-              <th>Total Sales Count</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.length > 0 ? (
-              paginatedData.map((agent, index) => (
-                <tr key={`${agent.agentId}-${index}`}>
-                  <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
-                  <td className="first-name-col" data-label="Agent Name">
-                    {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
+    );
+  };
+
+  // table of paid batches with header image and receipt view
+  const renderBatchesTable = () => {
+    const key = 'paidBatches';
+    const currentPage = pages[key] || 1;
+    const startIdx = (currentPage - 1) * rowsPerPage;
+    const slice = batchData.slice(startIdx, startIdx + rowsPerPage);
+    return (
+      <>
+        <div className="table-header">
+          <img
+            src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
+            alt="Paid Batches"
+            className="header-image"
+          />
+          <div className="header-overlay">
+            <h2>Paid Batches</h2>
+          </div>
+        </div>
+        <div className="table-content">
+          <table>
+            <thead>
+              <tr>
+                <th>SN</th>
+                <th>Ref No</th>
+                <th>No Sales</th>
+                <th>Commission</th>
+                <th>Receipt</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {slice.length > 0 ? slice.map((b, i) => (
+                <tr key={b.ref_no}>
+                  <td>{startIdx + i + 1}</td>
+                  <td>{b.ref_no}</td>
+                  <td>{b.totalsales}</td>
+                  <td>{b.totalcommission}</td>
+                  <td>
+                    <button className="action-btn view-btn" onClick={() => handleViewImage(b.reciept_image_path, groupData)}>
+                      View Receipt
+                    </button>
                   </td>
-                  <td data-label="Phone Number">{agent.phone_number || 'N/A'}</td>
-                  <td data-label="Email">{agent.email || 'N/A'}</td>
-                  <td data-label="Distributor">{agent.distributor || 'N/A'}</td>
-                  <td className="region-name-col" data-label="Region">{agent.region || 'N/A'}</td>
-                  <td data-label="Sub Region">{agent.sub_region || 'N/A'}</td>
-                  <td data-label="Total Sales">{agent.totalSales || 'N/A'}</td>
-                  <td data-label="Total Commission">{agent.totalCommission || 'N/A'}</td>
-                  <td data-label="Total Sales Count">{agent.totalSalesCount || 'N/A'}</td>
-                  <td data-label="Actions">
-                    <button
-                      className="action-btn view-btn no-print screen-only"
-                      onClick={() => handleViewDetails(agent.agentId)}
-                    >
-                      View Sales Details
+                  <td>
+                    <button className="action-btn view-btn" onClick={() => handleViewBatch(b.ref_no)}>
+                      View Details
                     </button>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>
-                  No records found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        {Array.from({ length: totalPages }, (_, page) => page + 1).map((page) => (
-          <button
-            key={page}
-            onClick={() => setPageForTab('paid', page)}
-            style={{
-              margin: '0 5px',
-              padding: '5px 10px',
-              backgroundColor: (pages['paid'] || 1) === page ? '#0a803e' : '#f0f0f0',
-              color: (pages['paid'] || 1) === page ? '#fff' : '#000',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            {page}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-
-  if (loading) {
-    return <div>Loading paid commissions data...</div>;
-  }
+              )) : (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No records found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {renderPagination()}
+      </>
+    );
+  };
 
   return (
     <div className="registered-table">
-      {renderTable()}
+      {loading ? <div>Loading paid batches...</div> : renderBatchesTable()}
     </div>
   );
 }
-
-export default PaidCommissionsTable;

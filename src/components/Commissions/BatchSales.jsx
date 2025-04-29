@@ -16,7 +16,7 @@ const swalOptions = {
   color: '#283e56',
 };
 
-function SalesDetailsTable({ agentId, onBack, batchSales }) {
+function BatchDetails({ agentId, onBack, batchSales }) {
   const accessToken = useSelector((state) => state.auth.accessToken);
   const groupData = useSelector((state) => state.auth.groupData);
   const [agent, setAgent] = useState(null);
@@ -159,12 +159,10 @@ function SalesDetailsTable({ agentId, onBack, batchSales }) {
       (sale.distributor || '').toLowerCase().includes(search) ||
       (sale.region_name || '').toLowerCase().includes(search) ||
       (sale.sub_region || '').toLowerCase().includes(search) ||
-      (sale.amount ? sale.amount.toString().toLowerCase() : '').includes(search) ||
-      (sale.created_date || '').toLowerCase().includes(search) ||
       (sale.initial_commission ? sale.initial_commission.toString().toLowerCase() : '').includes(search) ||
-      (sale.status || '').toLowerCase().includes(search) ||
-      (sale.approval1 || '').toLowerCase().includes(search) ||
-      (sale.approval2 || '').toLowerCase().includes(search)
+      (sale.posting_date || '').toLowerCase().includes(search) ||
+      (sale.posting_state || '').toLowerCase().includes(search) ||
+      (sale.csv_state || '').toLowerCase().includes(search)
     );
   });
 
@@ -179,11 +177,11 @@ function SalesDetailsTable({ agentId, onBack, batchSales }) {
       <div className="table-header">
         <img
           src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1600"
-          alt="Sales Details"
+          alt="Batch Details"
           className="header-image"
         />
         <div className="header-overlay">
-          <h2>Sales Details</h2>
+          <h2>{batchSales ? 'Batch Details' : 'Sales Details'}</h2>
         </div>
       </div>
       <button 
@@ -210,77 +208,38 @@ function SalesDetailsTable({ agentId, onBack, batchSales }) {
           <thead>
             <tr>
               <th>SN</th>
-              <th>Agent Name</th>
+              <th>First Name</th>
+              <th>Email</th>
               <th>Phone Number</th>
-              <th>Distributor</th>
-              <th>Region</th>
-              <th>Sub Region</th>
-              <th>Amount</th>
+              <th>Posting Date</th>
+              <th>Posting Time</th>
+              <th>State</th>
               <th>Initial Commission</th>
-              <th>Created Date</th>
-              <th>Created Time</th>
-              <th>Status</th>
-              <th>Confirmation</th>
-              <th>Approval</th>
-              <th>Paid</th>
-              <th>Product Details</th>
+              <th>CSV State</th>
               <th>Receipt Image</th>
             </tr>
           </thead>
           <tbody>
             {paginatedSales.length > 0 ? (
               paginatedSales.map((sale, index) => (
-                <tr key={sale.ref_id || sale.id}>
+                <tr key={sale.id}>
                   <td data-label="SN">{index + 1 + (currentPage - 1) * rowsPerPage}</td>
-                  <td data-label="Agent Name">
-                    {sale.first_name || agent?.first_name || 'N/A'} {sale.last_name || agent?.last_name || 'N/A'}
+                  <td data-label="First Name">{sale.first_name || 'N/A'}</td>
+                  <td data-label="Email">{sale.email || 'N/A'}</td>
+                  <td data-label="Phone Number">{sale.phone_number || 'N/A'}</td>
+                  <td data-label="Posting Date">
+                    {sale.posting_date.split('T')[0]}
                   </td>
-                  <td data-label="Phone Number">
-                    {sale.phone_number || agent?.phone_number || 'N/A'}
+                  <td data-label="Posting Time">
+                    {sale.posting_date.split('T')[1].split('.')[0]}
                   </td>
-                  <td data-label="Distributor">
-                    {sale.distributor || agent?.distributor || 'N/A'}
-                  </td>
-                  <td data-label="Region">
-                    {sale.region_name || agent?.region || 'N/A'}
-                  </td>
-                  <td data-label="Sub Region">
-                    {sale.sub_region || agent?.sub_region || 'N/A'}
-                  </td>
-                  <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                  <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                  <td data-label="Created Date">
-                    {sale.created_date
-                      ? sale.created_date.split('T')[0]
-                      : sale.posting_date
-                        ? sale.posting_date.split('T')[0]
-                        : 'N/A'}
-                  </td>
-                  <td data-label="Created Time">
-                    {sale.created_date
-                      ? sale.created_date.split('T')[1].split('.')[0]
-                      : sale.posting_date
-                        ? sale.posting_date.split('T')[1].split('.')[0]
-                        : 'N/A'}
-                  </td>
-                  <td data-label="Status">{sale.status || sale.posting_state || 'N/A'}</td>
-                  <td data-label="Confirmation">{sale.approval1 || 'N/A'}</td>
-                  <td data-label="Approval">{sale.approval2 || 'N/A'}</td>
-                  <td data-label="Paid">
-                    {sale.initial_commission_paid ? "Paid" : "Not Paid"}
-                  </td>
-                  <td data-label="Product Details">
-                    <button 
-                      className="action-btn view-btn"
-                      onClick={() => handleViewProductDetails(sale.ref_id || sale.id)}
-                    >
-                      View Details
-                    </button>
-                  </td>
+                  <td data-label="State">{sale.posting_state || sale.state || 'N/A'}</td>
+                  <td data-label="Initial Commission">{sale.initial_commission}</td>
+                  <td data-label="CSV State">{sale.csv_state}</td>
                   <td data-label="Receipt Image">
                     <button 
                       className="action-btn view-btn no-print screen-only"
-                      onClick={() => handleViewImage(sale.reciept_image_path, groupData)}
+                      onClick={() => handleViewImage(sale.reciept_image_path)}
                     >
                       View
                     </button>
@@ -289,14 +248,14 @@ function SalesDetailsTable({ agentId, onBack, batchSales }) {
               ))
             ) : (
               <tr>
-                <td colSpan="15" className="no-records" style={{ textAlign: 'center', padding: '20px' }}>
-                  No sales records found.
+                <td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>
+                  No batch records found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-        {filteredSales.length > rowsPerPage && (
+        {totalPages > 1 && (
           <div style={{ marginTop: '10px', textAlign: 'center' }}>
             {Array.from({ length: totalPages }, (_, page) => (
               <button
@@ -321,4 +280,4 @@ function SalesDetailsTable({ agentId, onBack, batchSales }) {
   );
 }
 
-export default SalesDetailsTable;
+export default BatchDetails;

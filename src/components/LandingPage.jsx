@@ -66,7 +66,7 @@ const mainMenuItems = [
     icon: <FaMoneyBill />,
     subItems: [
       { key: 'commissionDisbursement', label: 'Commission Disbursement', icon: <FaMoneyBill /> },
-      { key: 'paidCommissions', label: 'Paid Commissions', icon: <FaMoneyBill /> }
+      // { key: 'paidCommissions', label: 'Paid Commissions', icon: <FaMoneyBill /> }
     ]
   },
   {

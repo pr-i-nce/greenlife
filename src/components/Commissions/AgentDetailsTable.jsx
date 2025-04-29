@@ -19,26 +19,33 @@ function AgentDetailsTable() {
   const groupData = useSelector((state) => state.auth.groupData);
   const [agentData, setAgentData] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Use selectedRefNo to track the refNo of the agent record for which details are being viewed.
+  const [selectedRefNo, setSelectedRefNo] = useState(null);
   const [showSalesDetails, setShowSalesDetails] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState(null);
 
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
-  // Fetch agent details from the /batch-agent endpoint.
+  // Fetch agent details from the /sales/get-batch endpoint using refNo in the request params.
   const fetchAgentData = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/batch-agent');
+      // Update the endpoint and pass a refNo parameter.
+      // Here we assume you have a way to determine the correct refNo to use.
+      // For instance, if groupData or another prop contains it, you can replace `yourRefNoValue` accordingly.
+      const yourRefNoValue = groupData?.refNo || ''; // adjust this line as needed
+      const { data } = await apiClient.get('/sales/get-batch', {
+        params: { refNo: yourRefNoValue },
+      });
       // Expecting data to be an array of agent objects.
       if (Array.isArray(data)) {
         setAgentData(data);
       } else {
-        throw new Error('Invalid data format');
+        throw new Error('Invalid data format received from sales/get-batch');
       }
     } catch (error) {
       Swal.fire({
         ...swalOptions,
-        title: 'Error fetching agent data',
+        title: 'Error fetching batch data',
         text: error.message,
         icon: 'error',
       });
@@ -47,13 +54,14 @@ function AgentDetailsTable() {
     }
   };
 
+  // The effect now calls the updated fetchAgentData and sets the pagination tab appropriately.
   useEffect(() => {
     fetchAgentData();
-    // Set the pagination key to 'agents'
     setPageForTab('agents', 1);
   }, [accessToken]);
 
-  const handleViewDetails = (agentId) => {
+  // When a view details button is clicked, pass the refNo value for that agent record.
+  const handleViewDetails = (agentRefNo) => {
     if (!groupData?.permissions?.readCommission) {
       Swal.fire({
         ...swalOptions,
@@ -63,11 +71,11 @@ function AgentDetailsTable() {
       });
       return;
     }
-    setSelectedAgentId(agentId);
+    setSelectedRefNo(agentRefNo);
     setShowSalesDetails(true);
   };
 
-  // Pagination calculations using the 'agents' key
+  // Pagination calculations using the 'agents' key.
   const currentPage = pages['agents'] || 1;
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
@@ -107,7 +115,7 @@ function AgentDetailsTable() {
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((agent, index) => (
-                <tr key={`${agent.agentId}-${index}`}>
+                <tr key={`${agent.refNo}-${index}`}>
                   <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
                   <td className="first-name-col" data-label="Agent Name">
                     {agent.first_name || 'N/A'} {agent.last_name || 'N/A'}
@@ -125,7 +133,8 @@ function AgentDetailsTable() {
                   <td data-label="Actions">
                     <button
                       className="action-btn view-btn no-print screen-only"
-                      onClick={() => handleViewDetails(agent.agentId)}
+                      // Pass the agent's refNo to the handler.
+                      onClick={() => handleViewDetails(agent.refNo)}
                     >
                       View Sales Details
                     </button>
@@ -163,11 +172,12 @@ function AgentDetailsTable() {
     </div>
   );
 
-  // Render the modal with SalesDetailsTable if an agent is selected.
+  // Render the modal with SalesDetailsTable if an agent's refNo has been selected.
   if (showSalesDetails) {
     return (
       <GenericModal onClose={() => setShowSalesDetails(false)} showBackButton={false}>
-        <SalesDetailsTable agentId={selectedAgentId} onBack={() => setShowSalesDetails(false)} />
+        {/* Pass the refNo instead of agentId */}
+        <SalesDetailsTable refNo={selectedRefNo} onBack={() => setShowSalesDetails(false)} />
       </GenericModal>
     );
   }
