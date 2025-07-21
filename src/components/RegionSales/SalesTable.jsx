@@ -102,19 +102,6 @@ function SalesTable() {
     setPageForTab(currentTab, 1);
   }, [currentTab, accessToken]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (currentTab === 'all') {
-  //       fetchAllSales();
-  //     } else if (currentTab === 'accepted') {
-  //       fetchAcceptedSales();
-  //     } else if (currentTab === 'rejected') {
-  //       fetchRejectedSales();
-  //     }
-  //   }, 5000);
-  //   return () => clearInterval(interval);
-  // }, [currentTab, accessToken]);
-
   const showLoadingAlert = () => {
     Swal.fire({
       ...swalOptions,
@@ -125,6 +112,54 @@ function SalesTable() {
       }
     });
   };
+
+  // —— New Download Handler Added Here ——
+  const handleDownload = () => {
+    let endpoint = '';
+    let filename = '';
+    switch (currentTab) {
+      case 'all':
+        endpoint = '/sales/download-region-sales';
+        filename = 'all_sales.xlsx';
+        break;
+      case 'accepted':
+        endpoint = '/sales/download-region-approved-sales';
+        filename = 'approved_sales.xlsx';
+        break;
+      case 'rejected':
+        endpoint = '/sales/download-region-rejected-sales';
+        filename = 'rejected_sales.xlsx';
+        break;
+      default:
+        return;
+    }
+
+    fetch(`${BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to download file');
+        return response.blob();
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((err) => {
+        Swal.fire({ icon: 'error', title: 'Download Failed', text: err.message });
+      });
+  };
+  // —— End of Download Handler ——
+
 
   const handleAccept = async (saleId) => {
     if (!groupData?.permissions?.acceptSales) {
@@ -519,18 +554,50 @@ function SalesTable() {
         </div>
       </div>
       <div className="table-controls">
-        <div className="tabs">
-          <button className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`} onClick={() => setCurrentTab('all')}>
-            New sales
-          </button>
-          <button className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`} onClick={() => setCurrentTab('accepted')}>
-            Accepted sales
-          </button>
-          <button className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`} onClick={() => setCurrentTab('rejected')}>
-            Rejected sales
+        <div
+          className="tabs"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <button
+              className={`tab-btn ${currentTab === 'all' ? 'active' : ''}`}
+              onClick={() => setCurrentTab('all')}
+            >
+              New sales
+            </button>
+            <button
+              className={`tab-btn ${currentTab === 'accepted' ? 'active' : ''}`}
+              onClick={() => setCurrentTab('accepted')}
+            >
+              Accepted sales
+            </button>
+            <button
+              className={`tab-btn ${currentTab === 'rejected' ? 'active' : ''}`}
+              onClick={() => setCurrentTab('rejected')}
+            >
+              Rejected sales
+            </button>
+          </div>
+          <button
+            onClick={handleDownload}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#0a803e',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Download
           </button>
         </div>
-        <input 
+        <input
           type="text"
           placeholder="Search sales..."
           value={searchTerm}
