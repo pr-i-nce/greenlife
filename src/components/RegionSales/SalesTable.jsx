@@ -47,7 +47,7 @@ function SalesTable() {
   };
 
   const fetchAllSales = () => {
-    apiClient.get('/sales/all')
+    apiClient.get('/sales/email/region')
       .then((response) => {
         const data = response.data;
         if (Array.isArray(data)) {
@@ -62,7 +62,7 @@ function SalesTable() {
   };
 
   const fetchAcceptedSales = () => {
-    apiClient.get('/sales/approved')
+    apiClient.get('/sales/region-approved')
       .then((response) => {
         const data = response.data;
         if (Array.isArray(data)) {
@@ -77,7 +77,7 @@ function SalesTable() {
   };
 
   const fetchRejectedSales = () => {
-    apiClient.get('/sales/rejected')
+    apiClient.get('/sales/region-rejected')
       .then((response) => {
         const data = response.data;
         if (Array.isArray(data)) {
