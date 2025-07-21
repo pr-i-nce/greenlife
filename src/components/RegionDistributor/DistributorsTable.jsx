@@ -12,7 +12,6 @@ import { usePagination } from '../PaginationContext';
 const DistributorsTable = () => {
   const accessToken = useSelector((state) => state.auth.accessToken);
   const groupData = useSelector((state) => state.auth.groupData);
-  
   const [registerMode, setRegisterMode] = useState(false);
   const [distributors, setDistributors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,8 +26,8 @@ const DistributorsTable = () => {
   const fetchDistributors = async () => {
     try {
       setLoading(true);
-      const { data } = await apiClient.get('/distributor/region');
-      setDistributors(data[0]||[]);
+      const { data } = await apiClient.get('/distributor/email/region');
+      setDistributors(data || []);
     } catch (err) {
       setError(err.message);
     } finally {

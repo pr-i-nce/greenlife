@@ -25,9 +25,8 @@ function AgentsTable() {
 
   const fetchAgents = async () => {
     try {
-      const { data } = await apiClient.get('/agent/region');
-      setAgents(data[0]||[]);
-      console.log(data);
+      const { data } = await apiClient.get('/agent/email/region');
+      setAgents(data || []);
     } catch (err) {
       setError(err.message);
     }

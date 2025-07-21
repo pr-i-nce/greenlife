@@ -179,7 +179,6 @@ function CommissionsTable() {
     }
   };
 
-  // Updated pay to send refNo in body
   const handlePayBatch = async (refNo) => {
     if (!groupData?.permissions?.pay) {
       Swal.fire({ ...swalOptions, icon: 'error', title: 'Access Denied', text: 'You do not have permission to pay commission.' });
@@ -202,7 +201,7 @@ function CommissionsTable() {
   );
 
   if (showBatchDetails) return (
-    <GenericModal onClose={() => setShowBatchDetails(false)} showBackButton={true}>
+    <GenericModal onClose={() => setShowBatchDetails(false)} showBackButton={false} >
       <BatchDetails batchSales={batchSalesData} onBack={() => setShowBatchDetails(false)} />
     </GenericModal>
   );
@@ -213,7 +212,6 @@ function CommissionsTable() {
     const paginated = data.slice(startIdx, startIdx + rowsPerPage);
     const totalPages = Math.ceil(data.length / rowsPerPage);
 
-    // Combined for approval2 & initial
     return (
       <>
         <div className="table-content">
@@ -221,60 +219,176 @@ function CommissionsTable() {
             <thead>
               <tr>
                 <th>SN</th>
-                <th>State</th>
-                <th>Ref No</th>
-                <th>No of Sales</th>
-                <th>Commission</th>
-                <th>Actions</th>
+                {tabName === 'approval1' ? (
+                  <>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>Initial Commission</th>
+                    <th>Final Commission</th>
+                    <th>Sub-region</th>
+                    <th>Region</th>
+                    <th>Distributor</th>
+                    <th>Receipt</th>
+                    <th>Actions</th>
+                  </>
+                ) : (
+                  <>
+                    <th>State</th>
+                    <th>Ref No</th>
+                    <th>No of Sales</th>
+                    <th>Commission</th>
+                    <th>Actions</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
               {paginated.length > 0 ? paginated.map((item, idx) => {
-                const state = item.posting_state || item.state;
+                const batchState = item.state || item.posting_state;
                 return (
-                  <tr key={`${item.ref_no}-${idx}`}>
+                  <tr key={`${item.ref_no || item.id}-${idx}`}>
                     <td data-label="SN">{startIdx + idx + 1}</td>
-                    <td data-label="State">{state || 'N/A'}</td>
-                    <td data-label="Ref No">{item.ref_no || 'N/A'}</td>
-                    <td data-label="No of Sales">{item.totalsales || 'N/A'}</td>
-                    <td data-label="Commission">{item.totalcommission || 'N/A'}</td>
-                    <td data-label="Actions">
-                      {tabName === 'approval2' && (
-                        state === 'open' ? (
-                          <>
-                            <button className="action-btn view-btn" onClick={() => handleCloseBatch(item.ref_no)}>Close Batch</button>
-                            <button className="action-btn view-btn" onClick={() => handleViewBatch(item.ref_no)}>View</button>
-                          </>
-                        ) : (
-                          <>
-                            <button className="action-btn view-btn" onClick={() => handlePayBatch(item.ref_no)}>Pay</button>
-                            <button className="action-btn view-btn" onClick={() => handleViewBatch(item.ref_no)}>View</button>
-                          </>
-                        )
-                      )}
-                      {tabName === 'initial' && (
-                        <>
-                          <button className="action-btn view-btn" onClick={() => handlePayBatch(item.ref_no)}>Pay</button>
-                          <button className="action-btn view-btn" onClick={() => handleViewBatch(item.ref_no)}>View</button>
-                        </>
-                      )}
-                    </td>
+
+                    {tabName === 'approval1' && (
+                      <>
+                        <td data-label="Name">{item.first_name} {item.last_name}</td>
+                        <td data-label="Email">{item.email}</td>
+                        <td data-label="Phone">{item.phone_number}</td>
+                        <td data-label="Amount">{item.amount}</td>
+                        <td data-label="Initial Commission">{item.initial_commission}</td>
+                        <td data-label="Final Commission">{item.final_commission}</td>
+                        <td data-label="Sub-region">{item.sub_region}</td>
+                        <td data-label="Region">{item.region_name}</td>
+                        <td data-label="Distributor">{item.distributor}</td>
+                        <td data-label="Receipt">
+                          <button
+                            className="action-btn view-btn"
+                            onClick={() => handleViewImage(item.reciept_image_path, groupData)}
+                          >
+                            View
+                          </button>
+                        </td>
+                        <td data-label="Actions">
+                          <button
+                            className="action-btn approve-btn"
+                            onClick={() => handleApproval1(item.id)}
+                          >
+                            Confirm
+                          </button>
+                        </td>
+                      </>
+                    )}
+
+                    {tabName === 'approval2' && (
+                      <>
+                        <td data-label="State">{batchState || 'N/A'}</td>
+                        <td data-label="Ref No">{item.ref_no || 'N/A'}</td>
+                        <td data-label="No of Sales">{item.totalsales || 'N/A'}</td>
+                        <td data-label="Commission">{item.totalcommission || 'N/A'}</td>
+                        <td data-label="Actions">
+                          {batchState === 'Opened' ? (
+                            <>
+                              <button
+                                className="action-btn close-btn"
+                                onClick={() => handleCloseBatch(item.ref_no)}
+                              >
+                                Close Batch
+                              </button>
+                              <button
+                                className="action-btn view-btn"
+                                onClick={() => handleViewBatch(item.ref_no)}
+                              >
+                                View
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="action-btn pay-btn"
+                                onClick={() => handlePayBatch(item.ref_no)}
+                              >
+                                Pay
+                              </button>
+                              <button
+                                className="action-btn view-btn"
+                                onClick={() => handleViewBatch(item.ref_no)}
+                              >
+                                View
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </>
+                    )}
+
+                    {tabName === 'initial' && (
+                      <>
+                        <td data-label="State">{batchState || 'N/A'}</td>
+                        <td data-label="Ref No">{item.ref_no || 'N/A'}</td>
+                        <td data-label="No of Sales">{item.totalsales || 'N/A'}</td>
+                        <td data-label="Commission">{item.totalcommission || 'N/A'}</td>
+                        <td data-label="Actions">
+                          <button
+                            className="action-btn view-btn"
+                            onClick={() => handlePayBatch(item.ref_no)}
+                          >
+                            Pay
+                          </button>
+                          <button
+                            className="action-btn view-btn"
+                            onClick={() => handleViewBatch(item.ref_no)}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 );
               }) : (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No records found.</td></tr>
+                <tr>
+                  <td colSpan={tabName === 'approval1' ? 12 : 6} style={{ textAlign: 'center', padding: '20px' }}>
+                    No records found.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
+
         <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-          <button onClick={() => pagesContainerRef.current?.scrollBy({ left: -50, behavior: 'smooth' })} style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>&#x25C0;</button>
+          <button
+            onClick={() => pagesContainerRef.current?.scrollBy({ left: -50, behavior: 'smooth' })}
+            style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}
+          >
+            &#x25C0;
+          </button>
           <div ref={pagesContainerRef} style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button key={p} onClick={() => setPageForTab(tabName, p)} style={{ margin: '0 5px', padding: '5px 10px', backgroundColor: (pages[tabName] || 1) === p ? '#0a803e' : '#f0f0f0', color: (pages[tabName] || 1) === p ? '#fff' : '#000', border: 'none', cursor: 'pointer' }}>{p}</button>
+              <button
+                key={p}
+                onClick={() => setPageForTab(tabName, p)}
+                style={{
+                  margin: '0 5px',
+                  padding: '5px 10px',
+                  backgroundColor: (pages[tabName] || 1) === p ? '#0a803e' : '#f0f0f0',
+                  color: (pages[tabName] || 1) === p ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {p}
+              </button>
             ))}
           </div>
-          <button onClick={() => pagesContainerRef.current?.scrollBy({ left: 50, behavior: 'smooth' })} style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>&#x25B6;</button>
+          <button
+            onClick={() => pagesContainerRef.current?.scrollBy({ left: 50, behavior: 'smooth' })}
+            style={{ margin: '0 5px', padding: '5px 10px', border: 'none', cursor: 'pointer' }}
+          >
+            &#x25B6;
+          </button>
         </div>
       </>
     );
@@ -301,7 +415,11 @@ function CommissionsTable() {
         </div>
       </div>
       {renderControls()}
-      {currentTab === 'approval1' ? renderTable(approval1Data, 'approval1') : currentTab === 'approval2' ? renderTable(approval2Data, 'approval2') : renderTable(initialData, 'initial')}
+      {currentTab === 'approval1'
+        ? renderTable(approval1Data, 'approval1')
+        : currentTab === 'approval2'
+          ? renderTable(approval2Data, 'approval2')
+          : renderTable(initialData, 'initial')}
     </div>
   );
 }
