@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { FaUser, FaIdBadge, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-import apiClient from '../apiClient';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 
+import {
+  FaUser,
+  FaIdBadge,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt
+} from 'react-icons/fa';
+import { useSelector } from 'react-redux';
+import apiClient from '../apiClient';
 import '../../styles/registeredTables.css';
 
 const SearchableDropdown = ({ id, value, onChange, options, placeholder, noOptionsText }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = React.useRef(null);
+  const dropdownRef = useRef(null);
 
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,19 +94,26 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
   const fetchDistributors = async () => {
     try {
       const { data } = await apiClient.get('/distributor/region');
-      setDistributors(data[0]||[]);
-      console.log("Distributors data:", data);
+      if (Array.isArray(data)) {
+        setDistributors(data);
+      } else {
+        console.error("Unexpected distributors format:", data);
+        setDistributors([]);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Distributor fetch error:', err);
+      setDistributors([]);
     }
   };
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/filter');
-      setSubregions(data[0]||[]);
+      const { data } = await apiClient.get('/subregion/all'); // or '/subregion/filter'
+      const normalized = Array.isArray(data?.[0]) ? data[0] : data;
+      setSubregions(Array.isArray(normalized) ? normalized : []);
     } catch (err) {
-      console.error(err);
+      console.error('Subregion fetch error:', err);
+      setSubregions([]);
     }
   };
 
@@ -111,17 +124,21 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
   }, [accessToken]);
 
-  const distributorOptions = distributors.map(dist => ({
-    id: dist.id,
-    label: dist.businessName,
-    value: dist.businessName
-  }));
+  const distributorOptions = Array.isArray(distributors)
+    ? distributors.map(dist => ({
+        id: dist.id,
+        label: dist.businessName,
+        value: dist.businessName
+      }))
+    : [];
 
-  const subregionOptions = subregions.map(sub => ({
-    id: sub.id,
-    label: sub.subRegionName,
-    value: sub.subRegionName
-  }));
+  const subregionOptions = Array.isArray(subregions)
+    ? subregions.map(sub => ({
+        id: sub.id,
+        label: sub.subRegionName,
+        value: sub.subRegionName
+      }))
+    : [];
 
   const simpleEmailValid = (email) => email.includes('@') && email.includes('.');
 
@@ -145,7 +162,6 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     return validateRequiredFields() || validateEmailFormat(regData.email);
   };
   
-
   const clearRegistrationForm = () => {
     setRegData({
       firstName: '',
@@ -165,7 +181,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
 
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return; 
+    if (isLoading) return;
     const validationError = validateRegistrationForm();
     if (validationError) {
       setRegError(validationError);
@@ -178,14 +194,23 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
     }
     setRegError('');
     setIsLoading(true);
+    
+    Swal.fire({
+      title: 'Loading...',
+      text: 'Please wait...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     const payload = { ...regData };
     try {
       const response = await apiClient.post('/agent', payload, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       const responseText = response.data;
+      Swal.close();
       Swal.fire({
         icon: 'success',
         title: 'Success',
@@ -196,6 +221,7 @@ const AgentsRegistration = ({ onClose, onRegistrationSuccess }) => {
         if (onRegistrationSuccess) onRegistrationSuccess();
       });
     } catch (err) {
+      Swal.close();
       Swal.fire({
         icon: 'error',
         title: 'Error',
