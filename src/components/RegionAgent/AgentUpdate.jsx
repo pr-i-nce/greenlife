@@ -40,23 +40,28 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const fetchDistributors = async () => {
     try {
       const { data } = await apiClient.get('/distributor/region');
-      setDistributors(data[0]||[]);
+      if (Array.isArray(data)) {
+        setDistributors(data);
+      } else {
+        console.error("Unexpected distributors format:", data);
+        setDistributors([]);
+      }
     } catch (err) {
-      console.error(err);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load distributors.' });
+      console.error('Distributor fetch error:', err);
+      setDistributors([]);
     }
   };
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/filter');
-      setSubregions(data[0]||[]);
+      const { data } = await apiClient.get('/subregion/all'); // or '/subregion/filter'
+      const normalized = Array.isArray(data?.[0]) ? data[0] : data;
+      setSubregions(Array.isArray(normalized) ? normalized : []);
     } catch (err) {
-      console.error(err);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load subregions.' });
+      console.error('Subregion fetch error:', err);
+      setSubregions([]);
     }
   };
-
   useEffect(() => {
     if (accessToken) {
       fetchDistributors();

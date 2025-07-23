@@ -46,13 +46,15 @@ const DistributorUpdate = ({ record, onClose, onUpdateSuccess }) => {
     }
   };
 
+
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/all');
-      setSubregions(data);
+      const { data } = await apiClient.get('/subregion/all'); // or '/subregion/filter'
+      const normalized = Array.isArray(data?.[0]) ? data[0] : data;
+      setSubregions(Array.isArray(normalized) ? normalized : []);
     } catch (err) {
-      console.error(err);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load subregions.' });
+      console.error('Subregion fetch error:', err);
+      setSubregions([]);
     }
   };
 
