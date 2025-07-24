@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../styles/registeredTables.css';
 import ProductDetails from './ProductDetails';
@@ -24,7 +24,10 @@ function SalesTable() {
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { pages, setPageForTab, rowsPerPage } = usePagination();
+
+  const pagesContainerRef = useRef(null);
 
   const confirmAction = async (promptText) => {
     const result = await Swal.fire({
@@ -47,6 +50,7 @@ function SalesTable() {
   };
 
   const fetchAllSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/email/region')
       .then((response) => {
         const data = response.data;
@@ -58,10 +62,14 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching all sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const fetchAcceptedSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/region-approved')
       .then((response) => {
         const data = response.data;
@@ -73,10 +81,14 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching accepted sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const fetchRejectedSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/region-rejected')
       .then((response) => {
         const data = response.data;
@@ -88,6 +100,9 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching rejected sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
@@ -113,7 +128,6 @@ function SalesTable() {
     });
   };
 
-  // —— New Download Handler Added Here ——
   const handleDownload = () => {
     let endpoint = '';
     let filename = '';
@@ -134,6 +148,7 @@ function SalesTable() {
         return;
     }
 
+    setIsLoading(true);
     fetch(`${BASE_URL}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -156,10 +171,11 @@ function SalesTable() {
       })
       .catch((err) => {
         Swal.fire({ icon: 'error', title: 'Download Failed', text: err.message });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
-  // —— End of Download Handler ——
-
 
   const handleAccept = async (saleId) => {
     if (!groupData?.permissions?.acceptSales) {
@@ -307,7 +323,6 @@ function SalesTable() {
       return;
     }
     const imageUrl = `${BASE_URL}/serve/getImage/${reciept_image_path}`;
-    console.log('Image URL:', imageUrl);
     Swal.fire({
       ...swalOptions,
       title: 'Receipt Image',
@@ -370,149 +385,176 @@ function SalesTable() {
     });
     const paginatedData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
     return (
       <div>
-        <div className="table-content">
-          <table>
-            <thead>
-              <tr>
-                <th>SN</th>
-                <th className="first-name-col">Agent name</th>
-                <th>Phone number</th>
-                <th>Distributor</th>
-                <th className="region-name-col">Region</th>
-                <th>Sub region</th>
-                <th>Amount</th>
-                <th>Created Date</th>
-                <th>Created Time</th>
-                {tabName === 'accepted' && <th>Initial commission</th>}
-                <th>Status</th>
-                <th>Product details</th>
-                <th>Receipt image</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((sale, index) => (
-                  <tr key={`${sale.id}-${index}`}>
-                    <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
-                    <td className="first-name-col" data-label="Agent Name">
-                      {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
-                    </td>
-                    <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
-                    <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
-                    <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
-                    <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
-                    <td data-label="Amount">{sale.amount || 'N/A'}</td>
-                    <td data-label="Created Date">
-                      {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
-                    </td>
-                    <td data-label="Created Time">
-                      {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
-                    </td>
-                    {tabName === 'accepted' && (
-                      <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
-                    )}
-                    <td data-label="Status">{sale.status || 'Pending'}</td>
-                    <td data-label="Product Details">
-                      <button className="action-btn view-btn" onClick={() => {
-                        if (!groupData?.permissions?.readProduct) {
-                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
-                          return;
-                        }
-                        handleViewProductDetails(sale.ref_id);
-                      }}>
-                        View Details
-                      </button>
-                    </td>
-                    <td data-label="Receipt Image">
-                      <button className="action-btn view-btn" onClick={() => {
-                        if (!groupData?.permissions?.viewRecieptImage) {
-                          Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
-                          return;
-                        }
-                        handleViewImage(sale.reciept_image_path);
-                      }}>
-                        View
-                      </button>
-                    </td>
-                    <td data-label="Actions">
-                      {tabName === 'all' && (
-                        <>
-                          <button className="action-btn view-btn" onClick={() => {
-                            if (!groupData?.permissions?.acceptSales) {
-                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
-                              return;
-                            }
-                            handleAccept(sale.id);
-                          }}>
-                            Accept
-                          </button>
-                          <button className="action-btn delete-btn" onClick={() => {
-                            if (!groupData?.permissions?.rejectSales) {
-                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
-                              return;
-                            }
-                            handleReject(sale.id);
-                          }}>
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {tabName === 'accepted' && (
-                        <button className="action-btn delete-btn" onClick={() => {
-                          if (!groupData?.permissions?.rejectSales) {
-                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
-                            return;
-                          }
-                          moveAcceptedToRejected(sale.id);
-                        }}>
-                          Reject
-                        </button>
-                      )}
-                      {tabName === 'rejected' && (
-                        <button className="action-btn view-btn" onClick={() => {
-                          if (!groupData?.permissions?.acceptSales) {
-                            Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
-                            return;
-                          }
-                          moveRejectedToAccepted(sale.id);
-                        }}>
-                          Accept
-                        </button>
-                      )}
-                    </td>
+        {isLoading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+            <div className="spinner" />
+          </div>
+        ) : (
+          <>
+            <div className="table-content">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SN</th>
+                    <th className="first-name-col">Agent name</th>
+                    <th>Phone number</th>
+                    <th>Distributor</th>
+                    <th className="region-name-col">Region</th>
+                    <th>Sub region</th>
+                    <th>Amount</th>
+                    <th>Created Date</th>
+                    <th>Created Time</th>
+                    {tabName === 'accepted' && <th>Initial commission</th>}
+                    <th>Status</th>
+                    <th>Product details</th>
+                    <th>Receipt image</th>
+                    <th>Actions</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={tabName === 'accepted' ? 12 : 10} style={{ textAlign: 'center', padding: '20px' }}>
-                    No records found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div style={{ marginTop: '10px', textAlign: 'center' }}>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setPageForTab(tabName, page)}
-              style={{
-                margin: '0 5px',
-                padding: '5px 10px',
-                backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
-                color: (pages[tabName] || 1) === page ? '#fff' : '#000',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
+                </thead>
+                <tbody>
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((sale, index) => (
+                      <tr key={`${sale.id}-${index}`}>
+                        <td data-label="SN">{index + 1 + indexOfFirstRow}</td>
+                        <td className="first-name-col" data-label="Agent Name">
+                          {sale.first_name || 'N/A'} {sale.last_name || 'N/A'}
+                        </td>
+                        <td data-label="Phone number">{sale.phone_number || 'N/A'}</td>
+                        <td data-label="Distributor">{sale.distributor || 'N/A'}</td>
+                        <td className="region-name-col" data-label="Region">{sale.region_name || 'N/A'}</td>
+                        <td data-label="Sub Region">{sale.sub_region || 'N/A'}</td>
+                        <td data-label="Amount">{sale.amount || 'N/A'}</td>
+                        <td data-label="Created Date">
+                          {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
+                        </td>
+                        <td data-label="Created Time">
+                          {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
+                        </td>
+                        {tabName === 'accepted' && (
+                          <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
+                        )}
+                        <td data-label="Status">{sale.status || 'Pending'}</td>
+                        <td data-label="Product Details">
+                          <button className="action-btn view-btn" onClick={() => {
+                            if (!groupData?.permissions?.readProduct) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view product details.' });
+                              return;
+                            }
+                            handleViewProductDetails(sale.ref_id);
+                          }}>
+                            View Details
+                          </button>
+                        </td>
+                        <td data-label="Receipt Image">
+                          <button className="action-btn view-btn" onClick={() => {
+                            if (!groupData?.permissions?.viewRecieptImage) {
+                              Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to view receipt images.' });
+                              return;
+                            }
+                            handleViewImage(sale.reciept_image_path);
+                          }}>
+                            View
+                          </button>
+                        </td>
+                        <td data-label="Actions">
+                          {tabName === 'all' && (
+                            <>
+                              <button className="action-btn view-btn" onClick={() => {
+                                if (!groupData?.permissions?.acceptSales) {
+                                  Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                                  return;
+                                }
+                                handleAccept(sale.id);
+                              }}>
+                                Accept
+                              </button>
+                              <button className="action-btn delete-btn" onClick={() => {
+                                if (!groupData?.permissions?.rejectSales) {
+                                  Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                                  return;
+                                }
+                                handleReject(sale.id);
+                              }}>
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {tabName === 'accepted' && (
+                            <button className="action-btn delete-btn" onClick={() => {
+                              if (!groupData?.permissions?.rejectSales) {
+                                Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to reject sales.' });
+                                return;
+                              }
+                              moveAcceptedToRejected(sale.id);
+                            }}>
+                              Reject
+                            </button>
+                          )}
+                          {tabName === 'rejected' && (
+                            <button className="action-btn view-btn" onClick={() => {
+                              if (!groupData?.permissions?.acceptSales) {
+                                Swal.fire({ icon: 'error', title: 'Access Denied', text: 'You do not have permission to accept sales.' });
+                                return;
+                              }
+                              moveRejectedToAccepted(sale.id);
+                            }}>
+                              Accept
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={tabName === 'accepted' ? 12 : 10} style={{ textAlign: 'center', padding: '20px' }}>
+                        No records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button
+                onClick={() => pagesContainerRef.current?.scrollBy({ left: -50, behavior: 'smooth' })}
+                style={{ margin: '0 5px', padding: '5px 10px', backgroundColor: '#f0f0f0', border: 'none', cursor: 'pointer' }}
+              >
+                &#x25C0;
+              </button>
+              <div
+                ref={pagesContainerRef}
+                style={{ overflowX: 'auto', whiteSpace: 'nowrap', width: '300px' }}
+              >
+                {Array.from({ length: Math.ceil(filteredData.length / rowsPerPage) }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setPageForTab(tabName, page)}
+                    style={{
+                      margin: '0 5px',
+                      padding: '5px 10px',
+                      backgroundColor: (pages[tabName] || 1) === page ? '#0a803e' : '#f0f0f0',
+                      color: (pages[tabName] || 1) === page ? '#fff' : '#000',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => pagesContainerRef.current?.scrollBy({ left: 50, behavior: 'smooth' })}
+                style={{ margin: '0 5px', padding: '5px 10px', backgroundColor: '#f0f0f0', border: 'none', cursor: 'pointer' }}
+              >
+                &#x25B6;
+              </button>
+            </div>
+          </>
+        )}
       </div>
     );
   };

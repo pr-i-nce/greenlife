@@ -24,6 +24,8 @@ function SalesTable() {
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  // ← ADDED loading state
+  const [isLoading, setIsLoading] = useState(false);
   const { pages, setPageForTab, rowsPerPage } = usePagination();
 
   // Ref for the pages container to enable scrolling.
@@ -50,6 +52,7 @@ function SalesTable() {
   };
 
   const fetchAllSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/all')
       .then((response) => {
         const data = response.data;
@@ -61,10 +64,14 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching all sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const fetchAcceptedSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/approved')
       .then((response) => {
         const data = response.data;
@@ -76,10 +83,14 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching accepted sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   const fetchRejectedSales = () => {
+    setIsLoading(true);
     apiClient.get('/sales/rejected')
       .then((response) => {
         const data = response.data;
@@ -91,6 +102,9 @@ function SalesTable() {
       })
       .catch((error) => {
         console.error('Error fetching rejected sales data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
@@ -325,6 +339,16 @@ function SalesTable() {
     });
     const paginatedData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
+    // ← SHOW SPINNER WHEN LOADING
+    if (isLoading) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <div className="spinner" />
+        </div>
+      );
+    }
+
     return (
       <div>
         <div className="table-content">
